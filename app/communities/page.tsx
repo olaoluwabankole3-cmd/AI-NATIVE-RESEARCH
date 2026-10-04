@@ -65,12 +65,24 @@ export default function CommunitiesPage() {
       return;
     }
 
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      setMessage("Your session has expired. Please sign in again.");
+      setCreating(false);
+      return;
+    }
+
     const { data: community, error: communityError } = await supabase
       .from("communities")
       .insert({
         name: trimmedName,
         slug,
         description: trimmedDescription || null,
+        created_by: user.id,
       })
       .select("id, name, slug, description")
       .single();
