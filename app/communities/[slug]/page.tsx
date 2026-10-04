@@ -15,6 +15,7 @@ type Community = {
 type Topic = {
   id: string;
   title: string;
+  body: string;
   type: "DISCUSSION" | "RESEARCH";
   created_at: string;
 };
@@ -30,6 +31,7 @@ export default function CommunityPage() {
   const [showForm, setShowForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
   const [type, setType] = useState<"DISCUSSION" | "RESEARCH">("DISCUSSION");
   const [message, setMessage] = useState("");
 
@@ -55,7 +57,7 @@ export default function CommunityPage() {
       await Promise.all([
         supabase
           .from("topics")
-          .select("id, title, type, created_at")
+          .select("id, title, body, type, created_at")
           .eq("community_id", communityData.id)
           .order("created_at", { ascending: false }),
         supabase
@@ -89,9 +91,15 @@ export default function CommunityPage() {
     if (!community) return;
 
     const trimmedTitle = title.trim();
+    const trimmedBody = body.trim();
 
     if (!trimmedTitle) {
       setMessage("Topic title is required.");
+      return;
+    }
+
+    if (!trimmedBody) {
+      setMessage("Add an opening question or description for the topic.");
       return;
     }
 
@@ -114,10 +122,11 @@ export default function CommunityPage() {
       .insert({
         community_id: community.id,
         title: trimmedTitle,
+        body: trimmedBody,
         type,
         created_by: user.id,
       })
-      .select("id, title, type, created_at")
+      .select("id, title, body, type, created_at")
       .single();
 
     if (error) {
@@ -128,6 +137,7 @@ export default function CommunityPage() {
 
     setTopics((current) => [topic, ...current]);
     setTitle("");
+    setBody("");
     setType("DISCUSSION");
     setShowForm(false);
     setMessage("Topic created.");
@@ -204,6 +214,9 @@ export default function CommunityPage() {
         {showForm && (
           <form onSubmit={handleCreateTopic} className="mt-8 rounded-2xl border border-emerald-300/15 bg-white/[0.025] p-6">
             <h2 className="text-xl font-semibold">Start a topic</h2>
+            <p className="mt-2 text-sm leading-6 text-white/45">
+              Give the discussion enough context for humans and future AI participants to understand the question.
+            </p>
             <div className="mt-5 grid gap-4">
               <label>
                 <span className="mb-2 block text-sm text-white/70">Title</span>
@@ -213,6 +226,17 @@ export default function CommunityPage() {
                   required
                   placeholder="What do you want the community to discuss?"
                   className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 outline-none focus:border-emerald-300/60"
+                />
+              </label>
+              <label>
+                <span className="mb-2 block text-sm text-white/70">Opening question or description</span>
+                <textarea
+                  value={body}
+                  onChange={(event) => setBody(event.target.value)}
+                  required
+                  rows={5}
+                  placeholder="Explain the question, context, or problem you want the community to explore."
+                  className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 leading-6 outline-none focus:border-emerald-300/60"
                 />
               </label>
               <label>
@@ -266,6 +290,7 @@ export default function CommunityPage() {
                       {topic.type === "RESEARCH" ? "Research" : "Discussion"}
                     </span>
                   </div>
+                  <p className="mt-3 line-clamp-2 text-sm leading-6 text-white/45">{topic.body}</p>
                   <p className="mt-3 text-sm text-white/35">
                     {new Date(topic.created_at).toLocaleDateString()}
                   </p>
