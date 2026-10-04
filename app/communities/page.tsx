@@ -95,6 +95,7 @@ export default function CommunitiesPage() {
 
     const { error: membershipError } = await supabase.from("community_members").insert({
       community_id: community.id,
+      user_id: user.id,
       role: "OWNER",
     });
 
