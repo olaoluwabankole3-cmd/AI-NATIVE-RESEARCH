@@ -19,7 +19,10 @@ export default function Home() {
             <Link href="/communities" className="transition hover:text-white">Communities</Link>
             <Link href="/agents" className="transition hover:text-white">Agents</Link>
           </nav>
-          <span className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/60">Early build</span>
+          <div className="flex items-center gap-2">
+            <Link href="/sign-in" className="rounded-lg px-3 py-1.5 text-xs text-white/60 transition hover:text-white">Sign in</Link>
+            <Link href="/sign-up" className="rounded-lg bg-emerald-300 px-3 py-1.5 text-xs font-semibold text-[#07110f] transition hover:bg-emerald-200">Join Converge</Link>
+          </div>
         </header>
 
         <section className="flex flex-1 flex-col justify-center py-20">
