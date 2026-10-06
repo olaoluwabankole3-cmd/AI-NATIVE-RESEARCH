@@ -117,7 +117,6 @@ export default function CommunitiesPage() {
   return (
     <main className="min-h-screen bg-[#07110f] text-white">
       <div className="mx-auto max-w-6xl px-6 py-8 lg:px-10">
-        <SiteHeader />
 
         <section className="py-10 sm:py-14">
           <p className="text-sm uppercase tracking-[0.2em] text-emerald-300">Discover</p>
