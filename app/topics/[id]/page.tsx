@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { agents, type Agent } from "@/lib/agents";
 
 type Topic = {
   id: string;
@@ -48,6 +49,7 @@ type Post = {
 type PostView = Post & {
   participant: TopicParticipant | undefined;
   profile: Profile | undefined;
+  agent: Agent | undefined;
 };
 
 function formatDate(value: string) {
@@ -79,6 +81,8 @@ export default function TopicPage() {
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [message, setMessage] = useState("");
+  const [showAgentPicker, setShowAgentPicker] = useState(false);
+  const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
 
   async function loadTopic() {
     setLoading(true);
@@ -206,6 +210,7 @@ export default function TopicPage() {
     }
 
     const participantMap = new Map(participants.map((participant) => [participant.id, participant]));
+    const agentMap = new Map(agents.map((agent) => [agent.id, agent]));
 
     setPosts(
       (postData ?? []).map((post) => {
@@ -215,6 +220,7 @@ export default function TopicPage() {
           ...post,
           participant,
           profile: participant?.user_id ? profileMap.get(participant.user_id) : undefined,
+          agent: participant?.agent_id ? agentMap.get(participant.agent_id) : undefined,
         };
       }),
     );
@@ -285,11 +291,48 @@ export default function TopicPage() {
           agent_id: null,
         },
         profile: profile ?? undefined,
+        agent: undefined,
       },
     ]);
 
     setReply("");
     setPosting(false);
+  }
+
+  async function handleAddAgent(agent: Agent) {
+    if (!topic || addingAgentId) return;
+
+    setAddingAgentId(agent.id);
+    setMessage("");
+
+    const alreadyAdded = posts.some(
+      (post) =>
+        post.participant?.participant_type === "AGENT" &&
+        post.participant.agent_id === agent.id,
+    );
+
+    if (alreadyAdded) {
+      setMessage(`${agent.name} is already participating in this topic.`);
+      setAddingAgentId(null);
+      return;
+    }
+
+    const { error } = await supabase.from("topic_participants").insert({
+      topic_id: topic.id,
+      participant_type: "AGENT",
+      user_id: null,
+      agent_id: agent.id,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setAddingAgentId(null);
+      return;
+    }
+
+    setShowAgentPicker(false);
+    setAddingAgentId(null);
+    await loadTopic();
   }
 
   const participantCount = useMemo(() => {
@@ -375,13 +418,66 @@ export default function TopicPage() {
 
               <button
                 type="button"
-                disabled
-                title="Agent participation is the next development milestone."
-                className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-white/35"
+                onClick={() => setShowAgentPicker((open) => !open)}
+                className="rounded-xl border border-emerald-300/20 bg-emerald-300/[0.04] px-4 py-2.5 text-sm font-medium text-emerald-200 transition hover:border-emerald-300/40 hover:bg-emerald-300/10"
               >
                 + Add agent
               </button>
             </div>
+
+            {showAgentPicker && (
+              <div className="mt-4 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold">Add a specialist</h3>
+                    <p className="mt-1 text-sm leading-6 text-white/40">
+                      Add a platform-level AI participant to this topic. This does not create a human account.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAgentPicker(false)}
+                    className="text-sm text-white/35 hover:text-white"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {agents.map((agent) => {
+                    const participating = posts.some(
+                      (post) =>
+                        post.participant?.participant_type === "AGENT" &&
+                        post.participant.agent_id === agent.id,
+                    );
+
+                    return (
+                      <button
+                        key={agent.id}
+                        type="button"
+                        disabled={participating || addingAgentId !== null}
+                        onClick={() => void handleAddAgent(agent)}
+                        className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-left transition hover:border-emerald-300/25 hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-300/10 text-sm font-semibold text-emerald-300">
+                            {agent.name.split(" ").map((part) => part[0]).join("").slice(0, 2)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium">{agent.name}</p>
+                            <p className="text-xs text-white/35">{agent.handle}</p>
+                          </div>
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-white/45">{agent.role}</p>
+                        <p className="mt-3 text-xs text-emerald-200/70">
+                          {participating ? "Already participating" : addingAgentId === agent.id ? "Adding…" : "Add to topic"}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 space-y-4">
               {posts.length === 0 ? (
@@ -417,9 +513,14 @@ export default function TopicPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <span className="font-medium">
-                            {post.profile?.display_name || post.profile?.username || "Converge member"}
+                            {post.agent?.name ||
+                              post.profile?.display_name ||
+                              post.profile?.username ||
+                              "Converge member"}
                           </span>
-                          <span className="text-xs text-white/30">Human</span>
+                          <span className="text-xs text-white/30">
+                            {post.participant?.participant_type === "AGENT" ? "AI agent" : "Human"}
+                          </span>
                           <span className="text-xs text-white/30">·</span>
                           <span className="text-xs text-white/35">
                             {formatDate(post.created_at)}
