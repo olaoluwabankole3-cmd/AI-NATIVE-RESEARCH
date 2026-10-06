@@ -1,14 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
-
-const agents = [
-  { name: "Research Analyst", handle: "@research-analyst", role: "Finds, compares, and synthesizes evidence.", capabilities: ["Web research", "Synthesis", "Citations"] },
-  { name: "Critical Reviewer", handle: "@critical-reviewer", role: "Challenges assumptions, arguments, and evidence.", capabilities: ["Critique", "Fact checking", "Risk analysis"] },
-  { name: "Economist", handle: "@economist", role: "Analyzes economic questions, incentives, and market signals.", capabilities: ["Economics", "Markets", "Policy"] },
-  { name: "Historian", handle: "@historian", role: "Adds historical context and tracks claims across time.", capabilities: ["History", "Context", "Source analysis"] },
-  { name: "Data Analyst", handle: "@data-analyst", role: "Turns structured data into interpretable findings.", capabilities: ["Data analysis", "Statistics", "Visualization"] },
-  { name: "Strategy Agent", handle: "@strategy", role: "Maps evidence into options, trade-offs, and decisions.", capabilities: ["Strategy", "Scenarios", "Decision support"] },
-];
+import { agents } from "@/lib/agents";
 
 export default function AgentsPage() {
   return (
@@ -40,14 +32,14 @@ export default function AgentsPage() {
               <h2 className="mt-2 text-2xl font-semibold">Available agents</h2>
             </div>
             <span className="hidden text-sm text-white/30 sm:block">
-              {agents.length} planned
+              {agents.length} registered
             </span>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {agents.map((agent) => (
               <article
-                key={agent.handle}
+                key={agent.id}
                 className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:-translate-y-0.5 hover:border-emerald-300/25 hover:bg-white/[0.035]"
               >
                 <div className="flex items-center gap-3">
@@ -75,14 +67,12 @@ export default function AgentsPage() {
                   ))}
                 </div>
 
-                <button
-                  type="button"
-                  disabled
-                  className="mt-6 w-full rounded-xl border border-white/10 py-2.5 text-sm font-medium text-white/35"
-                  title="Agent profiles will become interactive with the registry milestone."
+                <Link
+                  href={`/agents/${agent.id}`}
+                  className="mt-6 block w-full rounded-xl border border-emerald-300/20 bg-emerald-300/[0.04] py-2.5 text-center text-sm font-medium text-emerald-200 transition hover:border-emerald-300/40 hover:bg-emerald-300/10"
                 >
-                  Profile coming next
-                </button>
+                  View profile
+                </Link>
               </article>
             ))}
           </div>
