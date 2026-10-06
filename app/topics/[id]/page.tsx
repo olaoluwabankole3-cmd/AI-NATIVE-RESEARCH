@@ -84,6 +84,7 @@ export default function TopicPage() {
   const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
+  const [runningAgentId, setRunningAgentId] = useState<string | null>(null);
 
   async function loadTopic() {
     setLoading(true);
@@ -307,7 +308,7 @@ export default function TopicPage() {
     setAddingAgentId(agent.id);
     setMessage("");
 
-    const alreadyAdded = posts.some(
+    const alreadyAdded = topicParticipants.some(
       (post) =>
         post.participant?.participant_type === "AGENT" &&
         post.participant.agent_id === agent.id,
@@ -335,6 +336,33 @@ export default function TopicPage() {
     setShowAgentPicker(false);
     setAddingAgentId(null);
     await loadTopic();
+  }
+
+  async function handleRunAgent(agent: Agent) {
+    if (!topic || runningAgentId) return;
+
+    setRunningAgentId(agent.id);
+    setMessage("");
+
+    try {
+      const response = await fetch(`/api/topics/${topic.id}/agents/${agent.id}/run`, {
+        method: "POST",
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        setMessage(payload.error || "Agent execution failed.");
+        return;
+      }
+
+      setShowAgentPicker(false);
+      await loadTopic();
+      setMessage(`${agent.name} responded using ${payload.provider}.`);
+    } catch {
+      setMessage("The agent runtime could not be reached.");
+    } finally {
+      setRunningAgentId(null);
+    }
   }
 
   const participantCount = useMemo(() => {
@@ -471,9 +499,24 @@ export default function TopicPage() {
                           </div>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-white/45">{agent.role}</p>
-                        <p className="mt-3 text-xs text-emerald-200/70">
-                          {participating ? "Already participating" : addingAgentId === agent.id ? "Adding…" : "Add to topic"}
-                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-3">
+                          <span className="text-xs text-emerald-200/70">
+                            {participating ? "Participating" : addingAgentId === agent.id ? "Adding…" : "Add to topic"}
+                          </span>
+                          {participating && (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleRunAgent(agent);
+                              }}
+                              disabled={runningAgentId !== null}
+                              className="rounded-lg border border-emerald-300/20 px-2.5 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-300/10 disabled:opacity-40"
+                            >
+                              {runningAgentId === agent.id ? "Running…" : "Ask agent"}
+                            </button>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
