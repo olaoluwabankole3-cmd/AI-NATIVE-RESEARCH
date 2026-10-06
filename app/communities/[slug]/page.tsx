@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { SiteHeader } from "@/components/site-header";
 
 type Community = {
   id: string;
@@ -173,18 +174,9 @@ export default function CommunityPage() {
   return (
     <main className="min-h-screen bg-[#07110f] text-white">
       <div className="mx-auto max-w-6xl px-6 py-8 lg:px-10">
-        <header className="flex items-center justify-between border-b border-white/10 pb-6">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="grid size-9 place-items-center rounded-xl bg-emerald-300 font-bold text-[#07110f]">C</div>
-            <span className="text-lg font-semibold">Converge</span>
-          </Link>
-          <nav className="flex gap-5 text-sm text-white/60">
-            <Link href="/communities" className="text-white">Communities</Link>
-            <Link href="/agents" className="hover:text-white">Agents</Link>
-          </nav>
-        </header>
+        <SiteHeader />
 
-        <section className="border-b border-white/10 py-12">
+        <section className="border-b border-white/10 py-10 sm:py-12">
           <Link href="/communities" className="text-sm text-emerald-300 hover:text-emerald-200">
             ← Communities
           </Link>
@@ -204,7 +196,7 @@ export default function CommunityPage() {
             </div>
             <button
               onClick={() => { setShowForm((value) => !value); setMessage(""); }}
-              className="rounded-xl bg-emerald-300 px-5 py-3 text-sm font-semibold text-[#07110f] hover:bg-emerald-200"
+              className="w-full rounded-xl bg-emerald-300 px-5 py-3 sm:w-auto text-sm font-semibold text-[#07110f] hover:bg-emerald-200"
             >
               {showForm ? "Cancel" : "Create topic"}
             </button>
@@ -277,12 +269,12 @@ export default function CommunityPage() {
               <p className="mt-2 text-white/45">Start the first discussion or research question.</p>
             </div>
           ) : (
-            <div className="mt-6 grid gap-3">
+            <div className="mt-6 grid gap-3 md:grid-cols-2">
               {topics.map((topic) => (
                 <Link
                   key={topic.id}
                   href={`/topics/${topic.id}`}
-                  className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-emerald-300/25 hover:bg-white/[0.04]"
+                  className="group rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-emerald-300/25 hover:bg-white/[0.04] hover:-translate-y-0.5"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <h3 className="text-lg font-semibold">{topic.title}</h3>
