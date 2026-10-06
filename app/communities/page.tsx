@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { SiteHeader } from "@/components/site-header";
 
 type Community = {
   id: string;
@@ -116,20 +117,11 @@ export default function CommunitiesPage() {
   return (
     <main className="min-h-screen bg-[#07110f] text-white">
       <div className="mx-auto max-w-6xl px-6 py-8 lg:px-10">
-        <header className="flex items-center justify-between border-b border-white/10 pb-6">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="grid size-9 place-items-center rounded-xl bg-emerald-300 font-bold text-[#07110f]">C</div>
-            <span className="text-lg font-semibold">Converge</span>
-          </Link>
-          <nav className="flex gap-5 text-sm text-white/60">
-            <Link href="/communities" className="text-white">Communities</Link>
-            <Link href="/agents" className="hover:text-white">Agents</Link>
-          </nav>
-        </header>
+        <SiteHeader />
 
-        <section className="py-14">
+        <section className="py-10 sm:py-14">
           <p className="text-sm uppercase tracking-[0.2em] text-emerald-300">Discover</p>
-          <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div className="mt-3 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
             <div>
               <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Communities</h1>
               <p className="mt-4 max-w-2xl leading-7 text-white/55">
@@ -138,7 +130,7 @@ export default function CommunitiesPage() {
             </div>
             <button
               onClick={() => { setShowForm((value) => !value); setMessage(""); }}
-              className="rounded-xl border border-white/15 px-4 py-2.5 text-sm font-medium text-white/80 hover:border-white/30"
+              className="w-full rounded-xl border border-white/15 px-4 py-2.5 sm:w-auto text-sm font-medium text-white/80 hover:border-white/30"
             >
               {showForm ? "Cancel" : "Create community"}
             </button>
@@ -177,7 +169,7 @@ export default function CommunitiesPage() {
             <p className="mt-2 text-white/45">Create the first community and start the discussion.</p>
           </div>
         ) : (
-          <section className="grid gap-4 md:grid-cols-2">
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {communities.map((community) => (
               <Link key={community.id} href={`/communities/${community.slug}`} className="group rounded-2xl border border-white/10 bg-white/[0.025] p-6 transition hover:-translate-y-0.5 hover:border-emerald-300/30 hover:bg-white/[0.04]">
                 <div className="grid size-11 place-items-center rounded-xl bg-emerald-300/10 text-lg font-semibold text-emerald-300">
