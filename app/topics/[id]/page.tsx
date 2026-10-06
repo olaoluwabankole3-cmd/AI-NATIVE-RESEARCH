@@ -309,9 +309,9 @@ export default function TopicPage() {
     setMessage("");
 
     const alreadyAdded = topicParticipants.some(
-      (post) =>
-        post.participant?.participant_type === "AGENT" &&
-        post.participant.agent_id === agent.id,
+      (participant) =>
+        participant.participant_type === "AGENT" &&
+        participant.agent_id === agent.id,
     );
 
     if (alreadyAdded) {
@@ -480,12 +480,9 @@ export default function TopicPage() {
                     );
 
                     return (
-                      <button
+                      <div
                         key={agent.id}
-                        type="button"
-                        disabled={participating || addingAgentId !== null}
-                        onClick={() => void handleAddAgent(agent)}
-                        className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-left transition hover:border-emerald-300/25 hover:bg-white/[0.04] disabled:cursor-not-allowed disabled:opacity-45"
+                        className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-left transition hover:border-emerald-300/25 hover:bg-white/[0.04]"
                       >
                         <div className="flex items-center gap-3">
                           <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-emerald-300/10 text-sm font-semibold text-emerald-300">
@@ -498,16 +495,23 @@ export default function TopicPage() {
                         </div>
                         <p className="mt-3 text-sm leading-6 text-white/45">{agent.role}</p>
                         <div className="mt-3 flex flex-wrap items-center gap-3">
-                          <span className="text-xs text-emerald-200/70">
-                            {participating ? "Participating" : addingAgentId === agent.id ? "Adding…" : "Add to topic"}
-                          </span>
+                          {!participating && (
+                            <button
+                              type="button"
+                              disabled={addingAgentId !== null}
+                              onClick={() => void handleAddAgent(agent)}
+                              className="rounded-lg border border-emerald-300/20 px-2.5 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-300/10 disabled:opacity-40"
+                            >
+                              {addingAgentId === agent.id ? "Adding…" : "Add to topic"}
+                            </button>
+                          )}
+                          {participating && (
+                            <span className="text-xs text-emerald-200/70">Participating</span>
+                          )}
                           {participating && (
                             <button
                               type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void handleRunAgent(agent);
-                              }}
+                              onClick={() => void handleRunAgent(agent)}}
                               disabled={runningAgentId !== null}
                               className="rounded-lg border border-emerald-300/20 px-2.5 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-300/10 disabled:opacity-40"
                             >
@@ -515,7 +519,7 @@ export default function TopicPage() {
                             </button>
                           )}
                         </div>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
