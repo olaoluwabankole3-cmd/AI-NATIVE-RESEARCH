@@ -366,10 +366,8 @@ export default function TopicPage() {
   }
 
   const participantCount = useMemo(() => {
-    const ids = new Set(posts.map((post) => post.participant_id));
-    if (currentParticipantId) ids.add(currentParticipantId);
-    return ids.size;
-  }, [topicParticipants, currentParticipantId]);
+    return new Set(topicParticipants.map((participant) => participant.id)).size;
+  }, [topicParticipants]);
 
   if (loading) {
     return (
@@ -475,10 +473,10 @@ export default function TopicPage() {
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   {agents.map((agent) => {
-                    const participating = posts.some(
-                      (post) =>
-                        post.participant?.participant_type === "AGENT" &&
-                        post.participant.agent_id === agent.id,
+                    const participating = topicParticipants.some(
+                      (participant) =>
+                        participant.participant_type === "AGENT" &&
+                        participant.agent_id === agent.id,
                     );
 
                     return (
