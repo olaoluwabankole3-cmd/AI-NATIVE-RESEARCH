@@ -83,6 +83,7 @@ export default function TopicPage() {
   const [message, setMessage] = useState("");
   const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
+  const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
 
   async function loadTopic() {
     setLoading(true);
@@ -183,6 +184,7 @@ export default function TopicPage() {
     }
 
     setCurrentParticipantId(ownParticipant.id);
+    setTopicParticipants(participants);
 
     const userIds = Array.from(
       new Set(
@@ -339,7 +341,7 @@ export default function TopicPage() {
     const ids = new Set(posts.map((post) => post.participant_id));
     if (currentParticipantId) ids.add(currentParticipantId);
     return ids.size;
-  }, [posts, currentParticipantId]);
+  }, [topicParticipants, currentParticipantId]);
 
   if (loading) {
     return (
