@@ -327,7 +327,6 @@ export default function TopicPage() {
   return (
     <main className="min-h-screen bg-[#07110f] text-white">
       <div className="mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
-        <SiteHeader />
 
         <div className="py-7">
           <Link
