@@ -48,6 +48,7 @@ export function ResearchRoom({
   const [content, setContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [message, setMessage] = useState("");
+  const [generating, setGenerating] = useState(false);
 
   async function loadArtifacts() {
     setLoading(true);
@@ -74,7 +75,23 @@ export function ResearchRoom({
     void loadArtifacts();
   }, [topicId]);
 
-  async function handleCreate(event: FormEvent<HTMLFormElement>) {
+  async function handleGenerateSynthesis() {
+    setGenerating(true);
+    setMessage("");
+    try {
+      const response = await fetch(`/api/topics/${topicId}/agents/research-analyst/artifacts/synthesis`, { method: "POST" });
+      const payload = await response.json();
+      if (!response.ok) { setMessage(payload.error || "Could not generate a synthesis."); return; }
+      setArtifacts((current) => [payload.artifact as ResearchArtifact, ...current]);
+      setMessage(`Research Analyst synthesis saved using ${payload.provider}.`);
+    } catch {
+      setMessage("The research synthesis runtime could not be reached.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleCreate(event: FormEvent<HTMLFormElement) {
     event.preventDefault();
 
     const trimmedTitle = title.trim();
@@ -136,13 +153,23 @@ export function ResearchRoom({
             Preserve important claims, evidence, sources, syntheses, and decisions separately from the conversation stream.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowForm((value) => !value)}
-          className="rounded-xl bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200"
-        >
-          {showForm ? "Close" : "Add artifact"}
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => void handleGenerateSynthesis()}
+            disabled={generating}
+            className="rounded-xl border border-emerald-300/25 bg-emerald-300/[0.05] px-4 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-300/10 disabled:opacity-50"
+          >
+            {generating ? "Generating…" : "Generate synthesis"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowForm((value) => !value)}
+            className="rounded-xl bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200"
+          >
+            {showForm ? "Close" : "Add artifact"}
+          </button>
+        </div>
       </div>
 
       {showForm && (
