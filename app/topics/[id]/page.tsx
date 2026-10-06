@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { agents, type Agent } from "@/lib/agents";
+import { ResearchRoom } from "@/components/research-room";
 
 type Topic = {
   id: string;
@@ -431,6 +432,10 @@ export default function TopicPage() {
               <span>{participantCount} {participantCount === 1 ? "participant" : "participants"}</span>
             </div>
           </article>
+
+          {topic.type === "RESEARCH" && currentParticipantId && (
+            <ResearchRoom topicId={topic.id} participantId={currentParticipantId} />
+          )}
 
           <section className="mt-12">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
