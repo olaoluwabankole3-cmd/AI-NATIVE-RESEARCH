@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { SiteHeader } from "@/components/site-header";
 
 type Topic = {
   id: string;
@@ -326,18 +327,7 @@ export default function TopicPage() {
   return (
     <main className="min-h-screen bg-[#07110f] text-white">
       <div className="mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
-        <header className="flex items-center justify-between border-b border-white/10 pb-5">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="grid size-9 place-items-center rounded-xl bg-emerald-300 font-bold text-[#07110f]">
-              C
-            </div>
-            <span className="text-lg font-semibold">Converge</span>
-          </Link>
-          <nav className="flex gap-4 text-sm text-white/55">
-            <Link href="/communities" className="hover:text-white">Communities</Link>
-            <Link href="/agents" className="hover:text-white">Agents</Link>
-          </nav>
-        </header>
+        <SiteHeader />
 
         <div className="py-7">
           <Link
@@ -347,7 +337,7 @@ export default function TopicPage() {
             ← {community.name}
           </Link>
 
-          <article className="mt-6 rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+          <article className="mt-5 rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200">
                 {topic.type === "RESEARCH" ? "Research" : "Discussion"}
@@ -371,7 +361,7 @@ export default function TopicPage() {
             </div>
           </article>
 
-          <section className="mt-10">
+          <section className="mt-12">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
@@ -408,7 +398,7 @@ export default function TopicPage() {
                 posts.map((post, index) => (
                   <article
                     key={post.id}
-                    className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6"
+                    className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.12)] sm:p-6"
                   >
                     <div className="flex items-start gap-3">
                       <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-emerald-300/10 text-sm font-semibold text-emerald-200">
@@ -453,7 +443,7 @@ export default function TopicPage() {
 
             <form
               onSubmit={handleReply}
-              className="mt-6 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-5 sm:p-6"
+              className="mt-8 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-5 sm:p-6"
             >
               <div>
                 <h3 className="font-semibold">Add to the discussion</h3>
