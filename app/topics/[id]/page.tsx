@@ -82,6 +82,12 @@ export default function TopicPage() {
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"success" | "error" | "info">("info");
+
+  function showMessage(value: string, tone: "success" | "error" | "info" = "info") {
+    setMessage(value);
+    setMessageTone(tone);
+  }
   const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
@@ -98,7 +104,7 @@ export default function TopicPage() {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      setMessage("Your session has expired. Please sign in again.");
+      showMessage("Your session has expired. Please sign in again.", "error");
       setLoading(false);
       return;
     }
@@ -110,7 +116,7 @@ export default function TopicPage() {
       .single();
 
     if (topicError || !topicData) {
-      setMessage(topicError?.message ?? "Topic not found.");
+      showMessage(topicError?.message ?? "Topic not found.", "error");
       setLoading(false);
       return;
     }
@@ -139,19 +145,19 @@ export default function TopicPage() {
     ]);
 
     if (communityError || !communityData) {
-      setMessage(communityError?.message ?? "Community could not be loaded.");
+      showMessage(communityError?.message ?? "Community could not be loaded.", "error");
       setLoading(false);
       return;
     }
 
     if (postError) {
-      setMessage(postError.message);
+      showMessage(postError.message, "error");
       setLoading(false);
       return;
     }
 
     if (participantError) {
-      setMessage(participantError.message);
+      showMessage(participantError.message, "error");
       setLoading(false);
       return;
     }
@@ -177,7 +183,7 @@ export default function TopicPage() {
         .single();
 
       if (createParticipantError || !createdParticipant) {
-        setMessage(createParticipantError?.message ?? "Could not join this topic.");
+        showMessage(createParticipantError?.message ?? "Could not join this topic.", "error");
         setLoading(false);
         return;
       }
@@ -206,7 +212,7 @@ export default function TopicPage() {
         .in("id", userIds);
 
       if (profileError) {
-        setMessage(profileError.message);
+        showMessage(profileError.message, "error");
         setLoading(false);
         return;
       }
@@ -274,12 +280,12 @@ export default function TopicPage() {
     const trimmedReply = reply.trim();
 
     if (!trimmedReply) {
-      setMessage("Write a reply before posting.");
+      showMessage("Write a reply before posting.", "error");
       return;
     }
 
     if (!currentParticipantId || !topic) {
-      setMessage("Your topic participation is not ready yet.");
+      showMessage("Your topic participation is not ready yet.", "error");
       return;
     }
 
@@ -295,7 +301,7 @@ export default function TopicPage() {
       const payload = await response.json();
 
       if (!response.ok || !payload.humanPost) {
-        setMessage(payload.error || "Could not publish your reply.");
+        showMessage(payload.error || "Could not publish your reply.", "error");
         return;
       }
 
@@ -341,6 +347,8 @@ export default function TopicPage() {
         statusMessage = agentCount === 1
           ? `${payload.agentPosts[0].agent.name} responded automatically.`
           : `${agentCount} AI specialists responded automatically.`;
+      } else if (warnings.length > 0) {
+        statusMessage = "Your reply is live, but automatic AI replies could not be confirmed.";
       } else {
         statusMessage = "Your reply is live. No attached AI specialist was selected for this message.";
       }
@@ -348,9 +356,14 @@ export default function TopicPage() {
       if (warnings.length > 0) {
         statusMessage += ` Note: ${warnings.join(" ")}`;
       }
-      setMessage(statusMessage);
+      const statusTone = failures.length > 0 && agentCount === 0
+        ? "error"
+        : agentCount > 0 && failures.length === 0 && warnings.length === 0
+          ? "success"
+          : "info";
+      showMessage(statusMessage, statusTone);
     } catch {
-      setMessage("The automatic AI response service could not be reached.");
+      showMessage("The request did not finish. Your post may already be live; refresh the topic before retrying.", "info");
     } finally {
       setPosting(false);
     }
@@ -369,7 +382,7 @@ export default function TopicPage() {
     );
 
     if (alreadyAdded) {
-      setMessage(`${agent.name} is already participating in this topic.`);
+      showMessage(`${agent.name} is already participating in this topic.`, "info");
       setAddingAgentId(null);
       return;
     }
@@ -386,7 +399,7 @@ export default function TopicPage() {
       .single();
 
     if (error || !createdParticipant) {
-      setMessage(error?.message ?? "Could not add the AI participant.");
+      showMessage(error?.message ?? "Could not add the AI participant.", "error");
       setAddingAgentId(null);
       return;
     }
@@ -411,12 +424,12 @@ export default function TopicPage() {
                 },
               ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
         );
-        setMessage(`${agent.name} joined the topic and responded automatically.`);
+        showMessage(`${agent.name} joined the topic and responded automatically.`, "success");
       } else {
-        setMessage(`${agent.name} joined the topic, but could not respond yet.`);
+        showMessage(`${agent.name} joined the topic, but could not respond yet.`, "info");
       }
     } catch {
-      setMessage(`${agent.name} joined the topic, but its automatic response could not be reached.`);
+      showMessage(`${agent.name} joined the topic, but its automatic response could not be reached.`, "info");
     }
   }
 
@@ -665,7 +678,7 @@ export default function TopicPage() {
               />
 
               {message && (
-                <p className="mt-3 text-sm text-red-200">{message}</p>
+                <p className={`mt-3 text-sm ${messageTone === "error" ? "text-red-200" : messageTone === "success" ? "text-emerald-200" : "text-white/60"}`}>{message}</p>
               )}
 
               <div className="mt-4 flex justify-end">
