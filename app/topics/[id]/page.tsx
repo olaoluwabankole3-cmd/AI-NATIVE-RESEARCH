@@ -85,7 +85,7 @@ export default function TopicPage() {
   const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
-  const [runningAgentId, setRunningAgentId] = useState<string | null>(null);
+  const [autoResponding, setAutoResponding] = useState(false);
 
   async function loadTopic() {
     setLoading(true);
@@ -301,6 +301,12 @@ export default function TopicPage() {
 
     setReply("");
     setPosting(false);
+
+    const participatingAgentIds = topicParticipants
+      .filter((participant) => participant.participant_type === "AGENT" && participant.agent_id)
+      .map((participant) => participant.agent_id as string);
+
+    void triggerAutomaticAgentReplies(participatingAgentIds);
   }
 
   async function handleAddAgent(agent: Agent) {
@@ -337,40 +343,71 @@ export default function TopicPage() {
     setShowAgentPicker(false);
     setAddingAgentId(null);
     await loadTopic();
+    void triggerAutomaticAgentReplies([agent.id]);
   }
 
-  async function handleRunAgent(agent: Agent) {
-    if (!topic || runningAgentId) return;
+  async function triggerAutomaticAgentReplies(agentIds: string[]) {
+    if (!topic || autoResponding || agentIds.length === 0) return;
 
-    setRunningAgentId(agent.id);
-    setMessage("");
+    setAutoResponding(true);
+    setMessage(
+      agentIds.length === 1
+        ? "The specialist is responding…"
+        : `The ${agentIds.length} specialists are responding…`,
+    );
 
-    try {
-      const response = await fetch(`/api/topics/${topic.id}/agents/${agent.id}/run`, {
-        method: "POST",
-      });
-      const payload = await response.json();
+    const failures: string[] = [];
 
-      if (!response.ok) {
-        setMessage(payload.error || "Agent execution failed.");
-        return;
+    for (const agentId of agentIds) {
+      const agent = agents.find((item) => item.id === agentId);
+      const participant = topicParticipants.find(
+        (item) => item.participant_type === "AGENT" && item.agent_id === agentId,
+      );
+
+      if (!agent || !participant) continue;
+
+      try {
+        const response = await fetch(`/api/topics/${topic.id}/agents/${agent.id}/run`, {
+          method: "POST",
+        });
+        const payload = await response.json();
+
+        if (!response.ok || !payload.post) {
+          failures.push(agent.name);
+          continue;
+        }
+
+        setPosts((current) => [
+          ...current,
+          {
+            ...payload.post,
+            participant,
+            profile: undefined,
+            agent,
+          },
+        ]);
+      } catch {
+        failures.push(agent.name);
       }
-
-      setShowAgentPicker(false);
-      await loadTopic();
-      const contextNote = payload.contextArtifactCount
-        ? ` It considered ${payload.contextArtifactCount} saved research artifacts.`
-        : "";
-      const historyNote = payload.executionLogged === false
-        ? " Execution history was not recorded; apply the agent_executions migration."
-        : "";
-      setMessage(`${agent.name} responded using ${payload.provider}.${contextNote}${historyNote}`);
-    } catch {
-      setMessage("The agent runtime could not be reached.");
-    } finally {
-      setRunningAgentId(null);
     }
+
+    if (failures.length > 0) {
+      setMessage(
+        failures.length === agentIds.length
+          ? "The AI participants could not respond. Check the agent runtime configuration."
+          : `Some AI participants could not respond: ${failures.join(", ")}.`,
+      );
+    } else {
+      setMessage(
+        agentIds.length === 1
+          ? `${agents.find((item) => item.id === agentIds[0])?.name || "The AI specialist"} responded automatically.`
+          : `${agentIds.length} AI participants responded automatically.`,
+      );
+    }
+
+    setAutoResponding(false);
   }
+
 
   const participantCount = useMemo(() => {
     return new Set(topicParticipants.map((participant) => participant.id)).size;
@@ -459,7 +496,7 @@ export default function TopicPage() {
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold">Human discussion</h2>
                 <p className="mt-2 text-sm text-white/40">
-                  Humans can discuss the question now. Specialized AI participants will join this same conversation next.
+                  Attached AI participants respond automatically when the discussion changes. No manual “Ask agent” step is required.
                 </p>
               </div>
 
@@ -528,14 +565,9 @@ export default function TopicPage() {
                             <span className="text-xs text-emerald-200/70">Participating</span>
                           )}
                           {participating && (
-                            <button
-                              type="button"
-                              onClick={() => void handleRunAgent(agent)}}
-                              disabled={runningAgentId !== null}
-                              className="rounded-lg border border-emerald-300/20 px-2.5 py-1 text-xs font-medium text-emerald-200 hover:bg-emerald-300/10 disabled:opacity-40"
-                            >
-                              {runningAgentId === agent.id ? "Running…" : "Ask agent"}
-                            </button>
+                            <span className="text-xs text-white/35">
+                              Auto-response enabled
+                            </span>
                           )}
                         </div>
                       </div>
@@ -634,10 +666,10 @@ export default function TopicPage() {
               <div className="mt-4 flex justify-end">
                 <button
                   type="submit"
-                  disabled={posting || !reply.trim()}
+                  disabled={posting || autoResponding || !reply.trim()}
                   className="rounded-xl bg-emerald-300 px-5 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {posting ? "Posting…" : "Post reply"}
+                  {posting ? "Posting…" : autoResponding ? "AI responding…" : "Post reply"}
                 </button>
               </div>
             </form>
