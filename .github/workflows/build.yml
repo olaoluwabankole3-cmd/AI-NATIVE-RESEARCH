@@ -6,7 +6,7 @@ on:
   pull_request:
 
 concurrency:
-  group: build-v3-${{ github.ref }}
+  group: build-v4-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
