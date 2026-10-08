@@ -88,6 +88,7 @@ export async function runAgent(
           { role: "user", content: userPrompt },
         ] }),
         cache: "no-store",
+        signal: AbortSignal.timeout(8000),
       });
       if (!response.ok) { lastError = `${provider.name} returned HTTP ${response.status}.`; continue; }
       const payload = await response.json();
