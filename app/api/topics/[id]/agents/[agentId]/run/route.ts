@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getAgent, runAgent, type AgentArtifactContext } from "@/lib/agent-runtime";
+import type { Agent } from "@/lib/agents";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
 type Params = { params: Promise<{ id: string; agentId: string }> };
@@ -17,12 +18,14 @@ function isMissingArtifactsTable(error: { code?: string; message?: string } | nu
 
 export async function POST(_request: Request, { params }: Params) {
   const { id: topicId, agentId } = await params;
-  const agent = getAgent(agentId);
-  if (!agent) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
+  const resolvedAgent = getAgent(agentId);
+  if (!resolvedAgent) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
+  const agent: Agent = resolvedAgent;
 
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  const userId = user.id;
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
@@ -43,7 +46,7 @@ export async function POST(_request: Request, { params }: Params) {
     .select("id")
     .eq("topic_id", topicId)
     .eq("participant_type", "HUMAN")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (!humanParticipant) {
@@ -158,7 +161,7 @@ export async function POST(_request: Request, { params }: Params) {
       agent_name: agent.name,
       execution_type: "REPLY",
       status: values.status,
-      triggered_by: user.id,
+      triggered_by: userId,
       provider: values.provider ?? null,
       model: values.model ?? null,
       context_post_count: contextPosts.length,
