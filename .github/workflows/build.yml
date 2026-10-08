@@ -26,3 +26,7 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # CI-only placeholders let Next.js prerender auth screens without live credentials.
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-public-key
