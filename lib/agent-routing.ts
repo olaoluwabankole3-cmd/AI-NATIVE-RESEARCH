@@ -9,7 +9,7 @@ const stopWords = new Set([
 
 function words(value: string) {
   return new Set(
-    value.toLowerCase().replace(/[^a-z0-9\\s-]/g, " ").split(/\\s+/).filter((word) => word.length > 2 && !stopWords.has(word)),
+    value.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/\\s+/).filter((word) => word.length > 2 && !stopWords.has(word)),
   );
 }
 
