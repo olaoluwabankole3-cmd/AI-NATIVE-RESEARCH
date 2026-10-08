@@ -327,26 +327,30 @@ export default function TopicPage() {
       return;
     }
 
-    const { error } = await supabase.from("topic_participants").insert({
-      topic_id: topic.id,
-      participant_type: "AGENT",
-      user_id: null,
-      agent_id: agent.id,
-    });
+    const { data: createdParticipant, error } = await supabase
+      .from("topic_participants")
+      .insert({
+        topic_id: topic.id,
+        participant_type: "AGENT",
+        user_id: null,
+        agent_id: agent.id,
+      })
+      .select("id, participant_type, user_id, agent_id")
+      .single();
 
-    if (error) {
-      setMessage(error.message);
+    if (error || !createdParticipant) {
+      setMessage(error?.message ?? "Could not add the AI participant.");
       setAddingAgentId(null);
       return;
     }
 
+    setTopicParticipants((current) => [...current, createdParticipant]);
     setShowAgentPicker(false);
     setAddingAgentId(null);
-    await loadTopic();
-    void triggerAutomaticAgentReplies([agent.id]);
+    void triggerAutomaticAgentReplies([agent.id], new Map([[agent.id, createdParticipant]]));
   }
 
-  async function triggerAutomaticAgentReplies(agentIds: string[]) {
+  async function triggerAutomaticAgentReplies(agentIds: string[], participantOverrides = new Map<string, TopicParticipant>()) {
     if (!topic || autoResponding || agentIds.length === 0) return;
 
     setAutoResponding(true);
@@ -360,9 +364,11 @@ export default function TopicPage() {
 
     for (const agentId of agentIds) {
       const agent = agents.find((item) => item.id === agentId);
-      const participant = topicParticipants.find(
-        (item) => item.participant_type === "AGENT" && item.agent_id === agentId,
-      );
+      const participant =
+        participantOverrides.get(agentId) ||
+        topicParticipants.find(
+          (item) => item.participant_type === "AGENT" && item.agent_id === agentId,
+        );
 
       if (!agent || !participant) continue;
 
@@ -477,15 +483,7 @@ export default function TopicPage() {
           </article>
 
           {topic.type === "RESEARCH" && currentParticipantId && (
-            <ResearchRoom
-              topicId={topic.id}
-              participantId={currentParticipantId}
-              researchAnalystParticipating={topicParticipants.some(
-                (participant) =>
-                  participant.participant_type === "AGENT" &&
-                  participant.agent_id === "research-analyst",
-              )}
-            />
+            <ResearchRoom topicId={topic.id} participantId={currentParticipantId} />
           )}
 
           <section className="mt-12">
@@ -565,8 +563,8 @@ export default function TopicPage() {
                             <span className="text-xs text-emerald-200/70">Participating</span>
                           )}
                           {participating && (
-                            <span className="text-xs text-white/35">
-                              Auto-response enabled
+                            <span className="text-xs text-emerald-200/70">
+                              Automatic replies on
                             </span>
                           )}
                         </div>
