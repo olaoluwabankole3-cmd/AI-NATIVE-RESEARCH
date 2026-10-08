@@ -67,7 +67,7 @@ export function ResearchRoom({
     setLoading(true);
     const { data, error } = await supabase
       .from("research_artifacts")
-      .select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, review_status, reviewed_by, reviewed_at, review_note, created_at")
+      .select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, created_at")
       .eq("topic_id", topicId)
       .order("created_at", { ascending: false });
 
@@ -96,11 +96,7 @@ export function ResearchRoom({
       const payload = await response.json();
       if (!response.ok) { setMessage(payload.error || "Could not generate a synthesis."); return; }
       setArtifacts((current) => [payload.artifact as ResearchArtifact, ...current]);
-      setMessage(
-        payload.executionLogged === false
-          ? "Synthesis saved, but execution history could not be recorded. Apply the agent_executions migration."
-          : `Research Analyst synthesis saved using ${payload.provider} with ${payload.contextArtifactCount ?? 0} existing research artifacts in context.`,
-      );
+      setMessage(`Research Analyst synthesis saved using ${payload.provider}.`);
     } catch {
       setMessage("The research synthesis runtime could not be reached.");
     } finally {
@@ -174,10 +170,10 @@ export function ResearchRoom({
           <button
             type="button"
             onClick={() => void handleGenerateSynthesis()}
-            disabled={generating || !researchAnalystParticipating}
+            disabled={generating}
             className="rounded-xl border border-emerald-300/25 bg-emerald-300/[0.05] px-4 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-300/10 disabled:opacity-50"
           >
-            {generating ? "Generating…" : researchAnalystParticipating ? "Generate synthesis" : "Add Research Analyst first"}
+            {generating ? "Generating…" : "Generate synthesis"}
           </button>
           <button
             type="button"
@@ -187,11 +183,6 @@ export function ResearchRoom({
             {showForm ? "Close" : "Add artifact"}
           </button>
         </div>
-        {!researchAnalystParticipating && (
-          <p className="mt-3 text-xs leading-5 text-white/35">
-            Add the Research Analyst from the conversation section below before generating an AI synthesis.
-          </p>
-        )}
       </div>
 
       {showForm && (
@@ -306,51 +297,6 @@ export function ResearchRoom({
                 </div>
               )}
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-white/55">{artifact.content}</p>
-              {artifact.review_note && (
-                <div className="mt-4 rounded-xl border border-white/10 bg-black/10 p-3">
-                  <p className="text-xs font-medium text-white/55">Review note</p>
-                  <p className="mt-1 text-xs leading-5 text-white/40">{artifact.review_note}</p>
-                </div>
-              )}
-              {artifact.review_status !== "APPROVED" && (
-                <div className="mt-4 border-t border-white/10 pt-4">
-                  {reviewingArtifactId === artifact.id ? (
-                    <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
-                      <input
-                        value={reviewNote}
-                        onChange={(event) => setReviewNote(event.target.value)}
-                        maxLength={2000}
-                        placeholder="Optional review note"
-                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs outline-none focus:border-emerald-300/50"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          disabled={reviewingArtifactId !== null}
-                          onClick={() => void handleReview(artifact.id, "APPROVED")}
-                          className="rounded-lg bg-emerald-300 px-3 py-2 text-xs font-semibold text-[#07110f] disabled:opacity-50"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          type="button"
-                          disabled={reviewingArtifactId !== null}
-                          onClick={() => void handleReview(artifact.id, "REJECTED")}
-                          className="rounded-lg border border-red-300/20 px-3 py-2 text-xs font-medium text-red-200 disabled:opacity-50"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => { setReviewingArtifactId(artifact.id); setReviewNote(artifact.review_note || ""); }}
-                      className="text-xs font-medium text-emerald-300 hover:text-emerald-200"
-                    >
-                      Review artifact →
-                    </button>
-                  )}
                 </div>
               )}
               {artifact.provenance?.source_url && (
