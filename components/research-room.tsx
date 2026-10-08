@@ -268,13 +268,6 @@ export function ResearchRoom({
                   {artifact.artifact_type}
                 </span>
                 <span className="text-xs text-white/30">{formatDate(artifact.created_at)}</span>
-                <span className={artifact.review_status === "APPROVED"
-                  ? "rounded-full bg-emerald-300/10 px-2.5 py-1 text-[11px] font-medium text-emerald-200"
-                  : artifact.review_status === "REJECTED"
-                    ? "rounded-full bg-red-300/10 px-2.5 py-1 text-[11px] font-medium text-red-200"
-                    : "rounded-full bg-amber-300/10 px-2.5 py-1 text-[11px] font-medium text-amber-200"}>
-                  {artifact.review_status === "APPROVED" ? "Approved" : artifact.review_status === "REJECTED" ? "Needs revision" : "Awaiting review"}
-                </span>
               </div>
               <h3 className="mt-3 text-lg font-semibold">{artifact.title}</h3>
               {artifact.provenance?.generated && (
@@ -293,8 +286,6 @@ export function ResearchRoom({
                 </div>
               )}
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-white/55">{artifact.content}</p>
-                </div>
-              )}
               {artifact.provenance?.source_url && (
                 <a
                   href={artifact.provenance.source_url}
