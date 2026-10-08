@@ -86,7 +86,7 @@ export async function POST(request: Request, { params }: Params) {
     const participant = (allParticipants ?? []).find((p) => p.participant_type === "AGENT" && p.agent_id === agent.id);
     if (!participant) continue;
     try {
-      const result = await runAgent({ ...topic, latestMessage: body }, contextPosts, contextArtifacts);
+      const result = await runAgent(agent, { ...topic, latestMessage: body }, contextPosts, contextArtifacts);
       const { data: agentPost, error: agentPostError } = await admin.from("posts").insert({ topic_id: topicId, participant_id: participant.id, body: result.content }).select("id, topic_id, participant_id, body, created_at, updated_at").single();
       if (agentPostError || !agentPost) {
         const errorMessage = agentPostError?.message || "The agent response could not be published.";
