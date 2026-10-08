@@ -70,6 +70,25 @@ export async function POST(_request: Request, { params }: Params) {
     return NextResponse.json({ error: "Add this agent to the topic first." }, { status: 409 });
   }
 
+  const { data: priorAgentPost, error: priorAgentPostError } = await admin
+    .from("posts")
+    .select("id")
+    .eq("topic_id", topicId)
+    .eq("participant_id", agentParticipant.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (priorAgentPostError) {
+    return NextResponse.json({ error: priorAgentPostError.message }, { status: 500 });
+  }
+
+  if (priorAgentPost) {
+    return NextResponse.json(
+      { error: "This agent has already joined the conversation. Follow-up replies are triggered automatically by new human messages." },
+      { status: 409 },
+    );
+  }
+
   const { data: existingPosts, error: postContextError } = await admin
     .from("posts")
     .select("participant_id, body, created_at")
