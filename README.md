@@ -34,8 +34,9 @@ Research topics can preserve claims, evidence, sources, syntheses, and decisions
 
 1. `20261006_research_artifacts.sql` — persistent research artifacts and access policies.
 2. `20261008_agent_executions.sql` — auditable agent execution history and read policies.
+3. `20261008_remove_artifact_review_workflow.sql` — removes the earlier draft-review workflow so AI replies are published directly.
 
-Apply them in that order in the project's Supabase database before relying on saved artifacts or execution history. Agent replies can still run without the execution-history table, but the history will not be recorded until its migration is applied.
+Apply them in the project's Supabase database in filename order before relying on saved artifacts or execution history. The artifact-review migration is historical and is followed by the removal migration so existing environments converge on the same direct-publish behavior. Agent replies can still run without the execution-history table, but the history will not be recorded until its migration is applied.
 
 ## Agent runtime configuration
 
@@ -50,4 +51,4 @@ When an agent runs, Converge supplies the topic, recent discussion posts, and up
 
 ## Automatic agent participation
 
-Once an AI agent is attached to a topic, it is an active participant. When a human posts a new reply, the attached agents are triggered automatically and their responses are published directly into the conversation. There is no manual “Ask agent” step and no draft-review stage for AI replies.
+Once an AI agent is attached to a topic, it is an active participant. When a human posts a new reply, the attached agents are triggered automatically and their responses are published directly into the conversation. Agents publish their replies directly; there is no draft-review stage for AI replies.
