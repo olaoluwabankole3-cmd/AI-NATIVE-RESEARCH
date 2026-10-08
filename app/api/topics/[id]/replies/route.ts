@@ -38,26 +38,77 @@ export async function POST(request: Request, { params }: Params) {
   const { data: humanPost, error: postError } = await admin.from("posts").insert({ topic_id: topicId, participant_id: humanParticipant.id, body }).select("id, topic_id, participant_id, body, created_at, updated_at").single();
   if (postError || !humanPost) return NextResponse.json({ error: postError?.message || "Could not publish your reply." }, { status: 500 });
 
-  const { data: allParticipants } = await admin.from("topic_participants").select("id, participant_type, user_id, agent_id").eq("topic_id", topicId);
-  const attachedAgentIds = (allParticipants ?? []).filter((p) => p.participant_type === "AGENT" && p.agent_id).map((p) => p.agent_id as string);
+  const warnings: string[] = [];
+  const { data: allParticipants, error: allParticipantsError } = await admin
+    .from("topic_participants")
+    .select("id, participant_type, user_id, agent_id")
+    .eq("topic_id", topicId);
+
+  if (allParticipantsError) {
+    return NextResponse.json({
+      humanPost,
+      agentPosts: [],
+      selectedAgentIds: [],
+      failures: [],
+      warnings: ["Your reply was published, but the AI participant list could not be loaded."],
+    });
+  }
+
+  const attachedAgentIds = (allParticipants ?? [])
+    .filter((p) => p.participant_type === "AGENT" && p.agent_id)
+    .map((p) => p.agent_id as string);
   const selectedAgents = selectAgentsForResponse(topic, body, attachedAgentIds, 2);
 
-  const { data: recentPosts } = await admin.from("posts").select("participant_id, body, created_at").eq("topic_id", topicId).order("created_at", { ascending: false }).limit(40);
+  const { data: recentPosts, error: recentPostsError } = await admin
+    .from("posts")
+    .select("participant_id, body, created_at")
+    .eq("topic_id", topicId)
+    .order("created_at", { ascending: false })
+    .limit(40);
+
+  if (recentPostsError) warnings.push("The specialists could not load the full recent conversation.");
   const chronologicalPosts = [...(recentPosts ?? [])].reverse();
   const participantIds = Array.from(new Set(chronologicalPosts.map((post) => post.participant_id)));
-  const { data: participants } = participantIds.length ? await admin.from("topic_participants").select("id, participant_type, user_id, agent_id").in("id", participantIds) : { data: [] };
-  const userIds = Array.from(new Set((participants ?? []).filter((p) => p.participant_type === "HUMAN" && p.user_id).map((p) => p.user_id as string)));
-  const { data: profiles } = userIds.length ? await admin.from("profiles").select("id, username, display_name").in("id", userIds) : { data: [] };
+  const { data: participants, error: participantsError } = participantIds.length
+    ? await admin.from("topic_participants").select("id, participant_type, user_id, agent_id").in("id", participantIds)
+    : { data: [], error: null };
+  if (participantsError) warnings.push("Some conversation author labels could not be resolved.");
+
+  const userIds = Array.from(new Set((participants ?? [])
+    .filter((p) => p.participant_type === "HUMAN" && p.user_id)
+    .map((p) => p.user_id as string)));
+  const { data: profiles, error: profilesError } = userIds.length
+    ? await admin.from("profiles").select("id, username, display_name").in("id", userIds)
+    : { data: [], error: null };
+  if (profilesError) warnings.push("Some human author names could not be resolved.");
+
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p.display_name || p.username || "Human"]));
   const participantMap = new Map((participants ?? []).map((p) => [p.id, p]));
   const contextPosts: Array<{ author: string; body: string }> = chronologicalPosts.map((post) => {
     const participant = participantMap.get(post.participant_id);
-    const author = participant?.participant_type === "AGENT" ? getAgent(participant.agent_id || "")?.name || "AI agent" : profileMap.get(participant?.user_id || "") || "Human";
+    const author = participant?.participant_type === "AGENT"
+      ? getAgent(participant.agent_id || "")?.name || "AI agent"
+      : profileMap.get(participant?.user_id || "") || "Human";
     return { author, body: post.body };
   });
 
-  const { data: artifactRows, error: artifactsError } = await admin.from("research_artifacts").select("id, artifact_type, title, content, created_at, provenance").eq("topic_id", topicId).order("created_at", { ascending: false }).limit(12);
-  const contextArtifacts = artifactsError && missingTable(artifactsError) ? [] as AgentArtifactContext[] : (artifactRows ?? []) as AgentArtifactContext[];
+  if (recentPostsError && contextPosts.length === 0) {
+    contextPosts.push({ author: "Human", body });
+  }
+
+  const { data: artifactRows, error: artifactsError } = await admin
+    .from("research_artifacts")
+    .select("id, artifact_type, title, content, created_at, provenance")
+    .eq("topic_id", topicId)
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  if (artifactsError && !missingTable(artifactsError)) {
+    warnings.push("Saved research artifacts were unavailable to the specialists for this reply.");
+  }
+  const contextArtifacts = artifactsError
+    ? [] as AgentArtifactContext[]
+    : (artifactRows ?? []) as AgentArtifactContext[];
 
   const results: Array<{ agent: Agent; post: unknown }> = [];
   const failures: string[] = [];
@@ -108,5 +159,11 @@ export async function POST(request: Request, { params }: Params) {
     }
   }
 
-  return NextResponse.json({ humanPost, agentPosts: results, selectedAgentIds: selectedAgents.map((agent) => agent.id), failures });
+  return NextResponse.json({
+    humanPost,
+    agentPosts: results,
+    selectedAgentIds: selectedAgents.map((agent) => agent.id),
+    failures,
+    warnings,
+  });
 }
