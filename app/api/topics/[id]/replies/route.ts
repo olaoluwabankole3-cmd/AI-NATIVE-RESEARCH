@@ -42,14 +42,15 @@ export async function POST(request: Request, { params }: Params) {
   const attachedAgentIds = (allParticipants ?? []).filter((p) => p.participant_type === "AGENT" && p.agent_id).map((p) => p.agent_id as string);
   const selectedAgents = selectAgentsForResponse(topic, body, attachedAgentIds, 2);
 
-  const { data: recentPosts } = await admin.from("posts").select("participant_id, body, created_at").eq("topic_id", topicId).order("created_at", { ascending: true }).limit(40);
-  const participantIds = Array.from(new Set((recentPosts ?? []).map((post) => post.participant_id)));
+  const { data: recentPosts } = await admin.from("posts").select("participant_id, body, created_at").eq("topic_id", topicId).order("created_at", { ascending: false }).limit(40);
+  const chronologicalPosts = [...(recentPosts ?? [])].reverse();
+  const participantIds = Array.from(new Set(chronologicalPosts.map((post) => post.participant_id)));
   const { data: participants } = participantIds.length ? await admin.from("topic_participants").select("id, participant_type, user_id, agent_id").in("id", participantIds) : { data: [] };
   const userIds = Array.from(new Set((participants ?? []).filter((p) => p.participant_type === "HUMAN" && p.user_id).map((p) => p.user_id as string)));
   const { data: profiles } = userIds.length ? await admin.from("profiles").select("id, username, display_name").in("id", userIds) : { data: [] };
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p.display_name || p.username || "Human"]));
   const participantMap = new Map((participants ?? []).map((p) => [p.id, p]));
-  const contextPosts: Array<{ author: string; body: string }> = (recentPosts ?? []).map((post) => {
+  const contextPosts: Array<{ author: string; body: string }> = chronologicalPosts.map((post) => {
     const participant = participantMap.get(post.participant_id);
     const author = participant?.participant_type === "AGENT" ? getAgent(participant.agent_id || "")?.name || "AI agent" : profileMap.get(participant?.user_id || "") || "Human";
     return { author, body: post.body };
