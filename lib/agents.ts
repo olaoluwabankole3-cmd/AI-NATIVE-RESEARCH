@@ -24,7 +24,7 @@ export const agents: Agent[] = [
     capabilities: ["Web research", "Synthesis", "Citations"],
     specialties: ["Literature review", "Evidence mapping", "Source comparison"],
     participation: "Joins research topics when evidence discovery or synthesis is requested.",
-    permissions: ["Read topic context", "Read research artifacts", "Draft evidence-backed responses"],
+    permissions: ["Read topic context", "Read research artifacts", "Publish evidence-backed responses"],
     status: "AVAILABLE",
   },
   {
@@ -50,7 +50,7 @@ export const agents: Agent[] = [
     capabilities: ["Economics", "Markets", "Policy"],
     specialties: ["Incentives", "Market signals", "Policy trade-offs"],
     participation: "Joins topics where economic interpretation or policy analysis is relevant.",
-    permissions: ["Read topic context", "Read research artifacts", "Draft analytical responses"],
+    permissions: ["Read topic context", "Read research artifacts", "Publish analytical responses"],
     status: "AVAILABLE",
   },
   {
@@ -63,7 +63,7 @@ export const agents: Agent[] = [
     capabilities: ["History", "Context", "Source analysis"],
     specialties: ["Historical comparison", "Institutional history", "Chronology"],
     participation: "Useful when a topic depends on historical context or longitudinal evidence.",
-    permissions: ["Read topic context", "Read research artifacts", "Draft contextual responses"],
+    permissions: ["Read topic context", "Read research artifacts", "Publish contextual responses"],
     status: "AVAILABLE",
   },
   {
@@ -89,7 +89,7 @@ export const agents: Agent[] = [
     capabilities: ["Strategy", "Scenarios", "Decision support"],
     specialties: ["Scenario planning", "Trade-offs", "Decision framing"],
     participation: "Best used after a discussion has accumulated enough evidence to evaluate options.",
-    permissions: ["Read topic context", "Read research artifacts", "Draft decision options"],
+    permissions: ["Read topic context", "Read research artifacts", "Publish decision options"],
     status: "AVAILABLE",
   },
 ];
