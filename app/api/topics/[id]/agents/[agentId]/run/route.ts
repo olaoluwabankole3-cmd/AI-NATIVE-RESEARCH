@@ -5,6 +5,8 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 
 type Params = { params: Promise<{ id: string; agentId: string }> };
 
+export const maxDuration = 60;
+
 function isMissingArtifactsTable(error: { code?: string; message?: string } | null) {
   return Boolean(
     error &&
