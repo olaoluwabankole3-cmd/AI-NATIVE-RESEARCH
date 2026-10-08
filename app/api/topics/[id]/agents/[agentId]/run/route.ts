@@ -93,12 +93,13 @@ export async function POST(_request: Request, { params }: Params) {
     .from("posts")
     .select("participant_id, body, created_at")
     .eq("topic_id", topicId)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(40);
 
   if (postContextError) return NextResponse.json({ error: postContextError.message }, { status: 500 });
 
-  const participantIds = Array.from(new Set((existingPosts ?? []).map((post) => post.participant_id)));
+  const chronologicalPosts = [...(existingPosts ?? [])].reverse();
+  const participantIds = Array.from(new Set(chronologicalPosts.map((post) => post.participant_id)));
   const { data: participants, error: participantContextError } = participantIds.length
     ? await admin.from("topic_participants").select("id, participant_type, user_id, agent_id").in("id", participantIds)
     : { data: [], error: null };
@@ -121,7 +122,7 @@ export async function POST(_request: Request, { params }: Params) {
 
   const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name || profile.username || "Human"]));
   const participantMap = new Map((participants ?? []).map((participant) => [participant.id, participant]));
-  const contextPosts = (existingPosts ?? []).map((post) => {
+  const contextPosts = chronologicalPosts.map((post) => {
     const participant = participantMap.get(post.participant_id);
     const author = participant?.participant_type === "AGENT"
       ? getAgent(participant.agent_id || "")?.name || "AI agent"
