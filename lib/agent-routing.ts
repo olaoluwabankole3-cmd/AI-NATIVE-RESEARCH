@@ -25,7 +25,7 @@ export function selectAgentsForResponse(
 ): Agent[] {
   const input = words(topic.title + " " + topic.body + " " + latestMessage);
 
-  return agents
+  const ranked = agents
     .filter((agent) => attachedAgentIds.includes(agent.id))
     .map((agent) => {
       const roleWords = words(agent.role);
@@ -34,7 +34,11 @@ export function selectAgentsForResponse(
       const relevance = tokenScore(input, [...roleWords, ...capabilityWords]) * 2 + tokenScore(input, [...specialtyWords]) * 3;
       return { agent, relevance };
     })
-    .sort((a, b) => b.relevance - a.relevance || a.agent.name.localeCompare(b.agent.name))
-    .slice(0, Math.min(limit, attachedAgentIds.length))
-    .map(({ agent }) => agent);
+    .sort((a, b) => b.relevance - a.relevance || a.agent.name.localeCompare(b.agent.name));
+
+  const relevant = ranked.filter((entry) => entry.relevance > 0).slice(0, limit);
+  if (relevant.length > 0) return relevant.map(({ agent }) => agent);
+
+  const fallback = ranked.find(({ agent }) => agent.id === "research-analyst") || ranked[0];
+  return fallback ? [fallback.agent] : [];
 }
