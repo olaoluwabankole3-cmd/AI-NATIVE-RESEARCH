@@ -254,57 +254,69 @@ export default function TopicPage() {
     }
 
     setPosting(true);
+    setAutoResponding(false);
     setMessage("");
 
-    const { data: post, error } = await supabase
-      .from("posts")
-      .insert({
-        topic_id: topic.id,
-        participant_id: currentParticipantId,
-        body: trimmedReply,
-      })
-      .select("id, topic_id, participant_id, body, created_at, updated_at")
-      .single();
+    try {
+      const response = await fetch(`/api/topics/${topic.id}/replies`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: trimmedReply }),
+      });
+      const payload = await response.json();
 
-    if (error || !post) {
-      setMessage(error?.message ?? "Could not publish your reply.");
-      setPosting(false);
-      return;
-    }
+      if (!response.ok || !payload.humanPost) {
+        setMessage(payload.error || "Could not publish your reply.");
+        return;
+      }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const participantMap = new Map(
+        topicParticipants.map((participant) => [participant.id, participant]),
+      );
 
-    const { data: profile } = user
-      ? await supabase
-          .from("profiles")
-          .select("id, username, display_name, avatar_url")
-          .eq("id", user.id)
-          .single()
-      : { data: undefined };
-
-    setPosts((current) => [
-      ...current,
-      {
-        ...post,
-        participant: {
-          id: currentParticipantId,
-          participant_type: "HUMAN",
-          user_id: user?.id ?? null,
-          agent_id: null,
+      setPosts((current) => [
+        ...current,
+        {
+          ...payload.humanPost,
+          participant: participantMap.get(payload.humanPost.participant_id),
+          profile: undefined,
+          agent: undefined,
         },
-        profile: profile ?? undefined,
-        agent: undefined,
-      },
-    ]);
+        ...(payload.agentPosts ?? []).map(
+          (entry: { agent: Agent; post: Post }) => ({
+            ...entry.post,
+            participant: participantMap.get(entry.post.participant_id),
+            profile: undefined,
+            agent: entry.agent,
+          }),
+        ),
+      ]);
 
-    setReply("");
+      setReply("");
 
-    // The server has already published this human reply. It now selects and
-    // triggers the most relevant attached AI specialists automatically.
-    setPosting(false);
-    void triggerAutomaticAgentReplies();
+      const failures = payload.failures ?? [];
+      const agentCount = payload.agentPosts?.length ?? 0;
+
+      if (failures.length > 0) {
+        setMessage(
+          agentCount
+            ? `Your reply is live and the relevant AI specialists responded. Some were unavailable: ${failures.join(", ")}.`
+            : `Your reply is live, but the AI specialists could not respond: ${failures.join(", ")}.`,
+        );
+      } else if (agentCount > 0) {
+        setMessage(
+          agentCount === 1
+            ? `${payload.agentPosts[0].agent.name} responded automatically.`
+            : `${agentCount} AI specialists responded automatically.`,
+        );
+      } else {
+        setMessage("Your reply is live. No attached AI specialist was selected for this message.");
+      }
+    } catch {
+      setMessage("The automatic AI response service could not be reached.");
+    } finally {
+      setPosting(false);
+    }
   }
 
   async function handleAddAgent(agent: Agent) {
@@ -345,7 +357,26 @@ export default function TopicPage() {
     setTopicParticipants((current) => [...current, createdParticipant]);
     setShowAgentPicker(false);
     setAddingAgentId(null);
-    void triggerAutomaticAgentReplies([agent.id], new Map([[agent.id, createdParticipant]]));
+    try {
+      const response = await fetch(`/api/topics/${topic.id}/agents/${agent.id}/run`, { method: "POST" });
+      const payload = await response.json();
+      if (response.ok && payload.post) {
+        setPosts((current) => [
+          ...current,
+          {
+            ...payload.post,
+            participant: createdParticipant,
+            profile: undefined,
+            agent,
+          },
+        ]);
+        setMessage(`${agent.name} joined the topic and responded automatically.`);
+      } else {
+        setMessage(`${agent.name} joined the topic, but could not respond yet.`);
+      }
+    } catch {
+      setMessage(`${agent.name} joined the topic, but its automatic response could not be reached.`);
+    }
   }
 
   async function triggerAutomaticAgentReplies() {
