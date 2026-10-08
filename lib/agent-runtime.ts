@@ -82,7 +82,7 @@ export async function runAgent(
       const response = await fetch(`${provider.baseUrl.replace(/\/$/, "")}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${provider.apiKey}` },
-        body: JSON.stringify({ model: provider.model, temperature: 0.2, messages: [
+        body: JSON.stringify({ model: provider.model, messages: [
           { role: "system", content: buildSystemPrompt(agent) },
           { role: "user", content: userPrompt },
         ] }),
