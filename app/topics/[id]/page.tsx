@@ -494,7 +494,7 @@ export default function TopicPage() {
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold">Human discussion</h2>
                 <p className="mt-2 text-sm text-white/40">
-                  Attached AI participants respond automatically when the discussion changes. No manual “Ask agent” step is required.
+                  Attached AI participants respond automatically when the discussion changes. Once they are added, their replies are published directly.
                 </p>
               </div>
 
