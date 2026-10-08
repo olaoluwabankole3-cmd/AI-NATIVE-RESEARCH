@@ -60,12 +60,14 @@ export function ResearchRoom({
   const [sourceUrl, setSourceUrl] = useState("");
   const [message, setMessage] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [reviewingArtifactId, setReviewingArtifactId] = useState<string | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
 
   async function loadArtifacts() {
     setLoading(true);
     const { data, error } = await supabase
       .from("research_artifacts")
-      .select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, created_at")
+      .select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, review_status, reviewed_by, reviewed_at, review_note, created_at")
       .eq("topic_id", topicId)
       .order("created_at", { ascending: false });
 
@@ -279,6 +281,13 @@ export function ResearchRoom({
                   {artifact.artifact_type}
                 </span>
                 <span className="text-xs text-white/30">{formatDate(artifact.created_at)}</span>
+                <span className={artifact.review_status === "APPROVED"
+                  ? "rounded-full bg-emerald-300/10 px-2.5 py-1 text-[11px] font-medium text-emerald-200"
+                  : artifact.review_status === "REJECTED"
+                    ? "rounded-full bg-red-300/10 px-2.5 py-1 text-[11px] font-medium text-red-200"
+                    : "rounded-full bg-amber-300/10 px-2.5 py-1 text-[11px] font-medium text-amber-200"}>
+                  {artifact.review_status === "APPROVED" ? "Approved" : artifact.review_status === "REJECTED" ? "Needs revision" : "Awaiting review"}
+                </span>
               </div>
               <h3 className="mt-3 text-lg font-semibold">{artifact.title}</h3>
               {artifact.provenance?.generated && (
@@ -297,6 +306,53 @@ export function ResearchRoom({
                 </div>
               )}
               <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-white/55">{artifact.content}</p>
+              {artifact.review_note && (
+                <div className="mt-4 rounded-xl border border-white/10 bg-black/10 p-3">
+                  <p className="text-xs font-medium text-white/55">Review note</p>
+                  <p className="mt-1 text-xs leading-5 text-white/40">{artifact.review_note}</p>
+                </div>
+              )}
+              {artifact.review_status !== "APPROVED" && (
+                <div className="mt-4 border-t border-white/10 pt-4">
+                  {reviewingArtifactId === artifact.id ? (
+                    <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                      <input
+                        value={reviewNote}
+                        onChange={(event) => setReviewNote(event.target.value)}
+                        maxLength={2000}
+                        placeholder="Optional review note"
+                        className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs outline-none focus:border-emerald-300/50"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={reviewingArtifactId !== null}
+                          onClick={() => void handleReview(artifact.id, "APPROVED")}
+                          className="rounded-lg bg-emerald-300 px-3 py-2 text-xs font-semibold text-[#07110f] disabled:opacity-50"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          disabled={reviewingArtifactId !== null}
+                          onClick={() => void handleReview(artifact.id, "REJECTED")}
+                          className="rounded-lg border border-red-300/20 px-3 py-2 text-xs font-medium text-red-200 disabled:opacity-50"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setReviewingArtifactId(artifact.id); setReviewNote(artifact.review_note || ""); }}
+                      className="text-xs font-medium text-emerald-300 hover:text-emerald-200"
+                    >
+                      Review artifact →
+                    </button>
+                  )}
+                </div>
+              )}
               {artifact.provenance?.source_url && (
                 <a
                   href={artifact.provenance.source_url}
