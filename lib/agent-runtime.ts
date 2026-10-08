@@ -57,7 +57,7 @@ export async function runAgent(
   const providers = getProviders();
   if (!providers.length) throw new Error("No AI provider is configured. Add at least one agent provider API key.");
 
-  const conversation = posts.length ? posts.map((post) => `${post.author}: ${post.body}`).join("\n\n") : "No replies yet.";
+  const conversation = posts.length ? posts.map((post) => `${post.author}: ${post.body.slice(0, 2500)}`).join("\n\n") : "No replies yet.";
   const artifactLimit = artifacts.slice(0, 12);
   const artifactContext = artifactLimit.length ? artifactLimit.map((artifact) => {
     const sourceUrl = artifact.provenance?.source_url ? `\nSource URL: ${artifact.provenance.source_url}` : "";
