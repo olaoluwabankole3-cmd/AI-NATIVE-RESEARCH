@@ -86,9 +86,11 @@ export default function TopicPage() {
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
 
-  async function loadTopic() {
-    setLoading(true);
-    setMessage("");
+  async function loadTopic(options: { silent?: boolean } = {}) {
+    if (!options.silent) {
+      setLoading(true);
+      setMessage("");
+    }
 
     const {
       data: { user },
@@ -237,6 +239,35 @@ export default function TopicPage() {
     }
   }, [params.id]);
 
+  useEffect(() => {
+    if (!params.id) return;
+
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const channel = supabase
+      .channel(`topic-posts-${params.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "posts",
+          filter: `topic_id=eq.${params.id}`,
+        },
+        () => {
+          if (refreshTimer) clearTimeout(refreshTimer);
+          refreshTimer = setTimeout(() => {
+            void loadTopic({ silent: true });
+          }, 250);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      void supabase.removeChannel(channel);
+    };
+  }, [params.id]);
+
   async function handleReply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -272,8 +303,7 @@ export default function TopicPage() {
         topicParticipants.map((participant) => [participant.id, participant]),
       );
 
-      setPosts((current) => [
-        ...current,
+      const incomingPosts: PostView[] = [
         {
           ...payload.humanPost,
           participant: participantMap.get(payload.humanPost.participant_id),
@@ -288,7 +318,13 @@ export default function TopicPage() {
             agent: entry.agent,
           }),
         ),
-      ]);
+      ];
+
+      setPosts((current) => {
+        const existingIds = new Set(current.map((post) => post.id));
+        return [...current, ...incomingPosts.filter((post) => !existingIds.has(post.id))]
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      });
 
       setReply("");
 
@@ -359,15 +395,19 @@ export default function TopicPage() {
       const response = await fetch(`/api/topics/${topic.id}/agents/${agent.id}/run`, { method: "POST" });
       const payload = await response.json();
       if (response.ok && payload.post) {
-        setPosts((current) => [
-          ...current,
-          {
-            ...payload.post,
-            participant: createdParticipant,
-            profile: undefined,
-            agent,
-          },
-        ]);
+        setPosts((current) =>
+          current.some((post) => post.id === payload.post.id)
+            ? current
+            : [
+                ...current,
+                {
+                  ...payload.post,
+                  participant: createdParticipant,
+                  profile: undefined,
+                  agent,
+                },
+              ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()),
+        );
         setMessage(`${agent.name} joined the topic and responded automatically.`);
       } else {
         setMessage(`${agent.name} joined the topic, but could not respond yet.`);
