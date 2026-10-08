@@ -85,7 +85,6 @@ export default function TopicPage() {
   const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
-  const [autoResponding, setAutoResponding] = useState(false);
 
   async function loadTopic() {
     setLoading(true);
@@ -254,7 +253,6 @@ export default function TopicPage() {
     }
 
     setPosting(true);
-    setAutoResponding(false);
     setMessage("");
 
     try {
@@ -630,10 +628,10 @@ export default function TopicPage() {
               <div className="mt-4 flex justify-end">
                 <button
                   type="submit"
-                  disabled={posting || autoResponding || !reply.trim()}
+                  disabled={posting || !reply.trim()}
                   className="rounded-xl bg-emerald-300 px-5 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {posting ? "Posting…" : autoResponding ? "AI responding…" : "Post reply"}
+                  {posting ? "Posting & getting AI replies…" : "Post reply"}
                 </button>
               </div>
             </form>
