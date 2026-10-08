@@ -43,9 +43,11 @@ function formatDate(value: string) {
 export function ResearchRoom({
   topicId,
   participantId,
+  researchAnalystParticipating,
 }: {
   topicId: string;
   participantId: string;
+  researchAnalystParticipating: boolean;
 }) {
   const supabase = createClient();
   const [artifacts, setArtifacts] = useState<ResearchArtifact[]>([]);
@@ -170,10 +172,10 @@ export function ResearchRoom({
           <button
             type="button"
             onClick={() => void handleGenerateSynthesis()}
-            disabled={generating}
+            disabled={generating || !researchAnalystParticipating}
             className="rounded-xl border border-emerald-300/25 bg-emerald-300/[0.05] px-4 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-300/10 disabled:opacity-50"
           >
-            {generating ? "Generating…" : "Generate synthesis"}
+            {generating ? "Generating…" : researchAnalystParticipating ? "Generate synthesis" : "Add Research Analyst first"}
           </button>
           <button
             type="button"
