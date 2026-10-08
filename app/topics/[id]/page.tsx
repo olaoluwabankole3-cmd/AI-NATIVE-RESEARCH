@@ -440,7 +440,15 @@ export default function TopicPage() {
           </article>
 
           {topic.type === "RESEARCH" && currentParticipantId && (
-            <ResearchRoom topicId={topic.id} participantId={currentParticipantId} />
+            <ResearchRoom
+              topicId={topic.id}
+              participantId={currentParticipantId}
+              researchAnalystParticipating={topicParticipants.some(
+                (participant) =>
+                  participant.participant_type === "AGENT" &&
+                  participant.agent_id === "research-analyst",
+              )}
+            />
           )}
 
           <section className="mt-12">
