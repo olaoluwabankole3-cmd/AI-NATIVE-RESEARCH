@@ -379,61 +379,7 @@ export default function TopicPage() {
     }
   }
 
-  async function triggerAutomaticAgentReplies() {
-    if (!topic || autoResponding) return;
 
-    setAutoResponding(true);
-    setMessage("The AI participants are responding…");
-
-    try {
-      const response = await fetch(`/api/topics/${topic.id}/replies`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: reply.trim() }),
-      });
-      const payload = await response.json();
-
-      if (!response.ok) {
-        setMessage(payload.error || "The AI participants could not respond.");
-        return;
-      }
-
-      const participantMap = new Map(
-        topicParticipants.map((participant) => [participant.id, participant]),
-      );
-
-      const newAgentPosts = (payload.agentPosts ?? []).map(
-        (entry: { agent: Agent; post: Post }) => ({
-          ...entry.post,
-          participant: participantMap.get(entry.post.participant_id),
-          profile: undefined,
-          agent: entry.agent,
-        }),
-      );
-
-      setPosts((current) => [...current, ...newAgentPosts]);
-
-      if (payload.failures?.length) {
-        setMessage(
-          newAgentPosts.length
-            ? `The relevant AI specialists responded. Some were unavailable: ${payload.failures.join(", ")}.`
-            : "The AI participants could not respond. Check the agent runtime configuration.",
-        );
-      } else if (newAgentPosts.length) {
-        setMessage(
-          newAgentPosts.length === 1
-            ? `${newAgentPosts[0].agent.name} responded automatically.`
-            : `${newAgentPosts.length} AI specialists responded automatically.`,
-        );
-      } else {
-        setMessage("Your reply was posted. No attached AI specialist was selected for this message.");
-      }
-    } catch {
-      setMessage("The automatic AI response service could not be reached.");
-    } finally {
-      setAutoResponding(false);
-    }
-  }
 
   const participantCount = useMemo(() => {
     return new Set(topicParticipants.map((participant) => participant.id)).size;
