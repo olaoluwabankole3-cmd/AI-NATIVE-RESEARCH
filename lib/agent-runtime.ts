@@ -50,7 +50,7 @@ export function getAgent(agentId: string) { return agents.find((agent) => agent.
 
 export async function runAgent(
   agent: Agent,
-  topic: { title: string; body: string; type?: string },
+  topic: { title: string; body: string; type?: string; latestMessage?: string },
   posts: Array<{ author: string; body: string }>,
   artifacts: AgentArtifactContext[] = [],
 ): Promise<RuntimeResult> {
@@ -69,6 +69,7 @@ export async function runAgent(
     `Topic type: ${topic.type || "Discussion"}`,
     `Research topic: ${topic.title}`,
     `Topic description:\n${topic.body}`,
+    `Latest human contribution to address:\n${topic.latestMessage || posts[posts.length - 1]?.body || topic.body}`,
     `Conversation so far:\n${conversation}`,
     `Saved research artifacts (newest first, up to 12):\n${artifactContext}`,
     "",
