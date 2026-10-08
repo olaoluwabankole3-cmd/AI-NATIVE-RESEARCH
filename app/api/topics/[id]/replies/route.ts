@@ -4,6 +4,8 @@ import { getAgent, runAgent, type AgentArtifactContext } from "@/lib/agent-runti
 import { selectAgentsForResponse } from "@/lib/agent-routing";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
+export const maxDuration = 60;
+
 type Params = { params: Promise<{ id: string }> };
 
 function missingTable(error: { code?: string; message?: string } | null) {
@@ -38,7 +40,7 @@ export async function POST(request: Request, { params }: Params) {
 
   const { data: allParticipants } = await admin.from("topic_participants").select("id, participant_type, user_id, agent_id").eq("topic_id", topicId);
   const attachedAgentIds = (allParticipants ?? []).filter((p) => p.participant_type === "AGENT" && p.agent_id).map((p) => p.agent_id as string);
-  const selectedAgents = selectAgentsForResponse(topic, body, attachedAgentIds, 3);
+  const selectedAgents = selectAgentsForResponse(topic, body, attachedAgentIds, 2);
 
   const { data: recentPosts } = await admin.from("posts").select("participant_id, body, created_at").eq("topic_id", topicId).order("created_at", { ascending: true }).limit(40);
   const participantIds = Array.from(new Set((recentPosts ?? []).map((post) => post.participant_id)));
