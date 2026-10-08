@@ -185,6 +185,11 @@ export function ResearchRoom({
             {showForm ? "Close" : "Add artifact"}
           </button>
         </div>
+        {!researchAnalystParticipating && (
+          <p className="mt-3 text-xs leading-5 text-white/35">
+            Add the Research Analyst from the conversation section below before generating an AI synthesis.
+          </p>
+        )}
       </div>
 
       {showForm && (
