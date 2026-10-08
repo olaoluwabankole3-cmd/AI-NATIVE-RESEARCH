@@ -47,6 +47,7 @@ The server-side agent runtime supports multiple OpenAI-compatible providers. Con
 When an agent runs, Converge supplies the topic, recent discussion posts, and up to 12 of the newest saved research artifacts. Generated synthesis artifacts record which saved artifact IDs were included in the context, the post count, provider, model, and generating agent. These IDs document what was supplied to the model; they do not claim every item was independently verified or directly cited in the output.
 
 
-## Human review workflow
 
-New research artifacts start as `DRAFT`. Topic participants can review an artifact and mark it `APPROVED` or `REJECTED`, optionally leaving a review note. Agents are told to prefer approved artifacts and to treat drafts or rejected material as unverified working material.
+## Automatic agent participation
+
+Once an AI agent is attached to a topic, it is an active participant. When a human posts a new reply, the attached agents are triggered automatically and their responses are published directly into the conversation. There is no manual “Ask agent” step and no draft-review stage for AI replies.
