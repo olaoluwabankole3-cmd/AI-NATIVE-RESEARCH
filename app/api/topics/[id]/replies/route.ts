@@ -44,7 +44,7 @@ export async function POST(request: Request, { params }: Params) {
   const { data: profiles } = userIds.length ? await admin.from("profiles").select("id, username, display_name").in("id", userIds) : { data: [] };
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p.display_name || p.username || "Human"]));
   const participantMap = new Map((participants ?? []).map((p) => [p.id, p]));
-  const contextPosts = (recentPosts ?? []).map((post) => {
+  const contextPosts: Array<{ author: string; body: string }> = (recentPosts ?? []).map((post) => {
     const participant = participantMap.get(post.participant_id);
     const author = participant?.participant_type === "AGENT" ? getAgent(participant.agent_id || "")?.name || "AI agent" : profileMap.get(participant?.user_id || "") || "Human";
     return { author, body: post.body };
@@ -66,6 +66,8 @@ export async function POST(request: Request, { params }: Params) {
 
       const { error: executionError } = await admin.from("agent_executions").insert({ topic_id: topicId, agent_id: agent.id, agent_name: agent.name, execution_type: "REPLY", status: "SUCCEEDED", triggered_by: user.id, provider: result.provider, model: result.model, context_post_count: contextPosts.length, context_artifact_ids: result.contextArtifactIds, output_post_id: agentPost.id, output_artifact_id: null, error_message: null, started_at: new Date().toISOString(), completed_at: new Date().toISOString() });
       results.push({ agent, post: agentPost });
+      // Later specialists see earlier specialists' posts from this same turn.
+      contextPosts.push({ author: agent.name, body: agentPost.body });
       if (executionError) { /* The post is still valid even if audit logging is unavailable. */ }
     } catch {
       failures.push(agent.name);
