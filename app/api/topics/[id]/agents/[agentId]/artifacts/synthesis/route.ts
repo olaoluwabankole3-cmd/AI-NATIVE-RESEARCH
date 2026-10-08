@@ -5,6 +5,8 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 
 type Params = { params: Promise<{ id: string; agentId: string }> };
 
+export const maxDuration = 60;
+
 export async function POST(_request: Request, { params }: Params) {
   const { id: topicId, agentId } = await params;
   const agent = getAgent(agentId);
