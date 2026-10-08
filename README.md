@@ -36,8 +36,9 @@ Research topics can preserve claims, evidence, sources, syntheses, and decisions
 2. `20261008_agent_executions.sql` — auditable agent execution history and read policies.
 3. `20261008_artifact_review.sql` and `20261008_remove_artifact_review_workflow.sql` — historical migration pair that ultimately leaves no artifact draft-review workflow.
 4. `20261008_enable_topic_post_realtime.sql` — enables realtime insert events for topic posts when Supabase Realtime is available.
+5. `20261009_topic_reply_idempotency.sql` — adds request IDs and source-post links so retrying a reply does not create duplicate human posts or duplicate automatic agent replies.
 
-Apply them in the project's Supabase database in filename order before relying on saved artifacts or execution history. The artifact-review migration is historical and is followed by the removal migration so existing environments converge on the same direct-publish behavior. Agent replies can still run without the execution-history table, but the history will not be recorded until its migration is applied.
+Apply them in the project's Supabase database in filename order. Apply the latest migration before testing automatic replies; it adds the columns and unique indexes that make retried requests safe. The artifact-review migration is historical and is followed by the removal migration so existing environments converge on the same direct-publish behavior. Agent replies can still run without the execution-history table, but the history will not be recorded until its migration is applied.
 
 ## Agent runtime configuration
 

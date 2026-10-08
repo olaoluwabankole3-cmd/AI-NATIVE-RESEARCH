@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
@@ -73,6 +73,7 @@ function initials(profile?: Profile) {
 export default function TopicPage() {
   const params = useParams<{ id: string }>();
   const supabase = createClient();
+  const replyRequestRef = useRef<{ body: string; id: string } | null>(null);
 
   const [topic, setTopic] = useState<Topic | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
@@ -289,6 +290,11 @@ export default function TopicPage() {
       return;
     }
 
+    const requestId = replyRequestRef.current?.body === trimmedReply
+      ? replyRequestRef.current.id
+      : crypto.randomUUID();
+    replyRequestRef.current = { body: trimmedReply, id: requestId };
+
     setPosting(true);
     setMessage("");
 
@@ -296,7 +302,7 @@ export default function TopicPage() {
       const response = await fetch(`/api/topics/${topic.id}/replies`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: trimmedReply }),
+        body: JSON.stringify({ body: trimmedReply, requestId }),
       });
       const payload = await response.json();
 
@@ -332,6 +338,7 @@ export default function TopicPage() {
           .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       });
 
+      if (replyRequestRef.current?.id === requestId) replyRequestRef.current = null;
       setReply("");
 
       const failures = payload.failures ?? [];
@@ -363,7 +370,7 @@ export default function TopicPage() {
           : "info";
       showMessage(statusMessage, statusTone);
     } catch {
-      showMessage("The request did not finish. Your post may already be live; refresh the topic before retrying.", "info");
+      showMessage("The request did not finish. You can retry safely; Converge will reuse the original post if it was already saved.", "info");
     } finally {
       setPosting(false);
     }
@@ -670,6 +677,7 @@ export default function TopicPage() {
               </div>
 
               <textarea
+                disabled={posting}
                 value={reply}
                 onChange={(event) => setReply(event.target.value)}
                 rows={5}
