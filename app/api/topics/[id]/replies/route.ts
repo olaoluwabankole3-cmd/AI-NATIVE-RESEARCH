@@ -133,6 +133,7 @@ export async function POST(request: Request, { params }: Params) {
       started_at: new Date().toISOString(),
       completed_at: new Date().toISOString(),
     });
+    if (error) warnings.push("An agent failure could not be recorded in execution history.");
     return !error;
   }
 
@@ -153,7 +154,7 @@ export async function POST(request: Request, { params }: Params) {
       results.push({ agent, post: agentPost });
       // Later specialists see earlier specialists' posts from this same turn.
       contextPosts.push({ author: agent.name, body: agentPost.body });
-      if (executionError) { /* The post is still valid even if audit logging is unavailable. */ }
+      if (executionError) warnings.push(`The reply from ${agent.name} was published, but its execution history could not be saved.`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Agent execution failed.";
       await recordFailedExecution(agent, errorMessage);
