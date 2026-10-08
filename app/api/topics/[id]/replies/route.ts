@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getAgent, runAgent, type AgentArtifactContext } from "@/lib/agent-runtime";
+import type { Agent } from "@/lib/agents";
 import { selectAgentsForResponse } from "@/lib/agent-routing";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
@@ -24,6 +25,7 @@ export async function POST(request: Request, { params }: Params) {
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  const userId = user.id;
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) return NextResponse.json({ error: "Server runtime is not configured: SUPABASE_SERVICE_ROLE_KEY is missing." }, { status: 503 });
@@ -32,7 +34,7 @@ export async function POST(request: Request, { params }: Params) {
   const { data: topic, error: topicError } = await admin.from("topics").select("id, title, body, type").eq("id", topicId).single();
   if (topicError || !topic) return NextResponse.json({ error: "Topic not found." }, { status: 404 });
 
-  const { data: humanParticipant } = await admin.from("topic_participants").select("id").eq("topic_id", topicId).eq("participant_type", "HUMAN").eq("user_id", user.id).maybeSingle();
+  const { data: humanParticipant } = await admin.from("topic_participants").select("id").eq("topic_id", topicId).eq("participant_type", "HUMAN").eq("user_id", userId).maybeSingle();
   if (!humanParticipant) return NextResponse.json({ error: "Join the topic before replying." }, { status: 403 });
 
   const { data: humanPost, error: postError } = await admin.from("posts").insert({ topic_id: topicId, participant_id: humanParticipant.id, body }).select("id, topic_id, participant_id, body, created_at, updated_at").single();
@@ -120,7 +122,7 @@ export async function POST(request: Request, { params }: Params) {
       agent_name: agent.name,
       execution_type: "REPLY",
       status: "FAILED",
-      triggered_by: user.id,
+      triggered_by: userId,
       provider: null,
       model: null,
       context_post_count: contextPosts.length,
@@ -147,7 +149,7 @@ export async function POST(request: Request, { params }: Params) {
         continue;
       }
 
-      const { error: executionError } = await admin.from("agent_executions").insert({ topic_id: topicId, agent_id: agent.id, agent_name: agent.name, execution_type: "REPLY", status: "SUCCEEDED", triggered_by: user.id, provider: result.provider, model: result.model, context_post_count: contextPosts.length, context_artifact_ids: result.contextArtifactIds, output_post_id: agentPost.id, output_artifact_id: null, error_message: null, started_at: new Date().toISOString(), completed_at: new Date().toISOString() });
+      const { error: executionError } = await admin.from("agent_executions").insert({ topic_id: topicId, agent_id: agent.id, agent_name: agent.name, execution_type: "REPLY", status: "SUCCEEDED", triggered_by: userId, provider: result.provider, model: result.model, context_post_count: contextPosts.length, context_artifact_ids: result.contextArtifactIds, output_post_id: agentPost.id, output_artifact_id: null, error_message: null, started_at: new Date().toISOString(), completed_at: new Date().toISOString() });
       results.push({ agent, post: agentPost });
       // Later specialists see earlier specialists' posts from this same turn.
       contextPosts.push({ author: agent.name, body: agentPost.body });
