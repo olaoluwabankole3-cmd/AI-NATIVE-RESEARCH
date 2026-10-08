@@ -300,13 +300,11 @@ export default function TopicPage() {
     ]);
 
     setReply("");
+
+    // The server has already published this human reply. It now selects and
+    // triggers the most relevant attached AI specialists automatically.
     setPosting(false);
-
-    const participatingAgentIds = topicParticipants
-      .filter((participant) => participant.participant_type === "AGENT" && participant.agent_id)
-      .map((participant) => participant.agent_id as string);
-
-    void triggerAutomaticAgentReplies(participatingAgentIds);
+    void triggerAutomaticAgentReplies();
   }
 
   async function handleAddAgent(agent: Agent) {
@@ -350,70 +348,61 @@ export default function TopicPage() {
     void triggerAutomaticAgentReplies([agent.id], new Map([[agent.id, createdParticipant]]));
   }
 
-  async function triggerAutomaticAgentReplies(agentIds: string[], participantOverrides = new Map<string, TopicParticipant>()) {
-    if (!topic || autoResponding || agentIds.length === 0) return;
+  async function triggerAutomaticAgentReplies() {
+    if (!topic || autoResponding) return;
 
     setAutoResponding(true);
-    setMessage(
-      agentIds.length === 1
-        ? "The specialist is responding…"
-        : `The ${agentIds.length} specialists are responding…`,
-    );
+    setMessage("The AI participants are responding…");
 
-    const failures: string[] = [];
+    try {
+      const response = await fetch(`/api/topics/${topic.id}/replies`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: reply.trim() }),
+      });
+      const payload = await response.json();
 
-    for (const agentId of agentIds) {
-      const agent = agents.find((item) => item.id === agentId);
-      const participant =
-        participantOverrides.get(agentId) ||
-        topicParticipants.find(
-          (item) => item.participant_type === "AGENT" && item.agent_id === agentId,
-        );
-
-      if (!agent || !participant) continue;
-
-      try {
-        const response = await fetch(`/api/topics/${topic.id}/agents/${agent.id}/run`, {
-          method: "POST",
-        });
-        const payload = await response.json();
-
-        if (!response.ok || !payload.post) {
-          failures.push(agent.name);
-          continue;
-        }
-
-        setPosts((current) => [
-          ...current,
-          {
-            ...payload.post,
-            participant,
-            profile: undefined,
-            agent,
-          },
-        ]);
-      } catch {
-        failures.push(agent.name);
+      if (!response.ok) {
+        setMessage(payload.error || "The AI participants could not respond.");
+        return;
       }
-    }
 
-    if (failures.length > 0) {
-      setMessage(
-        failures.length === agentIds.length
-          ? "The AI participants could not respond. Check the agent runtime configuration."
-          : `Some AI participants could not respond: ${failures.join(", ")}.`,
+      const participantMap = new Map(
+        topicParticipants.map((participant) => [participant.id, participant]),
       );
-    } else {
-      setMessage(
-        agentIds.length === 1
-          ? `${agents.find((item) => item.id === agentIds[0])?.name || "The AI specialist"} responded automatically.`
-          : `${agentIds.length} AI participants responded automatically.`,
-      );
-    }
 
-    setAutoResponding(false);
+      const newAgentPosts = (payload.agentPosts ?? []).map(
+        (entry: { agent: Agent; post: Post }) => ({
+          ...entry.post,
+          participant: participantMap.get(entry.post.participant_id),
+          profile: undefined,
+          agent: entry.agent,
+        }),
+      );
+
+      setPosts((current) => [...current, ...newAgentPosts]);
+
+      if (payload.failures?.length) {
+        setMessage(
+          newAgentPosts.length
+            ? `The relevant AI specialists responded. Some were unavailable: ${payload.failures.join(", ")}.`
+            : "The AI participants could not respond. Check the agent runtime configuration.",
+        );
+      } else if (newAgentPosts.length) {
+        setMessage(
+          newAgentPosts.length === 1
+            ? `${newAgentPosts[0].agent.name} responded automatically.`
+            : `${newAgentPosts.length} AI specialists responded automatically.`,
+        );
+      } else {
+        setMessage("Your reply was posted. No attached AI specialist was selected for this message.");
+      }
+    } catch {
+      setMessage("The automatic AI response service could not be reached.");
+    } finally {
+      setAutoResponding(false);
+    }
   }
-
 
   const participantCount = useMemo(() => {
     return new Set(topicParticipants.map((participant) => participant.id)).size;
