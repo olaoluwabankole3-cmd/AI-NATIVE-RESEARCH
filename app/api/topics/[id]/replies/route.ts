@@ -15,6 +15,9 @@ export async function POST(request: Request, { params }: Params) {
   const payload = (await request.json().catch(() => null)) as { body?: string } | null;
   const body = payload?.body?.trim() || "";
   if (!body) return NextResponse.json({ error: "Reply body is required." }, { status: 400 });
+  if (body.length > 12000) {
+    return NextResponse.json({ error: "Replies must be 12,000 characters or fewer." }, { status: 413 });
+  }
 
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
@@ -56,20 +59,48 @@ export async function POST(request: Request, { params }: Params) {
   const results: Array<{ agent: Agent; post: unknown }> = [];
   const failures: string[] = [];
 
+  async function recordFailedExecution(agent: Agent, errorMessage: string) {
+    const { error } = await admin.from("agent_executions").insert({
+      topic_id: topicId,
+      agent_id: agent.id,
+      agent_name: agent.name,
+      execution_type: "REPLY",
+      status: "FAILED",
+      triggered_by: user.id,
+      provider: null,
+      model: null,
+      context_post_count: contextPosts.length,
+      context_artifact_ids: contextArtifacts.map((artifact) => artifact.id),
+      output_post_id: null,
+      output_artifact_id: null,
+      error_message: errorMessage,
+      started_at: new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+    });
+    return !error;
+  }
+
   for (const agent of selectedAgents) {
     const participant = (allParticipants ?? []).find((p) => p.participant_type === "AGENT" && p.agent_id === agent.id);
     if (!participant) continue;
     try {
       const result = await runAgent(agent, topic, contextPosts, contextArtifacts);
       const { data: agentPost, error: agentPostError } = await admin.from("posts").insert({ topic_id: topicId, participant_id: participant.id, body: result.content }).select("id, topic_id, participant_id, body, created_at, updated_at").single();
-      if (agentPostError || !agentPost) { failures.push(agent.name); continue; }
+      if (agentPostError || !agentPost) {
+        const errorMessage = agentPostError?.message || "The agent response could not be published.";
+        await recordFailedExecution(agent, errorMessage);
+        failures.push(agent.name);
+        continue;
+      }
 
       const { error: executionError } = await admin.from("agent_executions").insert({ topic_id: topicId, agent_id: agent.id, agent_name: agent.name, execution_type: "REPLY", status: "SUCCEEDED", triggered_by: user.id, provider: result.provider, model: result.model, context_post_count: contextPosts.length, context_artifact_ids: result.contextArtifactIds, output_post_id: agentPost.id, output_artifact_id: null, error_message: null, started_at: new Date().toISOString(), completed_at: new Date().toISOString() });
       results.push({ agent, post: agentPost });
       // Later specialists see earlier specialists' posts from this same turn.
       contextPosts.push({ author: agent.name, body: agentPost.body });
       if (executionError) { /* The post is still valid even if audit logging is unavailable. */ }
-    } catch {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Agent execution failed.";
+      await recordFailedExecution(agent, errorMessage);
       failures.push(agent.name);
     }
   }
