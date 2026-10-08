@@ -149,7 +149,7 @@ export async function POST(_request: Request, { params }: Params) {
       context_artifact_ids: result.contextArtifactIds,
       context_post_count: contextPosts.length,
     },
-  }).select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, created_at").single();
+  }).select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, review_status, reviewed_by, reviewed_at, review_note, created_at").single();
 
   if (artifactError || !artifact) {
     const errorMessage = artifactError?.message || "Synthesis was generated but could not be saved.";
