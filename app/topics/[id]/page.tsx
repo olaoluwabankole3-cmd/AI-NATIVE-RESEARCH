@@ -358,7 +358,13 @@ export default function TopicPage() {
 
       setShowAgentPicker(false);
       await loadTopic();
-      setMessage(`${agent.name} responded using ${payload.provider}.`);
+      const contextNote = payload.contextArtifactCount
+        ? ` It considered ${payload.contextArtifactCount} saved research artifacts.`
+        : "";
+      const historyNote = payload.executionLogged === false
+        ? " Execution history was not recorded; apply the agent_executions migration."
+        : "";
+      setMessage(`${agent.name} responded using ${payload.provider}.${contextNote}${historyNote}`);
     } catch {
       setMessage("The agent runtime could not be reached.");
     } finally {
