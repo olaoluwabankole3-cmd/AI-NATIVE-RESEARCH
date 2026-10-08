@@ -43,11 +43,9 @@ function formatDate(value: string) {
 export function ResearchRoom({
   topicId,
   participantId,
-  researchAnalystParticipating,
 }: {
   topicId: string;
   participantId: string;
-  researchAnalystParticipating: boolean;
 }) {
   const supabase = createClient();
   const [artifacts, setArtifacts] = useState<ResearchArtifact[]>([]);
@@ -60,8 +58,6 @@ export function ResearchRoom({
   const [sourceUrl, setSourceUrl] = useState("");
   const [message, setMessage] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [reviewingArtifactId, setReviewingArtifactId] = useState<string | null>(null);
-  const [reviewNote, setReviewNote] = useState("");
 
   async function loadArtifacts() {
     setLoading(true);
