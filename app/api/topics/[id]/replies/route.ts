@@ -15,7 +15,7 @@ function missingTable(error: { code?: string; message?: string } | null) {
 export async function POST(request: Request, { params }: Params) {
   const { id: topicId } = await params;
   const payload = (await request.json().catch(() => null)) as { body?: string } | null;
-  const body = payload?.body?.trim() || "";
+  const body = typeof payload?.body === "string" ? payload.body.trim() : "";
   if (!body) return NextResponse.json({ error: "Reply body is required." }, { status: 400 });
   if (body.length > 12000) {
     return NextResponse.json({ error: "Replies must be 12,000 characters or fewer." }, { status: 413 });
