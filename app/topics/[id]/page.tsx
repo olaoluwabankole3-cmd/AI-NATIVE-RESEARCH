@@ -329,23 +329,26 @@ export default function TopicPage() {
       setReply("");
 
       const failures = payload.failures ?? [];
+      const warnings = payload.warnings ?? [];
       const agentCount = payload.agentPosts?.length ?? 0;
+      let statusMessage: string;
 
       if (failures.length > 0) {
-        setMessage(
-          agentCount
-            ? `Your reply is live and the relevant AI specialists responded. Some were unavailable: ${failures.join(", ")}.`
-            : `Your reply is live, but the AI specialists could not respond: ${failures.join(", ")}.`,
-        );
+        statusMessage = agentCount
+          ? `Your reply is live and the relevant AI specialists responded. Some were unavailable: ${failures.join(", ")}.`
+          : `Your reply is live, but the AI specialists could not respond: ${failures.join(", ")}.`;
       } else if (agentCount > 0) {
-        setMessage(
-          agentCount === 1
-            ? `${payload.agentPosts[0].agent.name} responded automatically.`
-            : `${agentCount} AI specialists responded automatically.`,
-        );
+        statusMessage = agentCount === 1
+          ? `${payload.agentPosts[0].agent.name} responded automatically.`
+          : `${agentCount} AI specialists responded automatically.`;
       } else {
-        setMessage("Your reply is live. No attached AI specialist was selected for this message.");
+        statusMessage = "Your reply is live. No attached AI specialist was selected for this message.";
       }
+
+      if (warnings.length > 0) {
+        statusMessage += ` Note: ${warnings.join(" ")}`;
+      }
+      setMessage(statusMessage);
     } catch {
       setMessage("The automatic AI response service could not be reached.");
     } finally {
