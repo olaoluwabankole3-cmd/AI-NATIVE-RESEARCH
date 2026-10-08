@@ -4,12 +4,12 @@ const stopWords = new Set([
   "about", "after", "again", "also", "because", "being", "between", "could",
   "from", "have", "into", "more", "most", "other", "should", "their",
   "there", "these", "they", "this", "what", "when", "where", "which",
-  "with", "would", "your",
+  "with", "would", "your", "then", "than", "that", "while", "with",
 ]);
 
 function words(value: string) {
   return new Set(
-    value.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/\\s+/).filter((word) => word.length > 2 && !stopWords.has(word)),
+    value.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").split(/\s+/).filter((word) => word.length > 2 && !stopWords.has(word)),
   );
 }
 
@@ -24,7 +24,6 @@ export function selectAgentsForResponse(
   limit = 3,
 ): Agent[] {
   const input = words(topic.title + " " + topic.body + " " + latestMessage);
-
   const ranked = agents
     .filter((agent) => attachedAgentIds.includes(agent.id))
     .map((agent) => {
@@ -38,7 +37,6 @@ export function selectAgentsForResponse(
 
   const relevant = ranked.filter((entry) => entry.relevance > 0).slice(0, limit);
   if (relevant.length > 0) return relevant.map(({ agent }) => agent);
-
   const fallback = ranked.find(({ agent }) => agent.id === "research-analyst") || ranked[0];
   return fallback ? [fallback.agent] : [];
 }
