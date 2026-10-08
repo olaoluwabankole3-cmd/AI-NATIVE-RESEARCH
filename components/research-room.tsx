@@ -100,7 +100,7 @@ export function ResearchRoom({
     }
   }
 
-  async function handleCreate(event: FormEvent<HTMLFormElement) {
+  async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const trimmedTitle = title.trim();
