@@ -61,7 +61,7 @@ export function selectAgentsForResponse(
   topic: { title: string; body: string },
   latestMessage: string,
   attachedAgentIds: string[],
-  limit = 3,
+  limit = 2,
 ): Agent[] {
   const topicInput = words(topic.title + " " + topic.body);
   const messageInput = words(latestMessage);
