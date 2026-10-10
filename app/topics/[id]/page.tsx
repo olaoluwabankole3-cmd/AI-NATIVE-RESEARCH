@@ -478,14 +478,20 @@ export default function TopicPage() {
       <div className="mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
 
         <div className="py-7">
-          <Link
-            href={`/communities/${community.slug}`}
-            className="text-sm text-emerald-300 hover:text-emerald-200"
-          >
-            ← {community.name}
-          </Link>
+          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm text-white/40">
+            <Link href="/communities" className="transition hover:text-emerald-200">Communities</Link>
+            <span aria-hidden="true">/</span>
+            <Link
+              href={`/communities/${community.slug}`}
+              className="transition hover:text-emerald-200"
+            >
+              {community.name}
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span className="text-white/65">Topic</span>
+          </nav>
 
-          <article className="mt-5 rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+          <article className="mt-5 rounded-2xl border border-white/10 bg-[#0b1714] p-6 sm:p-8">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200">
                 {topic.type === "RESEARCH" ? "Research" : "Discussion"}
@@ -503,9 +509,13 @@ export default function TopicPage() {
               {topic.body}
             </div>
 
-            <div className="mt-7 flex flex-wrap gap-5 border-t border-white/10 pt-5 text-sm text-white/40">
-              <span>{posts.length} {posts.length === 1 ? "reply" : "replies"}</span>
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/10 pt-5 text-sm text-white/45">
+              <span className="inline-flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-emerald-300" />
+                {posts.length} {posts.length === 1 ? "reply" : "replies"}
+              </span>
               <span>{participantCount} {participantCount === 1 ? "participant" : "participants"}</span>
+              <span className="text-white/25">Started {formatDate(topic.created_at)}</span>
             </div>
           </article>
 
@@ -517,11 +527,11 @@ export default function TopicPage() {
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
-                  Conversation
+                  Topic thread
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold">Human discussion</h2>
-                <p className="mt-2 text-sm text-white/40">
-                  Attached AI participants respond automatically when the discussion changes. Once they are added, their replies are published directly.
+                <h2 className="mt-2 text-2xl font-semibold">Discussion</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">
+                  People and invited AI specialists share replies in the same thread. Participating specialists can respond automatically when you post.
                 </p>
               </div>
 
@@ -602,11 +612,11 @@ export default function TopicPage() {
               </div>
             )}
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
               {posts.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/15 p-8 text-center">
+                <div className="border-b border-white/10 p-8 text-center">
                   <div className="mx-auto grid size-11 place-items-center rounded-full bg-emerald-300/10 text-emerald-300">
-                    1
+                    <span aria-hidden="true">↳</span>
                   </div>
                   <h3 className="mt-4 font-semibold">Be the first to reply</h3>
                   <p className="mt-2 text-sm leading-6 text-white/40">
@@ -617,7 +627,7 @@ export default function TopicPage() {
                 posts.map((post, index) => (
                   <article
                     key={post.id}
-                    className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 shadow-[0_12px_40px_rgba(0,0,0,0.12)] sm:p-6"
+                    className={`border-b border-white/[0.08] p-5 last:border-b-0 sm:p-6 ${post.participant?.participant_type === "AGENT" ? "bg-emerald-300/[0.025]" : "bg-transparent"}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-emerald-300/10 text-sm font-semibold text-emerald-200">
@@ -641,17 +651,15 @@ export default function TopicPage() {
                               post.profile?.username ||
                               "Converge member"}
                           </span>
-                          <span className="text-xs text-white/30">
-                            {post.participant?.participant_type === "AGENT" ? "AI agent" : "Human"}
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${post.participant?.participant_type === "AGENT" ? "border border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-200" : "bg-white/[0.05] text-white/40"}`}>
+                            {post.participant?.participant_type === "AGENT" ? "AI specialist" : "Member"}
                           </span>
                           <span className="text-xs text-white/30">·</span>
                           <span className="text-xs text-white/35">
                             {formatDate(post.created_at)}
                           </span>
                           {index === 0 && (
-                            <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] text-white/35">
-                              First reply
-                            </span>
+                            <span className="text-[11px] text-white/30">First reply</span>
                           )}
                         </div>
 
