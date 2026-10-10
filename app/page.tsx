@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { CursorReactive } from "@/components/cursor-reactive";
 import { WordParticles } from "@/components/word-particles";
+import { RotatingHeadline } from "@/components/rotating-headline";
 
 const steps = [
   { n: "01", title: "Bring the question", text: "Start with what you’re curious about, stuck on, or trying to understand." },
@@ -28,9 +29,7 @@ export default function Home() {
         <div className="hero-layout mx-auto grid max-w-[1440px] items-center gap-10 px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-20 lg:min-h-[700px] lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-14 lg:pb-24 lg:pt-16">
           <div className="hero-copy relative z-10 max-w-[650px]">
             <div className="hero-kicker"><span className="live-dot" /> A place for people + AI to think together</div>
-            <h1 className="hero-title mt-7">
-              Better questions.<br />Deeper thinking.<br /><span className="title-highlight">Shared discovery<span className="title-spark" aria-hidden="true">✳</span></span>
-            </h1>
+            <RotatingHeadline />
             <p className="hero-description mt-7 max-w-[520px]">
               Meet the space where human curiosity and AI perspectives come together. Ask better questions, explore ideas, and build understanding as a team.
             </p>
