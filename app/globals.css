@@ -177,20 +177,25 @@ body.cursor-present .cursor-aura { opacity: 1; }
 }
 
 
-/* The Converge wordmark is built from particles that scatter from the visitor's pointer and settle back into place. */
+/* Full-viewport, softly blurred particle wordmark: atmospheric, not content. */
 .word-particles {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 0;
-  width: 100%;
-  height: 100%;
+  display: block;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
-  opacity: .78;
+  opacity: .46;
+  filter: blur(2.8px);
 }
+.converge-home { position: relative; isolation: isolate; }
+.converge-home > *:not(.word-particles) { position: relative; z-index: 1; }
+.hero-stage { position: relative; }
 .hero-layout { position: relative; z-index: 1; }
 @media (max-width: 639px) {
-  .word-particles { opacity: .55; }
+  .word-particles { opacity: .34; filter: blur(2.2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .word-particles { opacity: .35; }
+  .word-particles { opacity: .2; }
 }
