@@ -18,9 +18,8 @@ export function WordParticles() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const parent = canvas?.parentElement;
     const context = canvas?.getContext("2d", { alpha: true });
-    if (!canvas || !parent || !context) return;
+    if (!canvas || !context) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const finePointer = window.matchMedia("(pointer: fine)").matches;
@@ -38,14 +37,14 @@ export function WordParticles() {
       if (!sampleContext) return;
       sample.width = Math.max(1, Math.floor(width));
       sample.height = Math.max(1, Math.floor(height));
-      const maxTextWidth = Math.min(width * 0.76, 860);
-      const fontSize = Math.max(34, Math.min(width * 0.115, 112, maxTextWidth / 5.15));
+      const maxTextWidth = Math.max(1, width * 0.94);
+      const fontSize = Math.max(54, Math.min(width * 0.205, 260, maxTextWidth / 4.9));
       sampleContext.clearRect(0, 0, sample.width, sample.height);
       sampleContext.fillStyle = "#ffffff";
       sampleContext.textAlign = "center";
       sampleContext.textBaseline = "middle";
       sampleContext.font = `800 ${fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
-      sampleContext.fillText("CONVERGE", width / 2, height * (width < 640 ? 0.82 : 0.78), maxTextWidth);
+      sampleContext.fillText("CONVERGE", width / 2, height * 0.52, maxTextWidth);
       const pixels = sampleContext.getImageData(0, 0, sample.width, sample.height).data;
       particles.length = 0;
       const step = width < 640 ? 5 : 5;
@@ -63,8 +62,8 @@ export function WordParticles() {
               homeY,
               vx: 0,
               vy: 0,
-              radius: Math.random() * 0.7 + 0.65,
-              alpha: Math.random() * 0.36 + 0.35,
+              radius: Math.random() * 1.05 + 0.8,
+              alpha: Math.random() * 0.38 + 0.42,
             });
           }
         }
@@ -72,9 +71,8 @@ export function WordParticles() {
     };
 
     const resize = () => {
-      const rect = parent.getBoundingClientRect();
-      width = Math.max(1, rect.width);
-      height = Math.max(1, rect.height);
+      width = Math.max(1, window.innerWidth);
+      height = Math.max(1, window.innerHeight);
       pixelRatio = Math.min(window.devicePixelRatio || 1, 1.7);
       canvas.width = Math.floor(width * pixelRatio);
       canvas.height = Math.floor(height * pixelRatio);
@@ -86,9 +84,8 @@ export function WordParticles() {
 
     const onPointerMove = (event: PointerEvent) => {
       if (!finePointer || reducedMotion) return;
-      const rect = canvas.getBoundingClientRect();
-      pointer.x = event.clientX - rect.left;
-      pointer.y = event.clientY - rect.top;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
       pointer.active = pointer.x >= 0 && pointer.y >= 0 && pointer.x <= width && pointer.y <= height;
     };
     const onPointerLeave = () => { pointer.active = false; };
@@ -97,7 +94,7 @@ export function WordParticles() {
       const delta = lastTime ? Math.min((time - lastTime) / 16.67, 2) : 1;
       lastTime = time;
       context.clearRect(0, 0, width, height);
-      const forceRadius = width < 640 ? 65 : 100;
+      const forceRadius = width < 640 ? 90 : 150;
       for (const particle of particles) {
         if (pointer.active) {
           const dx = particle.x - pointer.x;
@@ -130,14 +127,13 @@ export function WordParticles() {
     };
 
     resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(parent);
+    window.addEventListener("resize", resize, { passive: true });
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     window.addEventListener("pointerleave", onPointerLeave);
     frame = window.requestAnimationFrame(draw);
 
     return () => {
-      observer.disconnect();
+      window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerleave", onPointerLeave);
       window.cancelAnimationFrame(frame);
