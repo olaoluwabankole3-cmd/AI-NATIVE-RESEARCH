@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { CursorReactive } from "@/components/cursor-reactive";
 
 const steps = [
   { n: "01", title: "Bring the question", text: "Start with what you’re curious about, stuck on, or trying to understand." },
@@ -18,6 +19,7 @@ function OrbitMark({ label, kind }: { label: string; kind: "human" | "ai" | "res
 export default function Home() {
   return (
     <main className="converge-home min-h-screen overflow-hidden">
+      <CursorReactive />
       <SiteHeader />
       <section className="hero-stage relative isolate">
         <div className="hero-grain" aria-hidden="true" />
@@ -37,7 +39,7 @@ export default function Home() {
             <div className="hero-proof mt-10"><div className="proof-avatars"><span>H</span><span>✳</span><span>AI</span></div><span>Human curiosity. Specialist perspectives. Shared discovery.</span></div>
           </div>
 
-          <div className="collab-scene relative mx-auto w-full max-w-[700px]" aria-label="Illustration of a human and AI specialists collaborating on a research question">
+          <div data-cursor-reactive="scene" className="collab-scene relative mx-auto w-full max-w-[700px]" aria-label="Illustration of a human and AI specialists collaborating on a research question">
             <div className="scene-glow" aria-hidden="true" />
             <div className="orbit orbit--outer" aria-hidden="true" /><div className="orbit orbit--inner" aria-hidden="true" />
             <svg className="connection-lines" viewBox="0 0 680 610" fill="none" aria-hidden="true">
@@ -102,12 +104,12 @@ export default function Home() {
       <section className="steps-section px-5 pb-20 sm:px-8 lg:px-14 lg:pb-28">
         <div className="mx-auto max-w-[1280px]">
           <div className="steps-heading"><div><p className="section-eyebrow">How Converge works</p><h2 className="section-heading mt-4">One question can<br />open <span>a whole world.</span></h2></div><p>Come with a question. Leave with new connections, new perspectives, and somewhere to continue.</p></div>
-          <div className="steps-grid mt-12">{steps.map((step) => <article key={step.n} className="step-card"><span className="step-number">{step.n}</span><div className="step-art" aria-hidden="true">{step.n === "01" ? <><span className="art-ring" /><span className="art-question">?</span><span className="art-spark">✳</span></> : step.n === "02" ? <><span className="art-person">●</span><span className="art-link">↔</span><span className="art-ai">✳</span></> : <><span className="art-doc">≋</span><span className="art-check">✓</span><span className="art-spark">✧</span></>}</div><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
+          <div className="steps-grid mt-12">{steps.map((step) => <article key={step.n} data-cursor-reactive="card" className="step-card"><span className="step-number">{step.n}</span><div className="step-art" aria-hidden="true">{step.n === "01" ? <><span className="art-ring" /><span className="art-question">?</span><span className="art-spark">✳</span></> : step.n === "02" ? <><span className="art-person">●</span><span className="art-link">↔</span><span className="art-ai">✳</span></> : <><span className="art-doc">≋</span><span className="art-check">✓</span><span className="art-spark">✧</span></>}</div><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
         </div>
       </section>
 
       <section className="closing-section px-5 pb-16 sm:px-8 lg:px-14 lg:pb-20">
-        <div className="closing-panel mx-auto max-w-[1280px]">
+        <div data-cursor-reactive="panel" className="closing-panel mx-auto max-w-[1280px]">
           <div className="closing-orbit closing-orbit--one" aria-hidden="true" /><div className="closing-orbit closing-orbit--two" aria-hidden="true" />
           <div className="relative z-10 max-w-[700px]"><p className="section-eyebrow">Your seat is waiting</p><h2>Come curious.<br /><span>Leave connected.</span></h2><p>Bring the idea you can’t stop thinking about. There’s room to explore it here.</p><div className="mt-7 flex flex-wrap gap-3"><Link href="/sign-up" className="hero-primary">Join Converge <span aria-hidden="true">↗</span></Link><Link href="/communities" className="closing-link">Find a community →</Link></div></div>
           <div className="closing-sticker" aria-hidden="true"><span>HUMAN</span><b>+</b><span>AI</span><strong>✳</strong></div>
