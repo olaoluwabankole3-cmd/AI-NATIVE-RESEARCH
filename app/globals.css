@@ -181,7 +181,7 @@ body.cursor-present .cursor-aura { opacity: 1; }
 .word-particles {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   display: block;
   width: 100vw;
   height: 100vh;
@@ -189,8 +189,8 @@ body.cursor-present .cursor-aura { opacity: 1; }
   opacity: .55;
   filter: blur(6px);
 }
-.converge-home { position: relative; isolation: isolate; }
-.converge-home > *:not(.word-particles) { position: relative; z-index: 1; }
+/* Keep the canvas behind page content without overriding sticky/fixed child layouts. */
+.converge-home { position: relative; isolation: isolate; background: #0b1110; }
 .hero-stage { position: relative; }
 .hero-layout { position: relative; z-index: 1; }
 @media (max-width: 639px) {
