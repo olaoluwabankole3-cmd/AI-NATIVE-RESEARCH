@@ -181,7 +181,7 @@ body.cursor-present .cursor-aura { opacity: 1; }
 .word-particles {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 1;
   display: block;
   width: 100vw;
   height: 100vh;
@@ -189,10 +189,14 @@ body.cursor-present .cursor-aura { opacity: 1; }
   opacity: .55;
   filter: blur(6px);
 }
-/* Keep the canvas behind page content without overriding sticky/fixed child layouts. */
+/* Keep particles above the green page surfaces but below all readable content. */
 .converge-home { position: relative; isolation: isolate; background: #0b1110; }
-.hero-stage { position: relative; }
-.hero-layout { position: relative; z-index: 1; }
+.converge-home > :not(.word-particles) { position: relative; z-index: 2; }
+.hero-stage { position: relative; background: radial-gradient(ellipse at 74% 40%, rgba(40,110,81,.20), transparent 34%), radial-gradient(ellipse at 8% 85%, rgba(65,102,77,.10), transparent 32%), rgba(11,17,16,.76); }
+.intro-strip { background: rgba(16,26,20,.76); }
+.steps-section { background: rgba(11,17,16,.76); }
+.converge-footer { background: rgba(9,14,12,.82); }
+.hero-layout { position: relative; z-index: 2; }
 @media (max-width: 639px) {
   .word-particles { opacity: .4; filter: blur(4.5px); }
 }
