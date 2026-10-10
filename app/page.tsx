@@ -21,9 +21,9 @@ export default function Home() {
   return (
     <main className="converge-home min-h-screen overflow-hidden">
       <CursorReactive />
+      <WordParticles />
       <SiteHeader />
       <section className="hero-stage relative isolate">
-        <WordParticles />
         <div className="hero-grain" aria-hidden="true" />
         <div className="hero-layout mx-auto grid max-w-[1440px] items-center gap-10 px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-20 lg:min-h-[700px] lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-14 lg:pb-24 lg:pt-16">
           <div className="hero-copy relative z-10 max-w-[650px]">
