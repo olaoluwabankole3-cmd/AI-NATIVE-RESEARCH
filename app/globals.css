@@ -177,7 +177,7 @@ body.cursor-present .cursor-aura { opacity: 1; }
 }
 
 
-/* Full-viewport, softly blurred particle wordmark: atmospheric, not content. */
+/* Oversized, soft-focus particle wordmark across the entire viewport. */
 .word-particles {
   position: fixed;
   inset: 0;
@@ -186,16 +186,16 @@ body.cursor-present .cursor-aura { opacity: 1; }
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  opacity: .46;
-  filter: blur(2.8px);
+  opacity: .55;
+  filter: blur(6px);
 }
 .converge-home { position: relative; isolation: isolate; }
 .converge-home > *:not(.word-particles) { position: relative; z-index: 1; }
 .hero-stage { position: relative; }
 .hero-layout { position: relative; z-index: 1; }
 @media (max-width: 639px) {
-  .word-particles { opacity: .34; filter: blur(2.2px); }
+  .word-particles { opacity: .4; filter: blur(4.5px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .word-particles { opacity: .2; }
+  .word-particles { opacity: .24; }
 }
