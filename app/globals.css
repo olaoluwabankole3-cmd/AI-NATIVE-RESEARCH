@@ -121,3 +121,57 @@ button:disabled { cursor: not-allowed; }
 @media(max-width:1023px) { .collab-scene{min-height:540px;margin-top:10px}.hero-title{font-size:clamp(4.2rem,11vw,7rem)}.hero-layout{padding-top:64px}.collab-card{left:19%;width:62%}.collab-node--human{left:0}.collab-node--ai{right:0}.collab-node--review{left:2%} }
 @media(max-width:639px) { .cursor-demo--one{left:3%;top:53%;}.cursor-demo--two{right:0;top:16%;}.cursor-name{font-size:8px;padding:4px 6px}.demo-pointer{width:21px}.live-reaction--heart{left:2%;top:38%}.live-reaction--idea{right:0;top:39%}.live-reaction--fire{right:16%;bottom:17%}.live-reaction--spark{left:31%;top:12%}.hero-layout{padding-top:44px}.hero-title{font-size:clamp(4rem,17vw,6rem)}.hero-kicker{font-size:9px;letter-spacing:.08em}.hero-description{font-size:15px;line-height:1.8}.hero-proof{align-items:flex-start;font-size:10px}.collab-scene{min-height:470px;width:calc(100% + 10px);margin-left:-5px}.collab-card{left:13%;top:24%;width:74%;padding:16px;border-radius:17px}.collab-card h2{font-size:1.35rem}.question-label{margin-top:20px}.question-footer{font-size:8px}.collab-node{min-width:0;max-width:176px;padding:8px;gap:7px;border-radius:12px}.collab-node strong{font-size:9px}.collab-node div>span{font-size:8px}.collab-node small{font-size:8px;white-space:normal}.node-icon{width:29px;height:29px;border-radius:9px}.orbit-mark{width:21px;height:21px}.collab-node--human{left:0;top:8%}.collab-node--ai{right:0;top:57%}.collab-node--review{left:0;bottom:8%}.idea-bubble{font-size:8px;padding:8px 10px}.idea-bubble--one{top:8%;right:0}.idea-bubble--two{left:27%;bottom:1%}.scene-caption{right:3%;bottom:-13px;font-size:8px}.hero-bottom-ribbon{gap:10px;font-size:8px;letter-spacing:.12em}.steps-heading{display:block}.steps-heading>p{margin-top:20px}.steps-grid{grid-template-columns:1fr}.step-card{min-height:290px}.step-art{height:105px}.closing-sticker{right:7%;top:21%;width:75px;height:75px;border-radius:22px;transform:rotate(9deg)}.closing-sticker span{font-size:6px}.closing-sticker b{font-size:12px}.closing-sticker strong{font-size:17px}.closing-panel{padding-top:115px}.closing-orbit{right:-50%;width:300px;height:300px}.closing-orbit--two{right:-45%;width:230px;height:230px} }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.01ms !important; } }
+
+
+/* Cursor-reactive polish: a soft light follows the visitor and key surfaces respond to pointer position. */
+.cursor-aura {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  top: 0;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(calc(var(--cursor-x, -500px) - 150px), calc(var(--cursor-y, -500px) - 150px), 0);
+  background: radial-gradient(circle, rgba(141, 228, 187, .105) 0%, rgba(141, 228, 187, .045) 35%, transparent 70%);
+  transition: opacity .35s ease;
+  mix-blend-mode: screen;
+}
+body.cursor-present .cursor-aura { opacity: 1; }
+[data-cursor-reactive] { --glow-x: 50%; --glow-y: 50%; --tilt-x: 0deg; --tilt-y: 0deg; }
+.collab-scene[data-cursor-reactive] {
+  transform: perspective(1200px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transition: transform .24s ease-out;
+  transform-style: preserve-3d;
+}
+.collab-scene[data-cursor-reactive]::after {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 35%;
+  opacity: 0;
+  background: radial-gradient(circle at var(--glow-x) var(--glow-y), rgba(164,237,193,.13), transparent 42%);
+  transition: opacity .3s ease;
+}
+.collab-scene.cursor-tracking::after { opacity: 1; }
+.step-card[data-cursor-reactive] {
+  background-image: radial-gradient(circle at var(--glow-x) var(--glow-y), rgba(164,237,193,.13), transparent 48%), linear-gradient(145deg,rgba(25,39,30,.8),rgba(15,25,19,.94));
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.step-card[data-cursor-reactive].cursor-tracking:hover {
+  transform: perspective(850px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(-5px);
+  border-color: rgba(164,237,193,.48);
+}
+.closing-panel[data-cursor-reactive] {
+  background-image: radial-gradient(circle at var(--glow-x) var(--glow-y), rgba(141,228,187,.16), transparent 34%), radial-gradient(ellipse at 82% 50%,rgba(66,133,84,.3),transparent 38%), linear-gradient(120deg,#182b1d,#102016 65%,#16291b);
+  transition: background-position .25s ease;
+}
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .cursor-aura { display: none; }
+  .collab-scene[data-cursor-reactive] { transform: none; }
+}
