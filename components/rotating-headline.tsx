@@ -35,7 +35,6 @@ export function RotatingHeadline() {
             return <span className="rotating-headline__char" aria-hidden="true" key={index} style={{ animationDelay: `${Math.min(index * 12, 220)}ms` }}>{character === " " ? "\u00a0" : character}</span>;
           })}
           {lineIndex === phrase.lines.length - 1 && <span className="title-spark" aria-hidden="true">✳</span>}
-          {lineIndex < phrase.lines.length - 1 && <br />}
         </span>
       ))}
     </h1>
