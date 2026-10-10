@@ -72,6 +72,20 @@ export default function Home() {
             </div>
             <div className="idea-bubble idea-bubble--one"><span>✳</span> A new perspective!</div>
             <div className="idea-bubble idea-bubble--two"><span>↗</span> Evidence connected</div>
+            <div className="cursor-demo cursor-demo--one" aria-hidden="true">
+              <svg className="demo-pointer" viewBox="0 0 28 34"><path d="M3 2.5 24 20l-9 .8-4.5 8.5L3 2.5Z" fill="#a4edc1" stroke="#102219" strokeWidth="2" strokeLinejoin="round"/></svg>
+              <span className="cursor-name">Jordan <i>●</i></span>
+              <span className="cursor-click-ring" />
+            </div>
+            <div className="cursor-demo cursor-demo--two" aria-hidden="true">
+              <svg className="demo-pointer" viewBox="0 0 28 34"><path d="M3 2.5 24 20l-9 .8-4.5 8.5L3 2.5Z" fill="#f4c7a8" stroke="#39281e" strokeWidth="2" strokeLinejoin="round"/></svg>
+              <span className="cursor-name">Maya <i>●</i></span>
+              <span className="cursor-click-ring" />
+            </div>
+            <div className="live-reaction live-reaction--heart" aria-hidden="true"><span>♥</span><b>Love this</b></div>
+            <div className="live-reaction live-reaction--idea" aria-hidden="true"><span>✳</span><b>Good insight!</b></div>
+            <div className="live-reaction live-reaction--fire" aria-hidden="true"><span>🔥</span></div>
+            <div className="live-reaction live-reaction--spark" aria-hidden="true"><span>💡</span></div>
             <div className="scene-caption"><span className="caption-pulse" /> A conversation that grows smarter together</div>
           </div>
         </div>
