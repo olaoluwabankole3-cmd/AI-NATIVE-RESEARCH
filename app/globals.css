@@ -191,7 +191,12 @@ body.cursor-present .cursor-aura { opacity: 1; }
 }
 /* Keep particles above the green page surfaces but below all readable content. */
 .converge-home { position: relative; isolation: isolate; background: #0b1110; }
-.converge-home > :not(.word-particles) { position: relative; z-index: 2; }
+.converge-home > header,
+.converge-home > .hero-stage,
+.converge-home > .intro-strip,
+.converge-home > .steps-section,
+.converge-home > .closing-section,
+.converge-home > .converge-footer { position: relative; z-index: 2; }
 .hero-stage { position: relative; background: radial-gradient(ellipse at 74% 40%, rgba(40,110,81,.20), transparent 34%), radial-gradient(ellipse at 8% 85%, rgba(65,102,77,.10), transparent 32%), rgba(11,17,16,.76); }
 .intro-strip { background: rgba(16,26,20,.76); }
 .steps-section { background: rgba(11,17,16,.76); }
