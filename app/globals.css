@@ -209,10 +209,10 @@ body.cursor-present .cursor-aura { opacity: 1; }
   .word-particles { opacity: .24; }
 }
 
-.rotating-headline{height:2.49em;min-height:2.49em;overflow:visible;transition:opacity .36s ease,transform .36s ease,filter .36s ease;transform:translateY(0);filter:blur(0)}
-.rotating-headline--out{opacity:0;transform:translateY(5px);filter:blur(2px)}
-.rotating-headline--in{opacity:1;transform:translateY(0);filter:blur(0)}
+.rotating-headline{height:2.49em;min-height:2.49em;overflow:visible;transition:opacity .22s ease;transform:none;filter:none}
+.rotating-headline--out{opacity:0}
+.rotating-headline--in{opacity:1}
 .rotating-headline__line{display:block;height:1em;white-space:nowrap}
-.rotating-headline__char{display:inline-block;animation:headlineCharacterIn .52s cubic-bezier(.2,.7,.2,1) both}
-@keyframes headlineCharacterIn{from{opacity:0;transform:translateY(5px);filter:blur(1.5px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+.rotating-headline__char{display:inline-block;animation:headlineCharacterIn .3s ease-out both}
+@keyframes headlineCharacterIn{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.rotating-headline,.rotating-headline__char{animation:none!important;transition:none!important;filter:none!important;transform:none!important}}
