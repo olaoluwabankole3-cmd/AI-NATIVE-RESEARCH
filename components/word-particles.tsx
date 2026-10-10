@@ -38,13 +38,13 @@ export function WordParticles() {
       sample.width = Math.max(1, Math.floor(width));
       sample.height = Math.max(1, Math.floor(height));
       const maxTextWidth = Math.max(1, width * 0.94);
-      const fontSize = Math.max(54, Math.min(width * 0.205, 260, maxTextWidth / 4.9));
+      const fontSize = Math.max(70, Math.min(width * 0.31, 390, maxTextWidth / 4.9));
       sampleContext.clearRect(0, 0, sample.width, sample.height);
       sampleContext.fillStyle = "#ffffff";
       sampleContext.textAlign = "center";
       sampleContext.textBaseline = "middle";
       sampleContext.font = `800 ${fontSize}px Inter, ui-sans-serif, system-ui, sans-serif`;
-      sampleContext.fillText("CONVERGE", width / 2, height * 0.52, maxTextWidth);
+      sampleContext.fillText("CONVERGE", width / 2, height * 0.5, maxTextWidth);
       const pixels = sampleContext.getImageData(0, 0, sample.width, sample.height).data;
       particles.length = 0;
       const step = width < 640 ? 5 : 5;
