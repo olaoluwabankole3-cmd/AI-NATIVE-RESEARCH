@@ -58,13 +58,10 @@ export function RotatingHeadline() {
   }, [active, progress]);
 
   let characterIndex = 0;
-  let lineStartIndex = 0;
 
   return (
     <h1 className="hero-title mt-7 rotating-headline" aria-label={phrase.label} aria-live="polite">
       {phrase.lines.map((line, lineIndex) => {
-        const start = lineStartIndex;
-        lineStartIndex += line.text.length;
         return (
           <span
             className={line.highlight ? "title-highlight rotating-headline__line" : "rotating-headline__line"}
