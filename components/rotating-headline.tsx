@@ -14,14 +14,18 @@ export function RotatingHeadline() {
   const phrase = phrases[active];
 
   useEffect(() => {
+    let swap: number | undefined;
     const rotation = window.setInterval(() => {
       setIsTransitioning(true);
-      window.setTimeout(() => {
+      swap = window.setTimeout(() => {
         setActive((current) => (current + 1) % phrases.length);
         setIsTransitioning(false);
-      }, 360);
+      }, 220);
     }, 5000);
-    return () => window.clearInterval(rotation);
+    return () => {
+      window.clearInterval(rotation);
+      if (swap !== undefined) window.clearTimeout(swap);
+    };
   }, []);
 
   let characterIndex = 0;
