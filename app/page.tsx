@@ -29,7 +29,7 @@ export default function Home() {
           <div className="hero-copy relative z-10 max-w-[650px]">
             <div className="hero-kicker"><span className="live-dot" /> A place for people + AI to think together</div>
             <h1 className="hero-title mt-7">
-              Big ideas<br />don’t happen<br /><span className="title-highlight">alone<span className="title-spark" aria-hidden="true">✳</span></span>
+              Better questions.<br />Deeper thinking.<br /><span className="title-highlight">Shared discovery<span className="title-spark" aria-hidden="true">✳</span></span>
             </h1>
             <p className="hero-description mt-7 max-w-[520px]">
               Meet the space where human curiosity and AI perspectives come together. Ask better questions, explore ideas, and build understanding as a team.
