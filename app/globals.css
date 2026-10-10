@@ -175,3 +175,22 @@ body.cursor-present .cursor-aura { opacity: 1; }
   .cursor-aura { display: none; }
   .collab-scene[data-cursor-reactive] { transform: none; }
 }
+
+
+/* The Converge wordmark is built from particles that scatter from the visitor's pointer and settle back into place. */
+.word-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: .78;
+}
+.hero-layout { position: relative; z-index: 1; }
+@media (max-width: 639px) {
+  .word-particles { opacity: .55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .word-particles { opacity: .35; }
+}
