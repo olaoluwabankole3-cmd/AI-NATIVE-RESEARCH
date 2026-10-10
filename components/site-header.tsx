@@ -6,7 +6,7 @@ import { useState } from "react";
 
 const links = [
   { href: "/communities", label: "Communities" },
-  { href: "/agents", label: "Agents" },
+  { href: "/agents", label: "AI registry" },
 ];
 
 export function SiteHeader() {
@@ -14,18 +14,18 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[#07110f]/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-6 lg:px-10">
-        <Link href="/" className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
-          <span className="grid size-9 place-items-center rounded-xl bg-emerald-300 text-sm font-black text-[#07110f] shadow-[0_0_30px_rgba(110,231,183,0.12)]">
-            C
+    <header className="sticky top-0 z-30 border-b border-white/[0.09] bg-[#0b1110]/95 backdrop-blur-md">
+      <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12">
+        <Link href="/" className="group flex items-center gap-3" onClick={() => setMobileOpen(false)}>
+          <span className="relative grid size-9 place-items-center rounded-[10px] border border-emerald-200/30 bg-emerald-300 text-[17px] font-black tracking-[-0.08em] text-[#0b1110] transition group-hover:bg-emerald-200">
+            C<span className="absolute bottom-[7px] right-[7px] size-1 rounded-full bg-[#0b1110]" />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight sm:text-base">
-            Converge
+          <span className="text-[16px] font-semibold tracking-[-0.04em] text-white">
+            converge<span className="ml-1 text-emerald-300">.</span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 sm:flex">
+        <nav aria-label="Main navigation" className="hidden items-center gap-1 sm:flex">
           {links.map((link) => {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
@@ -33,37 +33,30 @@ export function SiteHeader() {
                 key={link.href}
                 href={link.href}
                 className={[
-                  "rounded-lg px-3 py-2 text-sm transition",
-                  active
-                    ? "bg-white/[0.06] text-white"
-                    : "text-white/45 hover:bg-white/[0.04] hover:text-white",
+                  "relative px-4 py-2 text-[13px] font-medium transition",
+                  active ? "text-white" : "text-white/50 hover:text-white",
                 ].join(" ")}
               >
                 {link.label}
+                {active && <span className="absolute inset-x-4 -bottom-[13px] h-px bg-emerald-300" />}
               </Link>
             );
           })}
         </nav>
 
-        <div className="flex items-center gap-1.5">
-          <Link
-            href="/sign-in"
-            className="hidden rounded-lg px-3 py-2 text-sm text-white/50 transition hover:text-white sm:block"
-          >
+        <div className="flex items-center gap-3">
+          <Link href="/sign-in" className="hidden px-2 py-2 text-[13px] font-medium text-white/55 transition hover:text-white sm:block">
             Sign in
           </Link>
-          <Link
-            href="/sign-up"
-            className="rounded-lg bg-emerald-300 px-3.5 py-2 text-xs font-bold text-[#07110f] transition hover:bg-emerald-200 sm:text-sm"
-          >
-            Join Converge
+          <Link href="/sign-up" className="rounded-lg bg-emerald-300 px-4 py-2.5 text-[13px] font-semibold text-[#0b1110] transition hover:bg-emerald-200">
+            Get started <span aria-hidden="true" className="ml-1">↗</span>
           </Link>
           <button
             type="button"
             aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen((open) => !open)}
-            className="grid size-10 place-items-center rounded-lg border border-white/10 text-white/70 transition hover:bg-white/[0.05] hover:text-white sm:hidden"
+            className="grid size-10 place-items-center border border-white/10 text-white/75 transition hover:bg-white/[0.05] sm:hidden"
           >
             <span className="sr-only">Menu</span>
             <span className="flex flex-col gap-1.5">
@@ -75,8 +68,8 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-white/[0.07] px-5 pb-4 pt-3 sm:hidden">
-          <nav className="grid gap-1">
+        <div className="border-t border-white/[0.09] bg-[#0b1110] px-5 pb-4 pt-3 sm:hidden">
+          <nav aria-label="Mobile navigation" className="grid gap-1">
             {links.map((link) => {
               const active = pathname === link.href || pathname.startsWith(link.href + "/");
               return (
@@ -84,22 +77,13 @@ export function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className={[
-                    "rounded-xl px-4 py-3 text-sm transition",
-                    active
-                      ? "bg-white/[0.06] text-white"
-                      : "text-white/55 hover:bg-white/[0.04] hover:text-white",
-                  ].join(" ")}
+                  className={["px-3 py-3 text-sm transition", active ? "bg-white/[0.06] text-white" : "text-white/55 hover:bg-white/[0.04] hover:text-white"].join(" ")}
                 >
                   {link.label}
                 </Link>
               );
             })}
-            <Link
-              href="/sign-in"
-              onClick={() => setMobileOpen(false)}
-              className="rounded-xl px-4 py-3 text-sm text-white/55 transition hover:bg-white/[0.04] hover:text-white"
-            >
+            <Link href="/sign-in" onClick={() => setMobileOpen(false)} className="px-3 py-3 text-sm text-white/55 hover:text-white">
               Sign in
             </Link>
           </nav>
