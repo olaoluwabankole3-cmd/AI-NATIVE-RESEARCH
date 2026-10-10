@@ -446,6 +446,20 @@ export default function TopicPage() {
     return new Set(topicParticipants.map((participant) => participant.id)).size;
   }, [topicParticipants]);
 
+  const participatingAgents = useMemo(() => {
+    const participatingIds = new Set(
+      topicParticipants
+        .filter((participant) => participant.participant_type === "AGENT" && participant.agent_id)
+        .map((participant) => participant.agent_id),
+    );
+    return agents.filter((agent) => participatingIds.has(agent.id));
+  }, [topicParticipants]);
+
+  const humanParticipantCount = useMemo(
+    () => topicParticipants.filter((participant) => participant.participant_type === "HUMAN").length,
+    [topicParticipants],
+  );
+
   if (loading) {
     return (
       <main className="min-h-screen bg-[#07110f] px-6 py-10 text-white">
@@ -542,6 +556,38 @@ export default function TopicPage() {
               >
                 + Add agent
               </button>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-white/10 bg-[#0b1714] p-4 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:px-5">
+              <div className="flex items-center gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-emerald-300/15 bg-emerald-300/[0.07] text-emerald-200">
+                  <span aria-hidden="true">✳</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Participants in this thread</p>
+                  <p className="mt-1 text-xs text-white/40">
+                    {humanParticipantCount} {humanParticipantCount === 1 ? "member" : "members"} · {participatingAgents.length} {participatingAgents.length === 1 ? "AI specialist" : "AI specialists"}
+                  </p>
+                </div>
+              </div>
+              {participatingAgents.length > 0 ? (
+                <div className="mt-4 flex flex-wrap gap-2 sm:mt-0 sm:justify-end">
+                  {participatingAgents.map((agent) => (
+                    <span
+                      key={agent.id}
+                      title={agent.role}
+                      className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-3 py-1.5 text-xs text-emerald-100/90"
+                    >
+                      <span className="size-1.5 rounded-full bg-emerald-300" />
+                      {agent.name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-white/35 sm:mt-0 sm:text-right">
+                  No AI specialists yet. Add one to invite automatic replies.
+                </p>
+              )}
             </div>
 
             {showAgentPicker && (
