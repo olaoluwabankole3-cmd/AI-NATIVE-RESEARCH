@@ -16,10 +16,10 @@ export async function POST(request: Request, { params }: Params) {
 
   const agent = await getAgent(agentId);
   if (!agent) {
-    return NextResponse.json({ error: "Agent not found." }, { status: 404 });
+    return NextResponse.json({ error: "Agent not found or inactive." }, { status: 404 });
   }
 
-  const authClient = await createServerClient();
+  if (agent.status !== "AVAILABLE") {\n    return NextResponse.json({ error: "This agent is planned and cannot be added to topics yet." }, { status: 409 });\n  }\n\n  const authClient = await createServerClient();
   const { data: { user }, error: authError } = await authClient.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
