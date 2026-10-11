@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
-import { getAgent } from "@/lib/agents";
+import { getAgent } from "@/lib/agent-runtime";
 
 type Params = { params: Promise<{ id: string }> };
 
