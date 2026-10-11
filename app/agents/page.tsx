@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getRegisteredAgents } from "@/lib/agent-registry";
 
-export default function AgentsPage() {
+export const dynamic = "force-dynamic";\n\nexport default async function AgentsPage() {\n  const agents = await getRegisteredAgents();
   return (
     <main className="min-h-screen bg-[#07110f] text-white">
       <SiteHeader />
@@ -32,7 +32,10 @@ export default function AgentsPage() {
               <h2 className="mt-2 text-2xl font-medium tracking-[-0.035em]">Available agents</h2>
             </div>
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4">
               <span className="hidden text-sm text-white/30 sm:block">{agents.length} registered</span>
+              <Link href="/admin/agents" className="rounded-full border border-white/15 px-3.5 py-2 text-xs font-medium text-white/65 transition hover:border-emerald-300/30 hover:text-emerald-200">Manage registry</Link>
+            </div>
               <Link href="/admin/agents" className="rounded-full border border-white/15 px-3.5 py-2 text-xs font-medium text-white/65 transition hover:border-emerald-300/30 hover:text-emerald-200">Manage registry</Link>
             </div>     </span>
           </div>
