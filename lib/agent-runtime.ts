@@ -96,7 +96,7 @@ export async function runAgent(
         try {
           const errorPayload = await response.json();
           const message = errorPayload?.error?.message ?? errorPayload?.message;
-          if (typeof message === "string") providerMessage = ": " + message.replace(/\\s+/g, " ").slice(0, 240);
+          if (typeof message === "string") providerMessage = ": " + message.replace(/\s+/g, " ").slice(0, 240);
         } catch {
           // The HTTP status remains useful when the provider returns a non-JSON error.
         }
