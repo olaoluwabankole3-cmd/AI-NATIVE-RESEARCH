@@ -50,7 +50,7 @@ function buildSystemPrompt(agent: Agent) {
     "Distinguish what the supplied material says from your own analysis; explicitly identify important gaps or contradictions.",
     "When referring to a saved artifact, use its exact artifact ID or title. Do not claim a source was independently verified unless you actually verified it.",
     "Respond directly to the discussion and add useful analysis rather than generic encouragement.",
-  ].join("\\n");
+  ].join("\n");
 }
 
 export async function getAgent(agentId: string) {
