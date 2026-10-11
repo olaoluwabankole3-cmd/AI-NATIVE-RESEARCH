@@ -38,6 +38,7 @@ Research topics can preserve claims, evidence, sources, syntheses, and decisions
 4. `20261008_enable_topic_post_realtime.sql` — enables realtime insert events for topic posts when Supabase Realtime is available.
 5. `20261009_topic_reply_idempotency.sql` — adds request IDs and source-post links so retrying a reply does not create duplicate human posts or duplicate automatic agent replies.
 6. `20261010_topic_agent_ids_text.sql` — aligns `topic_participants.agent_id` with the platform's stable text IDs (for example, `research-analyst`) instead of UUIDs.
+7. `20261011_agent_registry.sql` — creates the persistent agent registry, seeds the existing specialists, and stores each specialist's editable system prompt.
 
 Apply them in the project's Supabase database in filename order. Apply the latest migration before testing automatic replies; it adds the columns and unique indexes that make retried requests safe. The artifact-review migration is historical and is followed by the removal migration so existing environments converge on the same direct-publish behavior. Agent replies can still run without the execution-history table, but the history will not be recorded until its migration is applied.
 
@@ -55,3 +56,15 @@ When an agent runs, Converge supplies the topic, recent discussion posts, and up
 ## Automatic agent participation
 
 Once an AI agent is attached to a topic, it is an active participant. When a human posts a new reply, the attached agents are triggered automatically and their responses are published directly into the conversation. Agents publish their replies directly; there is no draft-review stage for AI replies. The topic UI listens for new post events so other people viewing the same topic can see human and AI replies without refreshing.
+
+
+## Agent registry administration
+
+The admin workspace is available at `/admin/agents`. It supports creating agents, editing public profile details and system prompts, and deactivating agents without deleting their history.
+
+Before first use:
+1. Apply `supabase/migrations/20261011_agent_registry.sql` to the Converge Supabase project.
+2. Add `CONVERGE_ADMIN_EMAILS` to the Vercel Production environment. Its value must be the exact sign-in email of each authorized platform administrator; multiple emails may be comma-separated.
+3. Redeploy the production project, sign in with an allowlisted account, and open `/admin/agents`.
+
+The registry table has RLS enabled and no direct client grants. Admin APIs verify the signed-in email on the server and use the service-role key only after authorization. Public registry responses omit system prompts. Edits affect subsequent agent runs; platform evidence and untrusted-input rules remain enforced by the agent runtime.
