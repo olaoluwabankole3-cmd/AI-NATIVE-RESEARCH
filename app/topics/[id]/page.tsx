@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
-import { agents, type Agent } from "@/lib/agents";
+import type { Agent } from "@/lib/agents";
 import { ResearchRoom } from "@/components/research-room";
 
 type Topic = {
@@ -89,7 +89,7 @@ export default function TopicPage() {
     setMessage(value);
     setMessageTone(tone);
   }
-  const [showAgentPicker, setShowAgentPicker] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([]);\n  const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
 
@@ -221,8 +221,15 @@ export default function TopicPage() {
       profileMap = new Map((profileData ?? []).map((profile) => [profile.id, profile]));
     }
 
+    const registryResponse = await fetch("/api/agents", { cache: "no-store" });
+    const registryPayload = await registryResponse.json().catch(() => null);
+    const registeredAgents: Agent[] = registryResponse.ok && Array.isArray(registryPayload?.agents)
+      ? registryPayload.agents as Agent[]
+      : [];
+    setAgents(registeredAgents);
+
     const participantMap = new Map(participants.map((participant) => [participant.id, participant]));
-    const agentMap = new Map(agents.map((agent) => [agent.id, agent]));
+    const agentMap = new Map(registeredAgents.map((agent) => [agent.id, agent]));
 
     setPosts(
       (postData ?? []).map((post) => {
@@ -628,7 +635,7 @@ export default function TopicPage() {
                 </div>
 
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {agents.map((agent) => {
+                  {agents.filter((agent) => agent.status === "AVAILABLE").map((agent) => {
                     const participating = topicParticipants.some(
                       (participant) =>
                         participant.participant_type === "AGENT" &&
