@@ -89,7 +89,8 @@ export default function TopicPage() {
     setMessage(value);
     setMessageTone(tone);
   }
-  const [agents, setAgents] = useState<Agent[]>([]);\n  const [showAgentPicker, setShowAgentPicker] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
 
