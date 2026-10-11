@@ -78,7 +78,7 @@ export async function runAgent(
     "Provide the next specialist contribution to this discussion.",
   ].join("\n");
 
-  let lastError = "All configured AI providers failed.";
+  const providerErrors: string[] = [];
   for (const provider of providers) {
     try {
       const response = await fetch(`${provider.baseUrl.replace(/\/$/, "")}/chat/completions`, {
@@ -91,12 +91,26 @@ export async function runAgent(
         cache: "no-store",
         signal: AbortSignal.timeout(8000),
       });
-      if (!response.ok) { lastError = `${provider.name} returned HTTP ${response.status}.`; continue; }
+      if (!response.ok) {
+        let providerMessage = "";
+        try {
+          const errorPayload = await response.json();
+          const message = errorPayload?.error?.message ?? errorPayload?.message;
+          if (typeof message === "string") providerMessage = ": " + message.replace(/\\s+/g, " ").slice(0, 240);
+        } catch {
+          // The HTTP status remains useful when the provider returns a non-JSON error.
+        }
+        providerErrors.push(provider.name + " returned HTTP " + response.status + providerMessage + ".");
+        continue;
+      }
       const payload = await response.json();
       const content = payload?.choices?.[0]?.message?.content?.trim();
-      if (!content) { lastError = `${provider.name} returned an empty response.`; continue; }
+      if (!content) { providerErrors.push(provider.name + " returned an empty response."); continue; }
       return { provider: provider.name, model: provider.model, content, contextArtifactIds: artifactLimit.map((artifact) => artifact.id) };
-    } catch { lastError = `${provider.name} could not be reached.`; }
+    } catch (error) {
+      const timedOut = error instanceof Error && error.name === "TimeoutError";
+      providerErrors.push(provider.name + (timedOut ? " timed out." : " could not be reached."));
+    }
   }
-  throw new Error(lastError);
+  throw new Error("All configured AI providers failed: " + (providerErrors.join("; ") || "No provider returned a usable response."));
 }
