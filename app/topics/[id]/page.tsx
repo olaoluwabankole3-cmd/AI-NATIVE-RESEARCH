@@ -480,7 +480,7 @@ export default function TopicPage() {
         .map((participant) => participant.agent_id),
     );
     return agents.filter((agent) => participatingIds.has(agent.id));
-  }, [topicParticipants]);
+  }, [topicParticipants, agents]);
 
   const humanParticipantCount = useMemo(
     () => topicParticipants.filter((participant) => participant.participant_type === "HUMAN").length,
