@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { getAgent, runAgent, type AgentArtifactContext } from "@/lib/agent-runtime";
+import { getAgents, runAgent, type AgentArtifactContext } from "@/lib/agent-runtime";
 import type { Agent } from "@/lib/agents";
 import { selectAgentsForResponse } from "@/lib/agent-routing";
 import { createClient as createServerClient } from "@/lib/supabase/server";
@@ -87,10 +87,12 @@ export async function POST(request: Request, { params }: Params) {
     });
   }
 
+  const registryAgents = await getAgents();
+  const registryAgentMap = new Map(registryAgents.map((agent) => [agent.id, agent]));
   const attachedAgentIds = (allParticipants ?? [])
     .filter((p) => p.participant_type === "AGENT" && p.agent_id)
     .map((p) => p.agent_id as string);
-  const selectedAgents = selectAgentsForResponse(topic, body, attachedAgentIds, 2);
+  const selectedAgents = selectAgentsForResponse(topic, body, attachedAgentIds, 2, registryAgents);
 
   const { data: recentPosts, error: recentPostsError } = await admin
     .from("posts")
@@ -121,7 +123,7 @@ export async function POST(request: Request, { params }: Params) {
   const contextPosts: Array<{ author: string; body: string }> = chronologicalPosts.map((post) => {
     const participant = participantMap.get(post.participant_id);
     const author = participant?.participant_type === "AGENT"
-      ? getAgent(participant.agent_id || "")?.name || "AI agent"
+      ? registryAgentMap.get(participant.agent_id || "")?.name || "AI agent"
       : profileMap.get(participant?.user_id || "") || "Human";
     return { author, body: post.body };
   });
