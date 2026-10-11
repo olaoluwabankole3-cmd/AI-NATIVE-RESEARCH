@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";\nimport type { ReactNode } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 
