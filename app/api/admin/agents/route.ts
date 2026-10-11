@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkPlatformAdmin } from "@/lib/admin-auth";
-import { createAgentRegistryAdminClient, getRegisteredAgents } from "@/lib/agent-registry";
+import { createAgentRegistryAdminClient } from "@/lib/agent-registry";
 
 export const dynamic = "force-dynamic";
 
