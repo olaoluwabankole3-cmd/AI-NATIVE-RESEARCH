@@ -11,6 +11,8 @@ export type Agent = {
   participation: string;
   permissions: string[];
   status: AgentStatus;
+  systemPrompt?: string;
+  isActive?: boolean;
 };
 
 export const agents: Agent[] = [
