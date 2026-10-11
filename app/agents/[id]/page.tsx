@@ -4,7 +4,9 @@ import { SiteHeader } from "@/components/site-header";
 import { getRegisteredAgent } from "@/lib/agent-registry";
 import { createClient } from "@/lib/supabase/server";
 
-type AgentProfilePageProps = { params: Promise<{ id: string }> };\n\nexport const dynamic = "force-dynamic";
+type AgentProfilePageProps = { params: Promise<{ id: string }> };
+
+export const dynamic = "force-dynamic";
 type ExecutionRow = {
   id: string;
   topic_id: string;
