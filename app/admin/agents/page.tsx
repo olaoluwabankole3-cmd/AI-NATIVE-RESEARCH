@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";\nimport type { ReactNode } from "react";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 
@@ -254,6 +254,6 @@ export default function AgentAdminPage() {
 
 const inputClass = "mt-2 w-full rounded-xl border border-white/10 bg-[#050b0a] px-3.5 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-emerald-300/40";
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return <label className="block min-w-0 text-sm font-medium text-white/75">{label}{hint && <span className="mt-1 block text-xs leading-5 font-normal text-white/35">{hint}</span>}{children}</label>;
 }
