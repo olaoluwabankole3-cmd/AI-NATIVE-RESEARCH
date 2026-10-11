@@ -10,7 +10,7 @@ export const maxDuration = 60;
 
 export async function POST(_request: Request, { params }: Params) {
   const { id: topicId, agentId } = await params;
-  const resolvedAgent = getAgent(agentId);
+  const resolvedAgent = await getAgent(agentId);
   if (!resolvedAgent) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
   const agent: Agent = resolvedAgent;
 
