@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
-import { agents } from "@/lib/agents";
+import { getRegisteredAgents } from "@/lib/agent-registry";
 
 export default function AgentsPage() {
   return (
@@ -31,9 +31,10 @@ export default function AgentsPage() {
               </p>
               <h2 className="mt-2 text-2xl font-medium tracking-[-0.035em]">Available agents</h2>
             </div>
-            <span className="hidden text-sm text-white/30 sm:block">
-              {agents.length} registered
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="hidden text-sm text-white/30 sm:block">{agents.length} registered</span>
+              <Link href="/admin/agents" className="rounded-full border border-white/15 px-3.5 py-2 text-xs font-medium text-white/65 transition hover:border-emerald-300/30 hover:text-emerald-200">Manage registry</Link>
+            </div>     </span>
           </div>
 
           <div className="mt-6 grid gap-x-7 gap-y-0 sm:grid-cols-2 lg:grid-cols-3">
