@@ -62,13 +62,14 @@ export function selectAgentsForResponse(
   latestMessage: string,
   attachedAgentIds: string[],
   limit = 2,
+  registryAgents: Agent[] = agents,
 ): Agent[] {
   const topicInput = words(topic.title + " " + topic.body);
   const messageInput = words(latestMessage);
   const fullInput = new Set([...topicInput, ...messageInput]);
 
-  const ranked = agents
-    .filter((agent) => attachedAgentIds.includes(agent.id))
+  const ranked = registryAgents
+    .filter((agent) => agent.status === "AVAILABLE" && agent.isActive !== false && attachedAgentIds.includes(agent.id))
     .map((agent) => {
       const roleWords = words(agent.role);
       const capabilityWords = words(agent.capabilities.join(" "));
