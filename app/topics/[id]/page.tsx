@@ -394,24 +394,34 @@ export default function TopicPage() {
       return;
     }
 
-    const { data: createdParticipant, error } = await supabase
-      .from("topic_participants")
-      .insert({
-        topic_id: topic.id,
-        participant_type: "AGENT",
-        user_id: null,
-        agent_id: agent.id,
-      })
-      .select("id, participant_type, user_id, agent_id")
-      .single();
+    let createdParticipant: TopicParticipant;
 
-    if (error || !createdParticipant) {
-      showMessage(error?.message ?? "Could not add the AI participant.", "error");
+    try {
+      const response = await fetch(`/api/topics/${topic.id}/agents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agentId: agent.id }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok || !payload.participant) {
+        showMessage(payload.error ?? "Could not add the AI participant.", "error");
+        setAddingAgentId(null);
+        return;
+      }
+
+      createdParticipant = payload.participant as TopicParticipant;
+    } catch {
+      showMessage("Could not reach the server to add this AI specialist.", "error");
       setAddingAgentId(null);
       return;
     }
 
-    setTopicParticipants((current) => [...current, createdParticipant]);
+    setTopicParticipants((current) =>
+      current.some((participant) => participant.id === createdParticipant.id)
+        ? current
+        : [...current, createdParticipant],
+    );
     setShowAgentPicker(false);
     setAddingAgentId(null);
     try {
