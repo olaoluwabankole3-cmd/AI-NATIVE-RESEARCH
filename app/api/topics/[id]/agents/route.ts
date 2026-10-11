@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Agent ID is required." }, { status: 400 });
   }
 
-  const agent = getAgent(agentId);
+  const agent = await getAgent(agentId);
   if (!agent) {
     return NextResponse.json({ error: "Agent not found." }, { status: 404 });
   }
