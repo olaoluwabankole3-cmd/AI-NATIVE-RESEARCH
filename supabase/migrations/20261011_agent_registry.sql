@@ -98,3 +98,6 @@ values
     'Act as a strategy and decision-support specialist. Turn evidence into a small set of options, assumptions, risks, trade-offs, and practical next steps. Make uncertainty visible and do not present recommendations as certainty.'
   )
 on conflict (id) do nothing;
+
+
+NOTIFY pgrst, 'reload schema';
