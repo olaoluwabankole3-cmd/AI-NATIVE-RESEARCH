@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { getAgent, runAgent, type AgentArtifactContext } from "@/lib/agent-runtime";
+import { getAgent, getAgents, runAgent, type AgentArtifactContext } from "@/lib/agent-runtime";
 import type { Agent } from "@/lib/agents";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
@@ -128,10 +128,12 @@ export async function POST(_request: Request, { params }: Params) {
 
   const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name || profile.username || "Human"]));
   const participantMap = new Map((participants ?? []).map((participant) => [participant.id, participant]));
+  const registryAgents = await getAgents();
+  const registryAgentMap = new Map(registryAgents.map((registeredAgent) => [registeredAgent.id, registeredAgent]));
   const contextPosts = chronologicalPosts.map((post) => {
     const participant = participantMap.get(post.participant_id);
     const author = participant?.participant_type === "AGENT"
-      ? getAgent(participant.agent_id || "")?.name || "AI agent"
+      ? registryAgentMap.get(participant.agent_id || "")?.name || "AI agent"
       : profileMap.get(participant?.user_id || "") || "Human";
     return { author, body: post.body };
   });
