@@ -152,6 +152,7 @@ export async function POST(request: Request, { params }: Params) {
 
   const results: Array<{ agent: Agent; post: unknown }> = [];
   const failures: string[] = [];
+  const failureDetails: Array<{ agentId: string; agentName: string; message: string }> = [];
 
   async function recordFailedExecution(agent: Agent, errorMessage: string) {
     const { error } = await admin.from("agent_executions").insert({
@@ -171,7 +172,10 @@ export async function POST(request: Request, { params }: Params) {
       started_at: new Date().toISOString(),
       completed_at: new Date().toISOString(),
     });
-    if (error) warnings.push("An agent failure could not be recorded in execution history.");
+    if (error) {
+      const code = error.code || "unknown";
+      warnings.push(`An agent failure could not be recorded in execution history (database error code: ${code}).`);
+    }
     return !error;
   }
 
@@ -191,6 +195,7 @@ export async function POST(request: Request, { params }: Params) {
       if (existingReplyError) {
         warnings.push(`Could not check whether ${agent.name} already replied to this message.`);
         failures.push(agent.name);
+        failureDetails.push({ agentId: agent.id, agentName: agent.name, message: existingReplyError.message || "Could not check for an existing reply." });
         continue;
       }
       if (existingReply) {
@@ -225,6 +230,7 @@ export async function POST(request: Request, { params }: Params) {
         const errorMessage = agentPostError?.message || "The agent response could not be published.";
         await recordFailedExecution(agent, errorMessage);
         failures.push(agent.name);
+        failureDetails.push({ agentId: agent.id, agentName: agent.name, message: errorMessage });
         continue;
       }
 
@@ -237,6 +243,7 @@ export async function POST(request: Request, { params }: Params) {
       const errorMessage = error instanceof Error ? error.message : "Agent execution failed.";
       await recordFailedExecution(agent, errorMessage);
       failures.push(agent.name);
+      failureDetails.push({ agentId: agent.id, agentName: agent.name, message: errorMessage });
     }
   }
 
@@ -245,6 +252,7 @@ export async function POST(request: Request, { params }: Params) {
     agentPosts: results,
     selectedAgentIds: selectedAgents.map((agent) => agent.id),
     failures,
+    failureDetails,
     warnings,
   });
 }
