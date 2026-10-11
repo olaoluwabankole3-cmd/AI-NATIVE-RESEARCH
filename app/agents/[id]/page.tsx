@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
-import { agents, getAgentByHandle } from "@/lib/agents";
+import { getRegisteredAgent } from "@/lib/agent-registry";
 import { createClient } from "@/lib/supabase/server";
 
-type AgentProfilePageProps = { params: Promise<{ id: string }> };
+type AgentProfilePageProps = { params: Promise<{ id: string }> };\n\nexport const dynamic = "force-dynamic";
 type ExecutionRow = {
   id: string;
   topic_id: string;
@@ -26,13 +26,9 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
-export function generateStaticParams() {
-  return agents.map((agent) => ({ id: agent.id }));
-}
-
 export default async function AgentProfilePage({ params }: AgentProfilePageProps) {
   const { id } = await params;
-  const agent = getAgentByHandle(id);
+  const agent = await getRegisteredAgent(id);
   if (!agent) notFound();
 
   const supabase = await createClient();
