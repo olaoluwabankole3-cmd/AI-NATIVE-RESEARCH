@@ -1,4 +1,5 @@
-import { agents, type Agent } from "@/lib/agents";
+import type { Agent } from "@/lib/agents";
+import { getRegisteredAgent, getRegisteredAgents } from "@/lib/agent-registry";
 
 export type AgentArtifactContext = {
   id: string;
