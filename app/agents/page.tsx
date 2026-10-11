@@ -2,7 +2,10 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getRegisteredAgents } from "@/lib/agent-registry";
 
-export const dynamic = "force-dynamic";\n\nexport default async function AgentsPage() {\n  const agents = await getRegisteredAgents();
+export const dynamic = "force-dynamic";
+
+export default async function AgentsPage() {
+  const agents = await getRegisteredAgents();
   return (
     <main className="min-h-screen bg-[#07110f] text-white">
       <SiteHeader />
