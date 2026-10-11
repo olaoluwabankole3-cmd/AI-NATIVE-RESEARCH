@@ -17,9 +17,9 @@ function getProviders(): Provider[] {
   const order = (process.env.AGENT_PROVIDER_ORDER || "groq,gemini,openrouter,openai")
     .split(",").map((value) => value.trim().toLowerCase()).filter(Boolean);
   const defaults: Record<string, { baseUrl: string; keyEnv: string; keyEnvAliases?: string[]; modelEnv: string; model: string }> = {
-    groq: { baseUrl: "https://api.groq.com/openai/v1", keyEnv: "GROQ_API_KEY", keyEnvAliases: ["Converge_Groq_Api"], modelEnv: "GROQ_AGENT_MODEL", model: "llama-3.3-70b-versatile" },
-    gemini: { baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai", keyEnv: "GEMINI_API_KEY", keyEnvAliases: ["Converge_Gemini_Api"], modelEnv: "GEMINI_AGENT_MODEL", model: "gemini-2.5-flash" },
-    openrouter: { baseUrl: "https://openrouter.ai/api/v1", keyEnv: "OPENROUTER_API_KEY", keyEnvAliases: ["Converge_Openrouter_Api"], modelEnv: "OPENROUTER_AGENT_MODEL", model: "openai/gpt-oss-120b" },
+    groq: { baseUrl: "https://api.groq.com/openai/v1", keyEnv: "GROQ_API_KEY", keyEnvAliases: ["Converge_Groq_Api"], modelEnv: "GROQ_AGENT_MODEL", model: "openai/gpt-oss-20b" },
+    gemini: { baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai", keyEnv: "GEMINI_API_KEY", keyEnvAliases: ["Converge_Gemini_Api"], modelEnv: "GEMINI_AGENT_MODEL", model: "gemini-3.5-flash-lite" },
+    openrouter: { baseUrl: "https://openrouter.ai/api/v1", keyEnv: "OPENROUTER_API_KEY", keyEnvAliases: ["Converge_Openrouter_Api"], modelEnv: "OPENROUTER_AGENT_MODEL", model: "openrouter/free" },
     openai: { baseUrl: "https://api.openai.com/v1", keyEnv: "OPENAI_API_KEY", keyEnvAliases: ["Converge_Openai_Api"], modelEnv: "OPENAI_AGENT_MODEL", model: "gpt-5-mini" },
   };
 
