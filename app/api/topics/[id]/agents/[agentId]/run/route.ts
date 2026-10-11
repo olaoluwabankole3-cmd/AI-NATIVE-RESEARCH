@@ -20,7 +20,8 @@ export async function POST(_request: Request, { params }: Params) {
   const { id: topicId, agentId } = await params;
   const resolvedAgent = await getAgent(agentId);
   if (!resolvedAgent) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
-  const agent: Agent = resolvedAgent;\n  if (agent.status !== "AVAILABLE") {\n    return NextResponse.json({ error: "This agent is not currently available to run." }, { status: 409 });\n  }
+  const agent: Agent = resolvedAgent;
+  if (agent.status !== "AVAILABLE") {\n    return NextResponse.json({ error: "This agent is not currently available to run." }, { status: 409 });\n  }
 
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
