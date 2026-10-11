@@ -209,10 +209,11 @@ body.cursor-present .cursor-aura { opacity: 1; }
   .word-particles { opacity: .24; }
 }
 
-.rotating-headline{height:3em;min-height:3em;overflow:visible;transition:opacity .22s ease;transform:none;filter:none}
+.rotating-headline{display:flex;flex-direction:column;align-items:flex-start;height:auto;min-height:0;line-height:1.08;overflow:visible;transition:opacity .22s ease;transform:none;filter:none}
 .rotating-headline--out{opacity:0}
 .rotating-headline--in{opacity:1}
-.rotating-headline__line{display:block;height:1em;line-height:1em;white-space:nowrap}
-.rotating-headline__char{display:inline-block;animation:headlineCharacterIn .3s ease-out both}
+.rotating-headline>.rotating-headline__line{position:relative;display:block;width:max-content;max-width:100%;height:auto;min-height:0;line-height:1.08;white-space:nowrap}
+.rotating-headline__char{display:inline-block;vertical-align:baseline;animation:headlineCharacterIn .3s ease-out both}
 @keyframes headlineCharacterIn{from{opacity:0}to{opacity:1}}
+@media(max-width:639px){.rotating-headline{line-height:1.04}.rotating-headline>.rotating-headline__line{line-height:1.04}}
 @media(prefers-reduced-motion:reduce){.rotating-headline,.rotating-headline__char{animation:none!important;transition:none!important;filter:none!important;transform:none!important}}
