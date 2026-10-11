@@ -342,6 +342,7 @@ export default function TopicPage() {
       setReply("");
 
       const failures = payload.failures ?? [];
+      const failureDetails = (payload.failureDetails ?? []) as Array<{ agentId: string; agentName: string; message: string }>;
       const warnings = payload.warnings ?? [];
       const agentCount = payload.agentPosts?.length ?? 0;
       let statusMessage: string;
@@ -360,6 +361,10 @@ export default function TopicPage() {
         statusMessage = "Your reply is live. No attached AI specialist was selected for this message.";
       }
 
+      if (failureDetails.length > 0) {
+        const details = failureDetails.map((failure) => `${failure.agentName}: ${failure.message}`).join(" ");
+        statusMessage += ` Details: ${details}`;
+      }
       if (warnings.length > 0) {
         statusMessage += ` Note: ${warnings.join(" ")}`;
       }
@@ -443,10 +448,14 @@ export default function TopicPage() {
         );
         showMessage(`${agent.name} joined the topic and responded automatically.`, "success");
       } else {
-        showMessage(`${agent.name} joined the topic, but could not respond yet.`, "info");
+        const reason = typeof payload.error === "string" ? ` Details: ${payload.error}` : "";
+        const historyNote = payload.executionLogged === false
+          ? " Failure details could not be saved; confirm that the agent_executions migration is applied."
+          : "";
+        showMessage(`${agent.name} joined the topic, but could not respond yet.${reason}${historyNote}`, "error");
       }
     } catch {
-      showMessage(`${agent.name} joined the topic, but its automatic response could not be reached.`, "info");
+      showMessage(`${agent.name} joined the topic, but its automatic response could not be reached. Check the connection and retry with a new human message.`, "error");
     }
   }
 
