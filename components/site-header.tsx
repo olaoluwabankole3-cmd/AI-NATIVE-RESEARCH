@@ -5,15 +5,46 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const links = [
-  { href: "/communities", label: "Communities" },
-  { href: "/feed", label: "Activity" },
-  { href: "/people", label: "People" },
-  { href: "/organizations", label: "Organisations" },
-  { href: "/network", label: "Network" },
-  { href: "/messages", label: "Messages" },
-  { href: "/agents", label: "AI registry" },
+type TopNavIconName = "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents";
+
+const links: { href: string; label: string; icon: TopNavIconName }[] = [
+  { href: "/communities", label: "Communities", icon: "communities" },
+  { href: "/feed", label: "Activity", icon: "activity" },
+  { href: "/people", label: "People", icon: "people" },
+  { href: "/organizations", label: "Organisations", icon: "organizations" },
+  { href: "/network", label: "Network", icon: "network" },
+  { href: "/messages", label: "Messages", icon: "messages" },
+  { href: "/agents", label: "AI registry", icon: "agents" },
 ];
+
+function TopNavGlyph({ name }: { name: TopNavIconName }) {
+  const common = {
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true as const,
+    className: "converge-nav-icon",
+  };
+  switch (name) {
+    case "communities":
+      return <svg {...common}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>;
+    case "activity":
+      return <svg {...common}><path d="M3 12h4l2.2-6 4.4 12 2.2-6H21" /></svg>;
+    case "people":
+      return <svg {...common}><circle cx="9" cy="8" r="3.2" /><path d="M3.5 20v-1.4a5.5 5.5 0 0 1 11 0V20M16 5.4a3.2 3.2 0 0 1 0 6.2M17 15a4.8 4.8 0 0 1 3.5 4.6" /></svg>;
+    case "organizations":
+      return <svg {...common}><path d="M4 20.5h16M6 20V4.5h12V20M9 8h1.5M13.5 8H15M9 11.5h1.5M13.5 11.5H15M10 20v-4h4v4" /></svg>;
+    case "network":
+      return <svg {...common}><circle cx="12" cy="5" r="2.3" /><circle cx="5" cy="18" r="2.3" /><circle cx="19" cy="18" r="2.3" /><path d="m10.9 7-4.7 8.9M13.1 7l4.7 8.9M7.5 18h9" /></svg>;
+    case "messages":
+      return <svg {...common}><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l-1-4.2A7.5 7.5 0 1 1 20 11.5Z" /><path d="M8 11h8M8 14.5h5" /></svg>;
+    case "agents":
+      return <svg {...common}><path d="m12 2.8 2.4 6.1 6.2 2.4-6.2 2.4-2.4 6.2-2.4-6.2-6.1-2.4 6.1-2.4L12 2.8Z" /><path d="m19.5 15.5 1.1 2.8 2.6 1.1-2.6 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.8Z" /></svg>;
+  }
+}
 
 const mobileLinksPrimary = [
   { href: "/communities", label: "Spaces", kind: "spaces" },
@@ -129,7 +160,8 @@ export function SiteHeader() {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
               <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined} className={["converge-primary-nav__link", active ? "is-active" : "", active ? "text-white" : muted].join(" ")}>
-                {link.label}
+                <TopNavGlyph name={link.icon} />
+                <span>{link.label}</span>
               </Link>
             );
           })}

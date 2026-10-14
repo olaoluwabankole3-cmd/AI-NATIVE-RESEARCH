@@ -441,16 +441,41 @@ main:not(.converge-home):has(> header) button:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
+  gap: 7px;
+  min-height: 37px;
   border: 1px solid transparent;
   border-radius: 10px;
-  padding: 0 12px;
+  padding: 0 8px;
   color: #a3b0a7;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 620;
   letter-spacing: -0.012em;
   white-space: nowrap;
   transition: color 170ms ease, background 170ms ease, border-color 170ms ease;
+}
+
+.converge-nav-icon {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  opacity: 0.86;
+  transition: opacity 170ms ease, transform 170ms ease;
+}
+
+.converge-primary-nav__link.is-active .converge-nav-icon {
+  opacity: 1;
+}
+
+.converge-primary-nav__link:hover .converge-nav-icon {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+@media (min-width: 1280px) and (max-width: 1535px) {
+  .converge-primary-nav { gap: 1px; }
+  .converge-primary-nav__link { gap: 5px; padding-right: 6px; padding-left: 6px; font-size: 10.5px; }
+  .converge-nav-icon { width: 14px; height: 14px; }
+  header .max-w-\[1480px\] > div span.max-w-\[160px\] { display: none; }
 }
 
 .converge-primary-nav__link:hover {
