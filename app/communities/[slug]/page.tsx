@@ -119,7 +119,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
         <div className="border-b border-white/[0.09] py-5">
@@ -137,7 +137,7 @@ export default function CommunityPage() {
           </div>
         ) : (
           <>
-            <section className="border-b border-white/[0.09] py-8 sm:py-10">
+            <section className="converge-page-intro border-b border-white/[0.09] py-8 sm:py-10">
               <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
                 <div className="min-w-0">
                   <div className="flex items-center gap-3">

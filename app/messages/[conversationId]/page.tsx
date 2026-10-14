@@ -142,7 +142,7 @@ export default function DirectConversationPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto flex min-h-[calc(100vh-72px)] max-w-[1120px] flex-col px-3 pb-6 pt-4 sm:px-7 sm:pt-7">
         <div className="mb-4 flex items-center gap-3">

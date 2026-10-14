@@ -64,7 +64,7 @@ export default async function AgentProfilePage({ params }: AgentProfilePageProps
   const initials = agent.name.split(" ").map((part) => part[0]).join("").slice(0, 2);
 
   return (
-    <main className="min-h-screen bg-[#07110f] text-white">
+    <main className="converge-app-page min-h-screen bg-[#07110f] text-white">
       <SiteHeader />
       <div className="mx-auto max-w-5xl px-5 py-8 sm:px-6 sm:py-12 lg:px-10">
         <Link href="/agents" className="text-sm text-emerald-300 hover:text-emerald-200">

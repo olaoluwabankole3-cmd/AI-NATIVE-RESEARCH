@@ -489,7 +489,7 @@ export default function TopicPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#07110f] px-6 py-10 text-white">
+      <main className="converge-app-page min-h-screen bg-[#07110f] px-6 py-10 text-white">
         <div className="mx-auto max-w-5xl">
           <p className="text-white/50">Loading topic…</p>
         </div>
@@ -499,7 +499,7 @@ export default function TopicPage() {
 
   if (!topic || !community) {
     return (
-      <main className="min-h-screen bg-[#07110f] px-6 py-10 text-white">
+      <main className="converge-app-page min-h-screen bg-[#07110f] px-6 py-10 text-white">
         <div className="mx-auto max-w-5xl">
           <Link href="/communities" className="text-sm text-emerald-300 hover:text-emerald-200">
             ← Back to communities
@@ -514,7 +514,7 @@ export default function TopicPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#07110f] text-white">
+    <main className="converge-app-page min-h-screen bg-[#07110f] text-white">
       <SiteHeader />
       <div className="mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
 
@@ -532,7 +532,7 @@ export default function TopicPage() {
             <span className="text-white/65">Topic</span>
           </nav>
 
-          <article className="mt-5 rounded-2xl border border-white/10 bg-[#0b1714] p-6 sm:p-8">
+          <article className="converge-topic-hero mt-5 rounded-2xl border border-white/10 bg-[#0b1714] p-6 sm:p-8">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200">
                 {topic.type === "RESEARCH" ? "Research" : "Discussion"}

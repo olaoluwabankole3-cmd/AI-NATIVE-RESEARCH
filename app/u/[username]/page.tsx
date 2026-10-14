@@ -154,7 +154,7 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto max-w-[1000px] px-4 pb-16 pt-8 sm:px-7 sm:pt-12">
         {loading ? (
