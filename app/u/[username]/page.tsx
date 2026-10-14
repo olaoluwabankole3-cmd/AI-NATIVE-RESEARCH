@@ -61,12 +61,14 @@ export default function PublicProfilePage() {
   useEffect(() => {
     let active = true;
     async function load() {
+      const profileQuery = supabase.from("profiles")
+        .select("id, username, display_name, headline, bio, avatar_url, location, organization, website_url, interests, profile_visibility, created_at");
+      const lookup = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username)
+        ? profileQuery.eq("id", username)
+        : profileQuery.eq("username", username);
       const [{ data: authData }, { data, error }] = await Promise.all([
         supabase.auth.getUser(),
-        supabase.from("profiles")
-          .select("id, username, display_name, headline, bio, avatar_url, location, organization, website_url, interests, profile_visibility, created_at")
-          .eq("username", username)
-          .maybeSingle(),
+        lookup.maybeSingle(),
       ]);
       if (!active) return;
       setViewerId(authData.user?.id ?? null);
@@ -171,7 +173,7 @@ export default function PublicProfilePage() {
                 </div>
                 <div className="mt-5">
                   <h1 className="break-words text-3xl font-semibold tracking-[-0.055em] sm:text-4xl">{profile.display_name}</h1>
-                  <p className="mt-1.5 text-sm text-white/40">@{profile.username}</p>
+                  {profile.username && <p className="mt-1.5 text-sm text-white/40">@{profile.username}</p>}
                   {profile.headline && <p className="mt-4 max-w-3xl text-base leading-7 text-white/80">{profile.headline}</p>}
                   {(profile.organization || profile.location) && <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45"><span>{profile.organization}</span>{profile.organization && profile.location && <span aria-hidden="true">·</span>}<span>{profile.location}</span></p>}
                 </div>
