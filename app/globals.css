@@ -396,3 +396,29 @@ main:not(.converge-home):has(> header) button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .converge-mobile-dock__item { transition: none; }
 }
+
+
+/* Keep compact summary metrics legible on phone-sized layouts. */
+@media (max-width: 639px) {
+  main:not(.converge-home):has(> header) div.grid[class~="sm:grid-cols-3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  main:not(.converge-home):has(> header) div.grid[class~="sm:grid-cols-3"] > div {
+    min-width: 0;
+    padding: 0.75rem;
+    border-radius: 0.85rem;
+  }
+  main:not(.converge-home):has(> header) div.grid[class~="sm:grid-cols-3"] > div > p:first-child {
+    font-size: 1.35rem;
+    line-height: 1.1;
+  }
+  main:not(.converge-home):has(> header) div.grid[class~="sm:grid-cols-3"] > div > p:nth-child(2) {
+    overflow-wrap: anywhere;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+  main:not(.converge-home):has(> header) div.grid[class~="sm:grid-cols-3"] > div > p:nth-child(3) {
+    display: none;
+  }
+}

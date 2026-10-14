@@ -77,7 +77,7 @@ export default function ActivityFeedPage() {
   const [filterTopicId, setFilterTopicId] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [composerOpen, setComposerOpen] = useState(true);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [postType, setPostType] = useState<PostType>("update");
   const [body, setBody] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
@@ -89,6 +89,14 @@ export default function ActivityFeedPage() {
   const [loadingComments, setLoadingComments] = useState<string | null>(null);
   const [commentBusy, setCommentBusy] = useState(false);
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 640px)");
+    const syncComposer = () => setComposerOpen(mediaQuery.matches);
+    syncComposer();
+    mediaQuery.addEventListener("change", syncComposer);
+    return () => mediaQuery.removeEventListener("change", syncComposer);
+  }, []);
 
   const loadFeed = useCallback(async (knownViewerId?: string) => {
     const currentViewerId = knownViewerId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
