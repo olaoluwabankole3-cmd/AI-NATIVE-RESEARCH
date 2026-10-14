@@ -1246,7 +1246,7 @@ main:not(.converge-home):has(> header) button:focus-visible {
 .converge-app-page input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
 .converge-app-page select,
 .converge-app-page textarea { border-radius: 6px !important; border-color: rgba(185,220,194,.16); }
-.converge-app-page input:not([type="file"]):not([type="checkbox"]):not([type="radio]),
+.converge-app-page input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
 .converge-app-page select { min-height: 42px; }
 .converge-app-page input:focus,
 .converge-app-page textarea:focus,
