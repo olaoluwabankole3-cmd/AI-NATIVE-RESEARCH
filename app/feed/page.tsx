@@ -90,14 +90,6 @@ export default function ActivityFeedPage() {
   const [commentBusy, setCommentBusy] = useState(false);
   const [notice, setNotice] = useState("");
 
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 640px)");
-    const syncComposer = () => setComposerOpen(mediaQuery.matches);
-    syncComposer();
-    mediaQuery.addEventListener("change", syncComposer);
-    return () => mediaQuery.removeEventListener("change", syncComposer);
-  }, []);
-
   const loadFeed = useCallback(async (knownViewerId?: string) => {
     const currentViewerId = knownViewerId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
     if (!currentViewerId) {
