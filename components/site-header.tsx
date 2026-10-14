@@ -44,7 +44,6 @@ export function SiteHeader() {
   const [authReady, setAuthReady] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const muted = "text-white/55 hover:text-white";
-  const line = "bg-emerald-300";
 
   useEffect(() => {
     let active = true;
@@ -125,13 +124,12 @@ export function SiteHeader() {
           <span className="text-[17px] font-bold tracking-[-0.055em]">converge<span className="ml-0.5 text-emerald-300">.</span></span>
         </Link>
 
-        <nav aria-label="Main navigation" className="hidden items-center gap-0.5 xl:flex">
+        <nav aria-label="Main navigation" className="converge-primary-nav hidden items-center gap-0.5 xl:flex">
           {links.map((link) => {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
-              <Link key={link.href} href={link.href} className={["relative px-4 py-2 text-[13px] font-semibold transition", active ? "text-white" : muted].join(" ")}>
+              <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined} className={["converge-primary-nav__link", active ? "is-active" : "", active ? "text-white" : muted].join(" ")}>
                 {link.label}
-                {active && <span className={["absolute inset-x-4 -bottom-[17px] h-0.5", line].join(" ")} />}
               </Link>
             );
           })}
