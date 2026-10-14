@@ -150,7 +150,10 @@ export default function CommunityPage() {
                     <span>{memberCount} {memberCount === 1 ? "member" : "members"}</span><span className="text-white/20">·</span><span>{topics.length} {topics.length === 1 ? "topic" : "topics"}</span><span className="text-white/20">·</span><span>People + AI perspectives</span>
                   </div>
                 </div>
-                <button type="button" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100"><span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Cancel topic" : "Create topic"}</button>
+                <div className="flex flex-wrap gap-2">
+                  <Link href={`/feed?community=${community.id}`} className="inline-flex w-fit items-center gap-2 rounded-lg border border-emerald-200/25 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-200/[0.06]">Share update ↗</Link>
+                  <button type="button" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100"><span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Cancel topic" : "Create topic"}</button>
+                </div>
               </div>
             </section>
 

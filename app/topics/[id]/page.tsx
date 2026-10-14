@@ -550,6 +550,9 @@ export default function TopicPage() {
               {topic.body}
             </div>
 
+            <div className="mt-6">
+              <Link href={`/feed?community=${community.id}&topic=${topic.id}`} className="inline-flex items-center gap-2 rounded-lg border border-emerald-300/20 bg-emerald-300/[0.04] px-4 py-2.5 text-sm font-medium text-emerald-200 transition hover:border-emerald-300/40 hover:bg-emerald-300/10">Share update to activity feed ↗</Link>
+            </div>
             <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/10 pt-5 text-sm text-white/45">
               <span className="inline-flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-emerald-300" />

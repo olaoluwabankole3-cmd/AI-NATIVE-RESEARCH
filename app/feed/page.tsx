@@ -1,18 +1,22 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 
 type PostType = "update" | "question" | "idea" | "resource";
+type CommunityContext = { id: string; name: string; slug: string; description: string | null };
+type TopicContext = { id: string; title: string; community_id: string; type: "DISCUSSION" | "RESEARCH"; created_at: string };
 type FeedPost = {
   id: string;
   author_id: string;
   post_type: PostType;
   body: string;
   link_url: string | null;
+  community_id: string | null;
+  topic_id: string | null;
   created_at: string;
   updated_at: string;
   like_count: number;
@@ -63,6 +67,12 @@ export default function ActivityFeedPage() {
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [viewerProfile, setViewerProfile] = useState<MemberProfile | null>(null);
   const [posts, setPosts] = useState<FeedPost[]>([]);
+  const [communities, setCommunities] = useState<CommunityContext[]>([]);
+  const [topics, setTopics] = useState<TopicContext[]>([]);
+  const [selectedCommunityId, setSelectedCommunityId] = useState("");
+  const [selectedTopicId, setSelectedTopicId] = useState("");
+  const contextInitialized = useRef(false);
+  const [feedScope, setFeedScope] = useState<"all" | "community" | "topic">("all");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [composerOpen, setComposerOpen] = useState(true);
@@ -86,15 +96,28 @@ export default function ActivityFeedPage() {
     }
     setViewerId(currentViewerId);
 
-    const [{ data: postData, error: postError }, { data: viewerData }] = await Promise.all([
+    const [
+      { data: postData, error: postError },
+      { data: viewerData },
+      { data: communityData, error: communityError },
+      { data: topicData, error: topicError },
+    ] = await Promise.all([
       supabase.from("activity_posts")
-        .select("id, author_id, post_type, body, link_url, created_at, updated_at")
+        .select("id, author_id, post_type, body, link_url, community_id, topic_id, created_at, updated_at")
         .order("created_at", { ascending: false })
         .limit(50),
       supabase.from("profiles")
         .select("id, username, display_name, avatar_url, headline, organization")
         .eq("id", currentViewerId)
         .maybeSingle(),
+      supabase.from("communities")
+        .select("id, name, slug, description")
+        .order("name", { ascending: true })
+        .limit(200),
+      supabase.from("topics")
+        .select("id, title, community_id, type, created_at")
+        .order("created_at", { ascending: false })
+        .limit(250),
     ]);
 
     if (postError) {
@@ -105,6 +128,26 @@ export default function ActivityFeedPage() {
     }
     setLoadError("");
     setViewerProfile((viewerData as MemberProfile | null) ?? null);
+    if (communityError || topicError) {
+      console.error("[Converge Activity Feed] Community/topic contexts could not be loaded", communityError ?? topicError);
+    }
+    const communityList = (communityData ?? []) as CommunityContext[];
+    const topicList = (topicData ?? []) as TopicContext[];
+    setCommunities(communityList);
+    setTopics(topicList);
+
+    if (!contextInitialized.current) {
+      const query = new URLSearchParams(window.location.search);
+      const requestedCommunity = query.get("community");
+      const requestedTopic = query.get("topic");
+      const matchTopic = topicList.find((item) => item.id === requestedTopic);
+      const matchCommunity = communityList.find((item) => item.id === requestedCommunity || item.slug === requestedCommunity);
+      const initialCommunityId = matchTopic?.community_id ?? matchCommunity?.id ?? "";
+      setSelectedCommunityId(initialCommunityId);
+      setSelectedTopicId(matchTopic?.community_id === initialCommunityId ? matchTopic.id : "");
+      contextInitialized.current = true;
+    }
+
     const rawPosts = (postData ?? []) as RawPost[];
     if (!rawPosts.length) {
       setPosts([]);
@@ -186,11 +229,15 @@ export default function ActivityFeedPage() {
 
     setPublishing(true);
     setNotice("");
+    const topicContext = topics.find((item) => item.id === selectedTopicId);
+    const contextCommunityId = topicContext?.community_id ?? selectedCommunityId;
     const { error } = await supabase.from("activity_posts").insert({
       author_id: viewerId,
       post_type: postType,
       body: trimmedBody,
       link_url: trimmedLink || null,
+      community_id: contextCommunityId || null,
+      topic_id: selectedTopicId || null,
     });
     if (error) {
       setNotice(friendlyError(error.message));
@@ -308,6 +355,14 @@ export default function ActivityFeedPage() {
   }
 
   const selectedType = postTypes.find((item) => item.value === postType) ?? postTypes[0];
+  const selectedCommunity = communities.find((item) => item.id === selectedCommunityId);
+  const selectedTopic = topics.find((item) => item.id === selectedTopicId);
+  const availableTopics = topics.filter((item) => !selectedCommunityId || item.community_id === selectedCommunityId);
+  const visiblePosts = posts.filter((post) => {
+    if (feedScope === "community") return Boolean(post.community_id);
+    if (feedScope === "topic") return Boolean(post.topic_id);
+    return true;
+  });
 
   return (
     <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
@@ -358,6 +413,42 @@ export default function ActivityFeedPage() {
                   {postTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                 </select>
                 <p className="mt-2 text-[11px] text-white/35">{selectedType.help}</p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">Community (optional)</span>
+                    <select
+                      value={selectedCommunityId}
+                      onChange={(event) => {
+                        const nextCommunityId = event.target.value;
+                        setSelectedCommunityId(nextCommunityId);
+                        if (selectedTopicId && !topics.some((item) => item.id === selectedTopicId && item.community_id === nextCommunityId)) {
+                          setSelectedTopicId("");
+                        }
+                      }}
+                      className="w-full rounded-xl border border-white/[0.1] bg-[#0b1110] px-3.5 py-3 text-xs text-white/80 outline-none focus:border-emerald-200/30"
+                    >
+                      <option value="">Main Converge feed</option>
+                      {communities.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">Research topic (optional)</span>
+                    <select
+                      value={selectedTopicId}
+                      onChange={(event) => {
+                        const nextTopicId = event.target.value;
+                        setSelectedTopicId(nextTopicId);
+                        const nextTopic = topics.find((item) => item.id === nextTopicId);
+                        if (nextTopic) setSelectedCommunityId(nextTopic.community_id);
+                      }}
+                      className="w-full rounded-xl border border-white/[0.1] bg-[#0b1110] px-3.5 py-3 text-xs text-white/80 outline-none focus:border-emerald-200/30"
+                    >
+                      <option value="">No specific topic</option>
+                      {availableTopics.map((item) => <option key={item.id} value={item.id}>{item.type === "RESEARCH" ? "Research" : "Discussion"} · {item.title}</option>)}
+                    </select>
+                  </label>
+                </div>
+                {(selectedCommunity || selectedTopic) && <p className="mt-3 rounded-xl border border-emerald-200/12 bg-emerald-200/[0.035] px-3.5 py-3 text-[11px] leading-5 text-emerald-100/75">This post will appear in the main activity feed{selectedCommunity ? `, the ${selectedCommunity.name} community` : ""}{selectedTopic ? `, and the “${selectedTopic.title}” topic` : ""}.</p>}
                 <label htmlFor="post-body" className="sr-only">Write your post</label>
                 <textarea id="post-body" value={body} onChange={(event) => setBody(event.target.value)} maxLength={5000} rows={4} placeholder={postType === "question" ? "What are you trying to figure out?" : postType === "idea" ? "What idea would you like people to think through?" : postType === "resource" ? "Tell us why this resource is useful…" : "What have you been working on or learning?"} className="mt-4 min-h-28 w-full resize-y rounded-2xl border border-white/[0.1] bg-[#0b1110] px-4 py-3 text-sm leading-6 text-white/85 outline-none placeholder:text-white/25 focus:border-emerald-200/25" />
                 <label htmlFor="post-link" className="mt-4 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/45">Link (optional)</label>
@@ -373,9 +464,14 @@ export default function ActivityFeedPage() {
               <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">The community pulse</p><h2 className="mt-1.5 text-xl font-semibold tracking-[-0.04em]">Latest activity</h2></div>
               <button type="button" onClick={() => { setLoading(true); void loadFeed(viewerId ?? undefined); }} disabled={loading} className="rounded-full border border-white/12 px-3.5 py-2 text-[10px] font-semibold text-white/55 hover:border-emerald-200/20 hover:text-white disabled:opacity-40">↻ Refresh</button>
             </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {([{ value: "all", label: "All activity" }, { value: "community", label: "Community posts" }, { value: "topic", label: "Research-topic posts" }] as const).map((item) => (
+                <button key={item.value} type="button" onClick={() => setFeedScope(item.value)} className={["rounded-full px-3.5 py-2 text-[10px] font-semibold transition", feedScope === item.value ? "bg-emerald-200 text-[#0b1710]" : "border border-white/10 text-white/50 hover:border-emerald-200/20 hover:text-white"].join(" ")}>{item.label}</button>
+              ))}
+            </div>
 
             {loading ? <div className="mt-4 grid gap-3">{[0,1,2].map((item) => <div key={item} className="h-44 animate-pulse rounded-2xl border border-white/[0.08] bg-white/[0.02]" />)}</div>
-              : posts.length ? <div className="mt-4 grid gap-4">{posts.map((post) => {
+              : posts.length && visiblePosts.length ? <div className="mt-4 grid gap-4">{visiblePosts.map((post) => {
                 const author = authors[post.author_id];
                 const typeInfo = postTypes.find((type) => type.value === post.post_type) ?? postTypes[0];
                 return <article key={post.id} className="overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/80 transition hover:border-white/[0.14]">
@@ -393,6 +489,10 @@ export default function ActivityFeedPage() {
                         </div>
                         {author?.headline && <p className="mt-1 truncate text-[11px] text-white/40">{author.headline}{author.organization ? ` · ${author.organization}` : ""}</p>}
                         <span className="mt-2 inline-flex rounded-full border border-emerald-200/12 bg-emerald-200/[0.04] px-2.5 py-1 text-[9px] font-semibold text-emerald-100/75">{typeInfo.label}</span>
+                        {(post.community_id || post.topic_id) && <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px]">
+                          {post.community_id && communities.find((item) => item.id === post.community_id) && <Link href={`/communities/${communities.find((item) => item.id === post.community_id)!.slug}`} className="rounded-full border border-white/10 px-2.5 py-1 text-white/55 transition hover:border-emerald-200/20 hover:text-emerald-100">{communities.find((item) => item.id === post.community_id)!.name}</Link>}
+                          {post.topic_id && topics.find((item) => item.id === post.topic_id) && <Link href={`/topics/${post.topic_id}`} className="max-w-full truncate rounded-full border border-sky-200/15 bg-sky-200/[0.04] px-2.5 py-1 text-sky-100/75 transition hover:border-sky-200/30 hover:text-sky-100">↗ {topics.find((item) => item.id === post.topic_id)!.title}</Link>}
+                        </div>}
                       </div>
                       {post.author_id === viewerId && <button type="button" disabled={busyPostId === post.id} onClick={() => void deletePost(post.id)} className="shrink-0 rounded-full border border-white/10 px-3 py-1.5 text-[9px] font-semibold text-white/35 transition hover:border-red-200/20 hover:text-red-100 disabled:opacity-40">Delete</button>}
                     </div>
@@ -439,9 +539,12 @@ export default function ActivityFeedPage() {
               })}</div>
               : <div className="mt-4 rounded-3xl border border-dashed border-white/[0.12] px-6 py-14 text-center sm:px-12">
                 <div className="mx-auto grid size-12 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.05] text-xl text-emerald-100">✳</div>
-                <h3 className="mt-4 text-xl font-semibold">Make the first contribution.</h3>
-                <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-white/45">Share a research question, a recent discovery, or a resource that helped your work. Converge gets more useful when members share what they are learning.</p>
-                <button type="button" onClick={() => setComposerOpen(true)} className="mt-5 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710]">Write the first post ↗</button>
+                <h3 className="mt-4 text-xl font-semibold">{posts.length ? "No posts in this view yet." : "Make the first contribution."}</h3>
+                <p className="mx-auto mt-2 max-w-lg text-sm leading-7 text-white/45">{posts.length ? "Try All activity to return to the full feed, or share a post linked to a community or research topic." : "Share a research question, a recent discovery, or a resource that helped your work. Converge gets more useful when members share what they are learning."}</p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  {posts.length > 0 && <button type="button" onClick={() => setFeedScope("all")} className="rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65">Show all activity</button>}
+                  <button type="button" onClick={() => setComposerOpen(true)} className="rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710]">Write a post ↗</button>
+                </div>
               </div>}
           </section>
 
