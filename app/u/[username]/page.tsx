@@ -22,6 +22,18 @@ const emptySocial: SocialSummary = {
   connection_status: "NONE", connection_request_id: null,
 };
 
+function parseSocialSummary(value: unknown): SocialSummary {
+  const row = (value ?? {}) as Partial<SocialSummary>;
+  return {
+    follower_count: Number(row.follower_count ?? 0),
+    following_count: Number(row.following_count ?? 0),
+    connection_count: Number(row.connection_count ?? 0),
+    followed_by_me: Boolean(row.followed_by_me),
+    connection_status: (row.connection_status ?? "NONE") as ConnectionStatus,
+    connection_request_id: row.connection_request_id ?? null,
+  };
+}
+
 function initials(name: string) {
   return name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "C";
 }
@@ -43,14 +55,7 @@ export default function PublicProfilePage() {
   async function refreshSocial(profileId: string) {
     const { data, error } = await supabase.rpc("get_profile_social_summary", { p_profile_id: profileId }).maybeSingle();
     if (error) return;
-    if (data) setSocial({
-      follower_count: Number(data.follower_count ?? 0),
-      following_count: Number(data.following_count ?? 0),
-      connection_count: Number(data.connection_count ?? 0),
-      followed_by_me: Boolean(data.followed_by_me),
-      connection_status: (data.connection_status ?? "NONE") as ConnectionStatus,
-      connection_request_id: data.connection_request_id ?? null,
-    });
+    if (data) setSocial(parseSocialSummary(data));
   }
 
   useEffect(() => {
@@ -70,16 +75,7 @@ export default function PublicProfilePage() {
       } else {
         setProfile(data as PublicProfile);
         const { data: summaryData } = await supabase.rpc("get_profile_social_summary", { p_profile_id: data.id }).maybeSingle();
-        if (active && summaryData) {
-          setSocial({
-            follower_count: Number(summaryData.follower_count ?? 0),
-            following_count: Number(summaryData.following_count ?? 0),
-            connection_count: Number(summaryData.connection_count ?? 0),
-            followed_by_me: Boolean(summaryData.followed_by_me),
-            connection_status: (summaryData.connection_status ?? "NONE") as ConnectionStatus,
-            connection_request_id: summaryData.connection_request_id ?? null,
-          });
-        }
+        if (active && summaryData) setSocial(parseSocialSummary(summaryData));
       }
       setLoading(false);
     }
