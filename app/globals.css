@@ -605,3 +605,171 @@ main:not(.converge-home):has(> header) button:focus-visible {
     transition: none !important;
   }
 }
+
+
+/* LinkedIn-inspired desktop navigation: icon above label, compact More menu. */
+.converge-primary-nav {
+  align-items: stretch;
+  align-self: stretch;
+  gap: 4px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.converge-primary-nav__link {
+  position: relative;
+  display: flex;
+  min-width: 67px;
+  min-height: 70px;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 0;
+  padding: 6px 7px 5px;
+  color: #9aa89e;
+  font-size: 10px;
+  font-weight: 580;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  transition: color 170ms ease, background 170ms ease;
+}
+
+.converge-nav-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  opacity: 0.82;
+  transition: opacity 170ms ease, transform 170ms ease;
+}
+
+.converge-nav-icon-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.converge-nav-label { display: block; }
+
+.converge-nav-count {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  min-width: 16px;
+  border: 1.5px solid #0b1110;
+  border-radius: 999px;
+  background: #eab58e;
+  padding: 0 4px;
+  color: #172119;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 14px;
+  text-align: center;
+}
+
+.converge-primary-nav__link.is-active {
+  color: #c1f3d4;
+  background: linear-gradient(180deg, rgba(141, 228, 187, 0.065), transparent);
+}
+
+.converge-primary-nav__link.is-active::after {
+  position: absolute;
+  right: 9px;
+  bottom: 0;
+  left: 9px;
+  height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: #8de4bb;
+  content: "";
+}
+
+.converge-primary-nav__link:hover {
+  color: #edf8f0;
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+.converge-primary-nav__link:hover .converge-nav-icon {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.converge-nav-more {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+}
+
+.converge-primary-nav__button {
+  min-width: 64px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.converge-more-menu {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% - 1px);
+  right: -8px;
+  width: 238px;
+  padding: 8px;
+  border: 1px solid rgba(185, 220, 194, 0.16);
+  border-radius: 15px;
+  background: rgba(13, 22, 17, 0.98);
+  box-shadow: 0 22px 64px rgba(0, 0, 0, 0.46), inset 0 1px rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+}
+
+.converge-more-menu__eyebrow {
+  margin: 8px 10px 7px;
+  color: #7f9485;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.converge-more-menu__link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 43px;
+  border-radius: 9px;
+  padding: 0 10px;
+  color: #b4c1b8;
+  font-size: 12px;
+  font-weight: 600;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.converge-more-menu__link .converge-nav-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.converge-more-menu__link:hover,
+.converge-more-menu__link.is-active {
+  color: #c1f3d4;
+  background: rgba(141, 228, 187, 0.08);
+}
+
+.converge-more-menu__arrow {
+  margin-left: auto;
+  color: #789080;
+}
+
+@media (min-width: 1280px) and (max-width: 1535px) {
+  .converge-primary-nav { gap: 0; padding-right: 0; padding-left: 0; }
+  .converge-primary-nav__link { min-width: 62px; padding-right: 4px; padding-left: 4px; font-size: 9.5px; }
+  .converge-primary-nav__button { min-width: 57px; }
+  .converge-nav-icon { width: 21px; height: 21px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .converge-primary-nav__link, .converge-more-menu__link, .converge-nav-icon { transition: none !important; }
+}

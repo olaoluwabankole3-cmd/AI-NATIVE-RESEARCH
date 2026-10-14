@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type TopNavIconName = "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents";
+type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "more";
 
 const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/communities", label: "Communities", icon: "communities" },
@@ -16,6 +16,16 @@ const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/messages", label: "Messages", icon: "messages" },
   { href: "/agents", label: "AI registry", icon: "agents" },
 ];
+
+const desktopLinks: { href: string; label: string; icon: TopNavIconName }[] = [
+  { href: "/feed", label: "Home", icon: "home" },
+  { href: "/network", label: "My Network", icon: "network" },
+  { href: "/communities", label: "Communities", icon: "communities" },
+  { href: "/messages", label: "Messaging", icon: "messages" },
+  { href: "/notifications", label: "Notifications", icon: "notifications" },
+];
+
+const moreLinks = links.filter((link) => ["/people", "/organizations", "/agents"].includes(link.href));
 
 function TopNavGlyph({ name }: { name: TopNavIconName }) {
   const common = {
@@ -29,6 +39,8 @@ function TopNavGlyph({ name }: { name: TopNavIconName }) {
     className: "converge-nav-icon",
   };
   switch (name) {
+    case "home":
+      return <svg {...common}><path d="m3 10.5 9-7.3 9 7.3M5.5 9v11h13V9M9.5 20v-6h5v6" /></svg>;
     case "communities":
       return <svg {...common}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>;
     case "activity":
@@ -43,6 +55,10 @@ function TopNavGlyph({ name }: { name: TopNavIconName }) {
       return <svg {...common}><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l-1-4.2A7.5 7.5 0 1 1 20 11.5Z" /><path d="M8 11h8M8 14.5h5" /></svg>;
     case "agents":
       return <svg {...common}><path d="m12 2.8 2.4 6.1 6.2 2.4-6.2 2.4-2.4 6.2-2.4-6.2-6.1-2.4 6.1-2.4L12 2.8Z" /><path d="m19.5 15.5 1.1 2.8 2.6 1.1-2.6 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.8Z" /></svg>;
+    case "notifications":
+      return <svg {...common}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>;
+    case "more":
+      return <svg {...common}><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none" /></svg>;
   }
 }
 
@@ -69,12 +85,34 @@ export function SiteHeader() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [authReady, setAuthReady] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const muted = "text-white/55 hover:text-white";
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (event.target instanceof Node && !moreMenuRef.current?.contains(event.target)) setMoreOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMoreOpen(false);
+    }
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [moreOpen]);
 
   useEffect(() => {
     let active = true;
@@ -141,7 +179,7 @@ export function SiteHeader() {
     <>
     <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-5 sm:px-8 lg:px-14">
-        <Link href={userEmail ? "/communities" : "/"} className="group flex items-center gap-3" onClick={() => setMobileOpen(false)}>
+        <Link href={userEmail ? "/feed" : "/"} className="group flex items-center gap-3" onClick={() => setMobileOpen(false)}>
           <span className="relative grid size-9 place-items-center rounded-[11px] border border-emerald-200/25 bg-[#15231b] text-emerald-200 transition group-hover:border-emerald-100/50 group-hover:bg-[#1b3024]" aria-hidden="true">
             <svg viewBox="0 0 36 36" className="size-[25px]" fill="none">
               <path d="M7.5 8.5 18 18 28.5 8.5M18 18l10.5 9.5M18 18 7.5 27.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -156,24 +194,44 @@ export function SiteHeader() {
         </Link>
 
         <nav aria-label="Main navigation" className="converge-primary-nav hidden items-center gap-0.5 xl:flex">
-          {links.map((link) => {
+          {desktopLinks.map((link) => {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
               <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined} className={["converge-primary-nav__link", active ? "is-active" : "", active ? "text-white" : muted].join(" ")}>
-                <TopNavGlyph name={link.icon} />
-                <span>{link.label}</span>
+                <span className="converge-nav-icon-wrap">
+                  <TopNavGlyph name={link.icon} />
+                  {link.href === "/notifications" && unreadNotifications > 0 && <span className="converge-nav-count">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
+                </span>
+                <span className="converge-nav-label">{link.label}</span>
               </Link>
             );
           })}
+          <div className="converge-nav-more" ref={moreMenuRef}>
+            <button type="button" aria-expanded={moreOpen} aria-controls="converge-more-menu" onClick={() => setMoreOpen((open) => !open)} className={["converge-primary-nav__link converge-primary-nav__button", moreOpen || moreLinks.some((link) => pathname === link.href || pathname.startsWith(link.href + "/")) ? "is-active" : "", moreOpen || moreLinks.some((link) => pathname === link.href || pathname.startsWith(link.href + "/")) ? "text-white" : muted].join(" ")}>
+              <TopNavGlyph name="more" />
+              <span className="converge-nav-label">More</span>
+            </button>
+            {moreOpen && (
+              <div id="converge-more-menu" className="converge-more-menu" role="menu" aria-label="More destinations">
+                <p className="converge-more-menu__eyebrow">Explore Converge</p>
+                {moreLinks.map((link) => {
+                  const active = pathname === link.href || pathname.startsWith(link.href + "/");
+                  return (
+                    <Link key={link.href} href={link.href} role="menuitem" onClick={() => setMoreOpen(false)} className={["converge-more-menu__link", active ? "is-active" : ""].join(" ")}>
+                      <TopNavGlyph name={link.icon} />
+                      <span>{link.label}</span>
+                      <span className="converge-more-menu__arrow" aria-hidden="true">↗</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
           {authReady && userEmail ? (
             <>
-              <Link href="/notifications" aria-label={unreadNotifications ? `Notifications, ${unreadNotifications} unread` : "Notifications"} title="Notifications" className={["relative grid size-10 shrink-0 place-items-center rounded-full border transition", pathname === "/notifications" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-[17px]" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>
-                {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-emerald-200 px-1 text-center text-[9px] font-black leading-4 text-[#0b1710]">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
-              </Link>
               <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition xl:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
               <span className="hidden max-w-[160px] truncate text-xs text-white/40 xl:block">{userEmail}</span>
               <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white xl:inline-flex">
