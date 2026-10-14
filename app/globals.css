@@ -228,7 +228,7 @@ body.cursor-present .cursor-aura { opacity: 1; }
   --converge-clay: #eab58e;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .converge-mobile-dock { display: none !important; }
 }
 
@@ -368,7 +368,7 @@ main:not(.converge-home):has(> header) button:focus-visible {
   outline-offset: 3px;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1279px) {
   main:not(.converge-home):has(> header):has(.converge-mobile-dock) {
     padding-bottom: calc(82px + env(safe-area-inset-bottom));
   }

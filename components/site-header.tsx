@@ -108,6 +108,7 @@ export function SiteHeader() {
   }
 
   return (
+    <>
     <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-5 sm:px-8 lg:px-14">
         <Link href={userEmail ? "/communities" : "/"} className="group flex items-center gap-3" onClick={() => setMobileOpen(false)}>
@@ -124,7 +125,7 @@ export function SiteHeader() {
           <span className="text-[17px] font-bold tracking-[-0.055em]">converge<span className="ml-0.5 text-emerald-300">.</span></span>
         </Link>
 
-        <nav aria-label="Main navigation" className="hidden items-center gap-0.5 lg:flex">
+        <nav aria-label="Main navigation" className="hidden items-center gap-0.5 xl:flex">
           {links.map((link) => {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
@@ -143,7 +144,7 @@ export function SiteHeader() {
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-[17px]" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>
                 {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-emerald-200 px-1 text-center text-[9px] font-black leading-4 text-[#0b1710]">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
               </Link>
-              <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition lg:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
+              <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition xl:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
               <span className="hidden max-w-[160px] truncate text-xs text-white/40 xl:block">{userEmail}</span>
               <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white lg:inline-flex">
                 {signingOut ? "Signing out…" : "Sign out"}
@@ -151,13 +152,13 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <Link href="/sign-in" className={["hidden px-2 py-2 text-[13px] font-semibold transition lg:block", muted].join(" ")}>Sign in</Link>
+              <Link href="/sign-in" className={["hidden px-2 py-2 text-[13px] font-semibold transition xl:block", muted].join(" ")}>Sign in</Link>
               <Link href="/sign-up" className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-4 py-2.5 text-[13px] font-semibold text-[#0b1110] transition hover:bg-emerald-200 sm:px-5">
                 Get started <span aria-hidden="true">↗</span>
               </Link>
             </>
           )}
-          <button type="button" aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileOpen} onClick={() => setMobileOpen((open) => !open)} className={["grid size-10 place-items-center rounded-xl border border-white/10 text-white/75 transition hover:bg-white/[0.05] lg:hidden", userEmail ? "hidden" : "grid"].join(" ")}>
+          <button type="button" aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileOpen} onClick={() => setMobileOpen((open) => !open)} className={["grid size-10 place-items-center rounded-xl border border-white/10 text-white/75 transition hover:bg-white/[0.05] xl:hidden", userEmail ? "hidden" : "grid"].join(" ")}>
             <span className="sr-only">Menu</span>
             <span className="flex flex-col gap-1.5">
               <span className={["h-px w-4 bg-current transition", mobileOpen ? "translate-y-1 rotate-45" : ""].join(" ")} />
@@ -168,7 +169,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-white/[0.09] bg-[#0b1110] px-5 pb-24 pt-3 lg:hidden">
+        <div className="border-t border-white/[0.09] bg-[#0b1110] px-5 pb-24 pt-3 xl:hidden">
           <nav aria-label="Mobile navigation" className="grid gap-1">
             {links.map((link) => {
               const active = pathname === link.href || pathname.startsWith(link.href + "/");
@@ -191,6 +192,7 @@ export function SiteHeader() {
         </div>
       )}
 
+    </header>
       {authReady && userEmail && (
         <nav className="converge-mobile-dock" aria-label="Mobile primary navigation">
           {mobileLinksPrimary.map((item) => {
@@ -208,6 +210,6 @@ export function SiteHeader() {
           </button>
         </nav>
       )}
-    </header>
+    </>
   );
 }
