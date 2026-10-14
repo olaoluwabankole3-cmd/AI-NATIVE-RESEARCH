@@ -234,10 +234,10 @@ export default function PeopleDirectoryPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto max-w-[1320px] px-4 pb-16 sm:px-7 lg:px-10">
-        <section className="border-b border-white/[0.09] py-9 sm:py-12">
+        <section className="converge-page-intro border-b border-white/[0.09] py-9 sm:py-12">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / People</p>
           <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>

@@ -122,10 +122,10 @@ export default function MessagesInboxPage() {
   }, [loadInbox, router, supabase]);
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto max-w-[1120px] px-4 pb-16 sm:px-7 lg:px-10">
-        <section className="flex flex-col justify-between gap-5 border-b border-white/[0.09] py-9 sm:flex-row sm:items-end sm:py-12">
+        <section className="converge-page-intro flex flex-col justify-between gap-5 border-b border-white/[0.09] py-9 sm:flex-row sm:items-end sm:py-12">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Messages</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Conversations that keep ideas moving.</h1>

@@ -193,7 +193,7 @@ export function SiteHeader() {
           <span className="text-[17px] font-bold tracking-[-0.055em]">converge<span className="ml-0.5 text-emerald-300">.</span></span>
         </Link>
 
-        <nav aria-label="Main navigation" className="converge-primary-nav hidden items-center gap-0.5 xl:flex">
+        <nav aria-label="Main navigation" className="converge-primary-nav hidden items-center gap-0.5 lg:flex">
           {desktopLinks.map((link) => {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
@@ -232,7 +232,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2 sm:gap-3">
           {authReady && userEmail ? (
             <>
-              <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition xl:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
+              <Link href="/profile" className={["hidden rounded-full border px-3 py-2 text-[11px] font-semibold transition lg:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
               <span className="hidden max-w-[160px] truncate text-xs text-white/40 xl:block">{userEmail}</span>
               <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white xl:inline-flex">
                 {signingOut ? "Signing out…" : "Sign out"}
@@ -246,7 +246,7 @@ export function SiteHeader() {
               </Link>
             </>
           )}
-          <button type="button" aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileOpen} onClick={() => setMobileOpen((open) => !open)} className={["grid size-10 place-items-center rounded-xl border border-white/10 text-white/75 transition hover:bg-white/[0.05] xl:hidden", userEmail ? "hidden" : "grid"].join(" ")}>
+          <button type="button" aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileOpen} onClick={() => setMobileOpen((open) => !open)} className={["grid size-10 place-items-center rounded-xl border border-white/10 text-white/75 transition hover:bg-white/[0.05] lg:hidden", userEmail ? "hidden" : "grid"].join(" ")}>
             <span className="sr-only">Menu</span>
             <span className="flex flex-col gap-1.5">
               <span className={["h-px w-4 bg-current transition", mobileOpen ? "translate-y-1 rotate-45" : ""].join(" ")} />
@@ -257,7 +257,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-white/[0.09] bg-[#0b1110] px-5 pb-24 pt-3 xl:hidden">
+        <div className="border-t border-white/[0.09] bg-[#0b1110] px-5 pb-24 pt-3 lg:hidden">
           <nav aria-label="Mobile navigation" className="grid gap-1">
             {links.map((link) => {
               const active = pathname === link.href || pathname.startsWith(link.href + "/");

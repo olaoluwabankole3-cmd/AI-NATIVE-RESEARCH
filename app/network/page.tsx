@@ -157,10 +157,10 @@ export default function NetworkPage() {
   const outgoingSection = outgoing.length ? <div className="mt-4 grid gap-3 md:grid-cols-2">{outgoing.map((request) => <PersonCard key={request.id} id={request.recipient_id} footer={<button type="button" disabled={!!busyAction} onClick={() => void connectionAction(request.id, "cancel")} className="rounded-full border border-white/15 px-3 py-2 text-[10px] font-semibold text-white/55 disabled:opacity-40">{busyAction === `${request.id}:cancel` ? "…" : "Cancel request"}</button>} />)}</div> : <EmptyState title="No outgoing requests" description="Connection requests you send will appear here until they are answered." />;
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto max-w-[1240px] px-4 pb-16 sm:px-7 lg:px-10">
-        <section className="border-b border-white/[0.09] py-9 sm:py-12">
+        <section className="converge-page-intro border-b border-white/[0.09] py-9 sm:py-12">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Your network</p>
           <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">People who move ideas forward.</h1><p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Follow people whose work you value, build mutual connections, and manage requests in one place.</p></div><Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65 hover:border-emerald-200/25 hover:text-white">Discover people ↗</Link></div>
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
