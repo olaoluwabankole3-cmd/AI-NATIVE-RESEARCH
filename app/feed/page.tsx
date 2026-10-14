@@ -73,6 +73,8 @@ export default function ActivityFeedPage() {
   const [selectedTopicId, setSelectedTopicId] = useState("");
   const contextInitialized = useRef(false);
   const [feedScope, setFeedScope] = useState<"all" | "community" | "topic">("all");
+  const [filterCommunityId, setFilterCommunityId] = useState("");
+  const [filterTopicId, setFilterTopicId] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [composerOpen, setComposerOpen] = useState(true);
@@ -145,6 +147,13 @@ export default function ActivityFeedPage() {
       const initialCommunityId = matchTopic?.community_id ?? matchCommunity?.id ?? "";
       setSelectedCommunityId(initialCommunityId);
       setSelectedTopicId(matchTopic?.community_id === initialCommunityId ? matchTopic.id : "");
+      if (matchTopic) {
+        setFilterTopicId(matchTopic.id);
+        setFeedScope("topic");
+      } else if (matchCommunity) {
+        setFilterCommunityId(matchCommunity.id);
+        setFeedScope("community");
+      }
       contextInitialized.current = true;
     }
 
@@ -358,7 +367,11 @@ export default function ActivityFeedPage() {
   const selectedCommunity = communities.find((item) => item.id === selectedCommunityId);
   const selectedTopic = topics.find((item) => item.id === selectedTopicId);
   const availableTopics = topics.filter((item) => !selectedCommunityId || item.community_id === selectedCommunityId);
+  const activeFilterCommunity = communities.find((item) => item.id === filterCommunityId);
+  const activeFilterTopic = topics.find((item) => item.id === filterTopicId);
   const visiblePosts = posts.filter((post) => {
+    if (filterTopicId && post.topic_id !== filterTopicId) return false;
+    if (filterCommunityId && post.community_id !== filterCommunityId) return false;
     if (feedScope === "community") return Boolean(post.community_id);
     if (feedScope === "topic") return Boolean(post.topic_id);
     return true;
@@ -379,9 +392,9 @@ export default function ActivityFeedPage() {
           </div>
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
             {[
-              { label: "Recent posts", value: posts.length, note: "Latest member activity" },
-              { label: "Your contributions", value: posts.filter((post) => post.author_id === viewerId).length, note: "In the current feed" },
-              { label: "Open conversations", value: posts.filter((post) => post.post_type === "question").length, note: "Questions to explore" },
+              { label: "Recent posts", value: visiblePosts.length, note: "Latest member activity" },
+              { label: "Your contributions", value: visiblePosts.filter((post) => post.author_id === viewerId).length, note: "In the current view" },
+              { label: "Open conversations", value: visiblePosts.filter((post) => post.post_type === "question").length, note: "Questions to explore" },
             ].map((item) => <div key={item.label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4"><p className="text-2xl font-semibold tracking-[-0.05em] text-emerald-100">{loading ? "—" : String(item.value).padStart(2, "0")}</p><p className="mt-1 text-xs font-semibold text-white/75">{item.label}</p><p className="mt-1 text-[10px] text-white/35">{item.note}</p></div>)}
           </div>
         </section>
@@ -464,8 +477,12 @@ export default function ActivityFeedPage() {
               <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">The community pulse</p><h2 className="mt-1.5 text-xl font-semibold tracking-[-0.04em]">Latest activity</h2></div>
               <button type="button" onClick={() => { setLoading(true); void loadFeed(viewerId ?? undefined); }} disabled={loading} className="rounded-full border border-white/12 px-3.5 py-2 text-[10px] font-semibold text-white/55 hover:border-emerald-200/20 hover:text-white disabled:opacity-40">↻ Refresh</button>
             </div>
+            {(activeFilterCommunity || activeFilterTopic) && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200/15 bg-emerald-200/[0.035] px-4 py-3">
+              <p className="text-xs text-emerald-100/80">Showing activity for <strong>{activeFilterTopic?.title ?? activeFilterCommunity?.name}</strong></p>
+              <button type="button" onClick={() => { setFilterCommunityId(""); setFilterTopicId(""); setFeedScope("all"); router.replace("/feed"); }} className="text-[10px] font-semibold text-white/45 transition hover:text-white">Clear context filter ×</button>
+            </div>}
             <div className="mt-4 flex flex-wrap gap-2">
-              {([{ value: "all", label: "All activity" }, { value: "community", label: "Community posts" }, { value: "topic", label: "Research-topic posts" }] as const).map((item) => (
+              {([{ value: "all", label: "All activity" }, { value: "community", label: "Community posts" }, { value: "topic", label: "Topic-linked posts" }] as const).map((item) => (
                 <button key={item.value} type="button" onClick={() => setFeedScope(item.value)} className={["rounded-full px-3.5 py-2 text-[10px] font-semibold transition", feedScope === item.value ? "bg-emerald-200 text-[#0b1710]" : "border border-white/10 text-white/50 hover:border-emerald-200/20 hover:text-white"].join(" ")}>{item.label}</button>
               ))}
             </div>
