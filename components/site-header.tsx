@@ -146,7 +146,7 @@ export function SiteHeader() {
               </Link>
               <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition xl:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
               <span className="hidden max-w-[160px] truncate text-xs text-white/40 xl:block">{userEmail}</span>
-              <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white lg:inline-flex">
+              <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white xl:inline-flex">
                 {signingOut ? "Signing out…" : "Sign out"}
               </button>
             </>
