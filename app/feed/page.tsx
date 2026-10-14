@@ -421,14 +421,14 @@ export default function ActivityFeedPage() {
 
             <div className="feed-rail-group">
               <div className="feed-rail-heading-row"><p className="feed-rail-heading">YOUR COMMUNITIES</p><Link href="/communities" aria-label="Browse communities">＋</Link></div>
-              {communities.slice(0, 5).map((community) => <Link key={community.id} href={\`/communities/\${community.slug}\`} className="feed-rail-link"><span className="feed-community-mark">{community.name.charAt(0).toUpperCase()}</span><span className="feed-rail-truncate">{community.name}</span></Link>)}
+              {communities.slice(0, 5).map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="feed-rail-link"><span className="feed-community-mark">{community.name.charAt(0).toUpperCase()}</span><span className="feed-rail-truncate">{community.name}</span></Link>)}
               {!communities.length && <p className="feed-rail-empty">Your communities will appear here.</p>}
               {communities.length > 5 && <Link href="/communities" className="feed-rail-more">Explore all communities →</Link>}
             </div>
 
             <div className="feed-rail-group">
               <div className="feed-rail-heading-row"><p className="feed-rail-heading">OPEN TOPICS</p><Link href="/communities" aria-label="Explore topics">↗</Link></div>
-              {topics.slice(0, 4).map((topic) => <Link key={topic.id} href={\`/topics/\${topic.id}\`} className="feed-topic-link"><span className={topic.type === "RESEARCH" ? "feed-topic-link__kind is-research" : "feed-topic-link__kind"}>{topic.type === "RESEARCH" ? "R" : "D"}</span><span>{topic.title}</span></Link>)}
+              {topics.slice(0, 4).map((topic) => <Link key={topic.id} href={`/topics/${topic.id}`} className="feed-topic-link"><span className={topic.type === "RESEARCH" ? "feed-topic-link__kind is-research" : "feed-topic-link__kind"}>{topic.type === "RESEARCH" ? "R" : "D"}</span><span>{topic.title}</span></Link>)}
               {!topics.length && <p className="feed-rail-empty">Start a topic to get a research thread going.</p>}
             </div>
           </aside>

@@ -14,7 +14,7 @@ const capabilities = [
 ];
 
 function Avatar({ label, tone = "green" }: { label: string; tone?: "green" | "clay" | "blue" }) {
-  return <span className={\`landing-avatar landing-avatar--\${tone}\`} aria-hidden="true">{label}</span>;
+  return <span className={`landing-avatar landing-avatar--${tone}`} aria-hidden="true">{label}</span>;
 }
 
 export default function Home() {
