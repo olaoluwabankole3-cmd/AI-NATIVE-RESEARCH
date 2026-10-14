@@ -56,9 +56,7 @@ export function SiteHeader() {
           <span className="relative grid size-9 place-items-center rounded-[12px] border border-emerald-200/30 bg-emerald-300 text-[17px] font-black tracking-[-0.08em] text-[#0b1110] transition group-hover:bg-emerald-200">
             C<span className={["absolute bottom-[7px] right-[7px] size-1 rounded-full", isHome ? "bg-[#f7b79b]" : "bg-[#0b1110]"].join(" ")} />
           </span>
-          <span className="text-[17px] font-bold tracking-[-0.055em]">
-            converge<span className="ml-0.5 text-emerald-300">.</span>
-          </span>
+          <span className="text-[17px] font-bold tracking-[-0.055em]">converge<span className="ml-0.5 text-emerald-300">.</span></span>
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-1 sm:flex">
@@ -73,10 +71,11 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
           {authReady && userEmail ? (
             <>
-              <span className="hidden max-w-[190px] truncate text-xs text-white/45 lg:block">{userEmail}</span>
+              <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition sm:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
+              <span className="hidden max-w-[160px] truncate text-xs text-white/40 xl:block">{userEmail}</span>
               <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white sm:inline-flex">
                 {signingOut ? "Signing out…" : "Sign out"}
               </button>
@@ -108,7 +107,8 @@ export function SiteHeader() {
             })}
             {userEmail ? (
               <>
-                <p className="truncate px-3 py-3 text-xs text-white/40">{userEmail}</p>
+                <Link href="/profile" onClick={() => setMobileOpen(false)} className={["rounded-xl px-3 py-3 text-sm font-semibold", pathname === "/profile" ? "bg-emerald-200/[0.08] text-emerald-100" : "text-emerald-200"].join(" ")}>My profile ↗</Link>
+                <p className="truncate px-3 py-2 text-xs text-white/40">{userEmail}</p>
                 <button type="button" onClick={handleSignOut} disabled={signingOut} className="px-3 py-3 text-left text-sm font-medium text-white/65">{signingOut ? "Signing out…" : "Sign out"}</button>
               </>
             ) : (
