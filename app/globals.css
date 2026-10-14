@@ -1291,3 +1291,37 @@ main:not(.converge-home):has(> header) button:focus-visible {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* Research topics read as documents and conversations, not oversized cards. */
+.converge-topic-hero {
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom-color: var(--app-line) !important;
+  border-left: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 25px 0 30px !important;
+}
+.converge-topic-hero h1 {
+  max-width: 24ch;
+  margin-top: 20px !important;
+  font-size: clamp(32px, 3.6vw, 46px) !important;
+  font-weight: 660 !important;
+  line-height: 1.12 !important;
+  letter-spacing: -.06em !important;
+  text-wrap: balance;
+}
+.converge-topic-hero > div.mt-6.whitespace-pre-wrap {
+  max-width: 76ch;
+  margin-top: 22px !important;
+  color: #bac6bd !important;
+  font-size: 15px !important;
+  line-height: 1.9 !important;
+}
+@media (max-width: 680px) {
+  .converge-topic-hero { padding-top: 20px !important; padding-bottom: 23px !important; }
+  .converge-topic-hero h1 { font-size: clamp(29px, 8vw, 36px) !important; }
+  .converge-topic-hero > div.mt-6.whitespace-pre-wrap { font-size: 13px !important; line-height: 1.85 !important; }
+}

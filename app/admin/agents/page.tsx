@@ -224,7 +224,7 @@ export default function AgentAdminPage() {
   const plannedCount = agents.filter((agent) => agent.status === "PLANNED").length;
 
   return (
-    <main className="relative min-h-screen isolate overflow-hidden bg-[#07110f] text-[#eff8f1]">
+    <main className="converge-app-page relative min-h-screen isolate overflow-hidden bg-[#07110f] text-[#eff8f1]">
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute -right-48 -top-48 h-[34rem] w-[34rem] rounded-full bg-emerald-400/[0.07] blur-[100px]" />
         <div className="absolute -bottom-72 -left-48 h-[34rem] w-[34rem] rounded-full bg-teal-500/[0.05] blur-[110px]" />
