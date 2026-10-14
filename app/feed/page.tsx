@@ -510,7 +510,7 @@ export default function ActivityFeedPage() {
             </div>
 
             {loading ? <div className="mt-4 grid gap-3">{[0,1,2].map((item) => <div key={item} className="h-44 animate-pulse rounded-2xl border border-white/[0.08] bg-white/[0.02]" />)}</div>
-              : posts.length && visiblePosts.length ? <div className="mt-4 grid gap-4">{visiblePosts.map((post) => {
+              : posts.length && visiblePosts.length ? <div className="mt-4 grid gap-0">{visiblePosts.map((post) => {
                 const author = authors[post.author_id];
                 const typeInfo = postTypes.find((type) => type.value === post.post_type) ?? postTypes[0];
                 return <article key={post.id} className="feed-post overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/80 transition hover:border-white/[0.14]">
