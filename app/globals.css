@@ -217,3 +217,182 @@ body.cursor-present .cursor-aura { opacity: 1; }
 @keyframes headlineCharacterIn{from{opacity:0}to{opacity:1}}
 @media(max-width:639px){.rotating-headline{line-height:1.04}.rotating-headline>.rotating-headline__line{line-height:1.04}}
 @media(prefers-reduced-motion:reduce){.rotating-headline,.rotating-headline__char{animation:none!important;transition:none!important;filter:none!important;transform:none!important}}
+
+
+/* Converge product UI: a quieter, more editorial system for the working app. */
+:root {
+  --converge-ink: #0b1110;
+  --converge-deep: #101815;
+  --converge-line: rgba(185, 220, 194, 0.13);
+  --converge-soft-line: rgba(255, 255, 255, 0.075);
+  --converge-clay: #eab58e;
+}
+
+@media (min-width: 1024px) {
+  .converge-mobile-dock { display: none !important; }
+}
+
+.converge-mobile-dock {
+  position: fixed;
+  z-index: 60;
+  left: 12px;
+  right: 12px;
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 3px;
+  padding: 7px;
+  border: 1px solid rgba(190, 224, 198, 0.19);
+  border-radius: 21px;
+  background: rgba(13, 22, 17, 0.94);
+  box-shadow: 0 12px 42px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 255, 255, 0.035);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+}
+
+.converge-mobile-dock__item {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 52px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 13px;
+  background: transparent;
+  padding: 5px 2px;
+  color: #83958a;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.converge-mobile-dock__item svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.converge-mobile-dock__item.is-active {
+  background: rgba(141, 228, 187, 0.105);
+  color: #b9f1d0;
+}
+
+.converge-mobile-dock__item.is-active::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 17px;
+  height: 2px;
+  border-radius: 4px;
+  background: #8de4bb;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.converge-mobile-dock__item:active { transform: scale(0.97); }
+
+@media (max-width: 380px) {
+  .converge-mobile-dock { left: 8px; right: 8px; gap: 1px; padding: 6px; }
+  .converge-mobile-dock__item { font-size: 9px; }
+}
+
+main:not(.converge-home):has(> header) {
+  min-height: 100dvh;
+  color: #edf5ee;
+  background-color: #0b1110;
+  background-image:
+    radial-gradient(68rem 34rem at 52% -12rem, rgba(60, 107, 73, 0.19), transparent 73%),
+    linear-gradient(180deg, rgba(255,255,255,0.012), transparent 28rem);
+}
+
+main:not(.converge-home):has(> header) > div {
+  position: relative;
+}
+
+main:not(.converge-home):has(> header) > div > section:first-child {
+  border-color: var(--converge-line);
+  padding-top: clamp(1.7rem, 3.8vw, 3rem);
+  padding-bottom: clamp(1.7rem, 3.8vw, 3rem);
+}
+
+main:not(.converge-home):has(> header) > div > section:first-child h1 {
+  max-width: 22ch;
+  color: #f0f5f0;
+  font-size: clamp(2rem, 4.5vw, 3.3rem);
+  font-weight: 650;
+  letter-spacing: -0.067em;
+  line-height: 1.03;
+  text-wrap: balance;
+}
+
+main:not(.converge-home):has(> header) p[class*="uppercase"][class*="tracking"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.145em;
+  color: #a3c7b0;
+}
+
+main:not(.converge-home):has(> header) p[class*="uppercase"][class*="tracking"]::before {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 9px;
+  border-radius: 2px;
+  background: var(--converge-clay);
+  content: "";
+  transform: rotate(45deg) translateY(-1px);
+}
+
+main:not(.converge-home):has(> header) div.rounded-3xl {
+  border-radius: 1.15rem;
+}
+
+main:not(.converge-home):has(> header) input,
+main:not(.converge-home):has(> header) textarea,
+main:not(.converge-home):has(> header) select,
+main:not(.converge-home):has(> header) button,
+main:not(.converge-home):has(> header) a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+main:not(.converge-home):has(> header) a:focus-visible,
+main:not(.converge-home):has(> header) button:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (max-width: 1023px) {
+  main:not(.converge-home):has(> header):has(.converge-mobile-dock) {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+  main.converge-home:has(.converge-mobile-dock) {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+  main:not(.converge-home):has(> header) > div > section:first-child h1 {
+    font-size: clamp(1.95rem, 6.4vw, 2.75rem);
+    line-height: 1.06;
+  }
+  main:not(.converge-home):has(> header) > div > section:first-child {
+    gap: 1.1rem;
+  }
+}
+
+@media (max-width: 639px) {
+  main:not(.converge-home):has(> header) > div {
+    overflow-wrap: anywhere;
+  }
+  main:not(.converge-home):has(> header) > div > section:first-child p[class*="text-sm"] {
+    line-height: 1.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .converge-mobile-dock__item { transition: none; }
+}

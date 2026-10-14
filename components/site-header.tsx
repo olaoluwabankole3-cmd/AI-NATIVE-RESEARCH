@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const links = [
@@ -15,11 +15,28 @@ const links = [
   { href: "/agents", label: "AI registry" },
 ];
 
+const mobileLinksPrimary = [
+  { href: "/communities", label: "Spaces", kind: "spaces" },
+  { href: "/feed", label: "Activity", kind: "activity" },
+  { href: "/people", label: "People", kind: "people" },
+  { href: "/messages", label: "Inbox", kind: "inbox" },
+] as const;
+
+function MobileGlyph({ name }: { name: (typeof mobileLinksPrimary)[number]["kind"] | "more" }) {
+  const common = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
+  switch (name) {
+    case "spaces": return <svg {...common}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>;
+    case "activity": return <svg {...common}><path d="M3 12h4l2.2-6 4.4 12 2.2-6H21" /></svg>;
+    case "people": return <svg {...common}><circle cx="9" cy="8" r="3.2" /><path d="M3.5 20v-1.4a5.5 5.5 0 0 1 11 0V20M16 5.4a3.2 3.2 0 0 1 0 6.2M17 15a4.8 4.8 0 0 1 3.5 4.6" /></svg>;
+    case "inbox": return <svg {...common}><path d="M4 4.5h16v15H4z" /><path d="m4 8 8 5.2L20 8M9 15h6" /></svg>;
+    default: return <svg {...common}><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" /></svg>;
+  }
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
-  const isHome = pathname === "/";
+  const supabase = useMemo(() => createClient(), []);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -94,13 +111,20 @@ export function SiteHeader() {
     <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-5 sm:px-8 lg:px-14">
         <Link href={userEmail ? "/communities" : "/"} className="group flex items-center gap-3" onClick={() => setMobileOpen(false)}>
-          <span className="relative grid size-9 place-items-center rounded-[12px] border border-emerald-200/30 bg-emerald-300 text-[17px] font-black tracking-[-0.08em] text-[#0b1110] transition group-hover:bg-emerald-200">
-            C<span className={["absolute bottom-[7px] right-[7px] size-1 rounded-full", isHome ? "bg-[#f7b79b]" : "bg-[#0b1110]"].join(" ")} />
+          <span className="relative grid size-9 place-items-center rounded-[11px] border border-emerald-200/25 bg-[#15231b] text-emerald-200 transition group-hover:border-emerald-100/50 group-hover:bg-[#1b3024]" aria-hidden="true">
+            <svg viewBox="0 0 36 36" className="size-[25px]" fill="none">
+              <path d="M7.5 8.5 18 18 28.5 8.5M18 18l10.5 9.5M18 18 7.5 27.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="7.5" cy="8.5" r="3" fill="currentColor" />
+              <circle cx="28.5" cy="8.5" r="3" fill="currentColor" />
+              <circle cx="7.5" cy="27.5" r="3" fill="currentColor" />
+              <circle cx="28.5" cy="27.5" r="3" fill="currentColor" />
+              <circle cx="18" cy="18" r="4.2" fill="#EAB58E" stroke="#15231B" strokeWidth="1.7" />
+            </svg>
           </span>
           <span className="text-[17px] font-bold tracking-[-0.055em]">converge<span className="ml-0.5 text-emerald-300">.</span></span>
         </Link>
 
-        <nav aria-label="Main navigation" className="hidden items-center gap-1 sm:flex">
+        <nav aria-label="Main navigation" className="hidden items-center gap-0.5 lg:flex">
           {links.map((link) => {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
@@ -119,21 +143,21 @@ export function SiteHeader() {
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-[17px]" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>
                 {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-emerald-200 px-1 text-center text-[9px] font-black leading-4 text-[#0b1710]">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
               </Link>
-              <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition sm:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
+              <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition lg:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
               <span className="hidden max-w-[160px] truncate text-xs text-white/40 xl:block">{userEmail}</span>
-              <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white sm:inline-flex">
+              <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white lg:inline-flex">
                 {signingOut ? "Signing out…" : "Sign out"}
               </button>
             </>
           ) : (
             <>
-              <Link href="/sign-in" className={["hidden px-2 py-2 text-[13px] font-semibold transition sm:block", muted].join(" ")}>Sign in</Link>
+              <Link href="/sign-in" className={["hidden px-2 py-2 text-[13px] font-semibold transition lg:block", muted].join(" ")}>Sign in</Link>
               <Link href="/sign-up" className="inline-flex items-center gap-2 rounded-full bg-emerald-300 px-4 py-2.5 text-[13px] font-semibold text-[#0b1110] transition hover:bg-emerald-200 sm:px-5">
                 Get started <span aria-hidden="true">↗</span>
               </Link>
             </>
           )}
-          <button type="button" aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileOpen} onClick={() => setMobileOpen((open) => !open)} className="grid size-10 place-items-center rounded-xl border border-white/10 text-white/75 transition hover:bg-white/[0.05] sm:hidden">
+          <button type="button" aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={mobileOpen} onClick={() => setMobileOpen((open) => !open)} className={["grid size-10 place-items-center rounded-xl border border-white/10 text-white/75 transition hover:bg-white/[0.05] lg:hidden", userEmail ? "hidden" : "grid"].join(" ")}>
             <span className="sr-only">Menu</span>
             <span className="flex flex-col gap-1.5">
               <span className={["h-px w-4 bg-current transition", mobileOpen ? "translate-y-1 rotate-45" : ""].join(" ")} />
@@ -144,7 +168,7 @@ export function SiteHeader() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-white/[0.09] bg-[#0b1110] px-5 pb-4 pt-3 sm:hidden">
+        <div className="border-t border-white/[0.09] bg-[#0b1110] px-5 pb-24 pt-3 lg:hidden">
           <nav aria-label="Mobile navigation" className="grid gap-1">
             {links.map((link) => {
               const active = pathname === link.href || pathname.startsWith(link.href + "/");
@@ -165,6 +189,24 @@ export function SiteHeader() {
             )}
           </nav>
         </div>
+      )}
+
+      {authReady && userEmail && (
+        <nav className="converge-mobile-dock" aria-label="Mobile primary navigation">
+          {mobileLinksPrimary.map((item) => {
+            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            return (
+              <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={["converge-mobile-dock__item", active ? "is-active" : ""].join(" ")}>
+                <MobileGlyph name={item.kind} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+          <button type="button" aria-expanded={mobileOpen} aria-label={mobileOpen ? "Close more navigation" : "Open more navigation"} onClick={() => setMobileOpen((open) => !open)} className={["converge-mobile-dock__item", mobileOpen || !mobileLinksPrimary.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) ? "is-active" : ""].join(" ")}>
+            <MobileGlyph name="more" />
+            <span>More</span>
+          </button>
+        </nav>
       )}
     </header>
   );
