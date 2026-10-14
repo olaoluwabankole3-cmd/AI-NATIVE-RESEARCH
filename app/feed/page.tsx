@@ -386,33 +386,55 @@ export default function ActivityFeedPage() {
   });
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-feed-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto max-w-[1320px] px-4 pb-16 sm:px-7 lg:px-10">
-        <section className="border-b border-white/[0.09] py-9 sm:py-12">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Activity</p>
-          <div className="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-            <div>
-              <h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Ideas move when they’re shared.</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50 sm:text-base">Research notes, open questions, useful resources, and small discoveries from people across Converge.</p>
-            </div>
-            <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65 transition hover:border-emerald-200/25 hover:text-white">Discover members ↗</Link>
+        <section className="feed-masthead">
+          <div className="feed-masthead__copy">
+            <p className="feed-eyebrow">YOUR CONVERGE HOME</p>
+            <h1>What are people thinking about?</h1>
+            <p>Ideas in progress, research worth sharing, and conversations that move work forward.</p>
           </div>
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            {[
-              { label: "Recent posts", value: visiblePosts.length, note: "Latest member activity" },
-              { label: "Your contributions", value: visiblePosts.filter((post) => post.author_id === viewerId).length, note: "In the current view" },
-              { label: "Open conversations", value: visiblePosts.filter((post) => post.post_type === "question").length, note: "Questions to explore" },
-            ].map((item) => <div key={item.label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4"><p className="text-2xl font-semibold tracking-[-0.05em] text-emerald-100">{loading ? "—" : String(item.value).padStart(2, "0")}</p><p className="mt-1 text-xs font-semibold text-white/75">{item.label}</p><p className="mt-1 text-[10px] text-white/35">{item.note}</p></div>)}
-          </div>
+          <button type="button" onClick={() => setComposerOpen(true)} className="feed-masthead__action"><span aria-hidden="true">＋</span> Start a discussion</button>
         </section>
 
         {(loadError || notice) && <p role={loadError ? "alert" : "status"} className={["mt-5 rounded-xl border px-4 py-3 text-sm leading-6", loadError ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/20 bg-emerald-200/[0.05] text-emerald-100"].join(" ")}>{loadError || notice}</p>}
 
-        <div className="mt-7 grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_300px] xl:gap-10">
+        <div className="converge-feed-grid mt-8 grid items-start gap-7 lg:grid-cols-[200px_minmax(0,1fr)_260px] xl:gap-9">
+          <aside className="converge-feed-left-rail hidden lg:block">
+            <div className="feed-profile">
+              <Link href="/profile" className="feed-profile__top">
+                <span className="feed-profile__avatar">{viewerProfile?.avatar_url ? <img src={viewerProfile.avatar_url} alt="" /> : initials(viewerProfile?.display_name ?? "You")}</span>
+                <span className="min-w-0"><strong>{viewerProfile?.display_name ?? "Your profile"}</strong><small>{viewerProfile?.headline ?? "Member of Converge"}</small></span>
+              </Link>
+              {(viewerProfile?.organization) && <p className="feed-profile__org">{viewerProfile.organization}</p>}
+              <Link href="/profile" className="feed-rail-link feed-rail-link--subtle">View your profile <span>↗</span></Link>
+            </div>
+
+            <div className="feed-rail-group">
+              <p className="feed-rail-heading">YOUR WORKSPACE</p>
+              <Link href="/feed" className="feed-rail-link is-active"><span className="feed-rail-glyph">⌁</span> Activity</Link>
+              <Link href="/network" className="feed-rail-link"><span className="feed-rail-glyph">◎</span> My network</Link>
+              <Link href="/messages" className="feed-rail-link"><span className="feed-rail-glyph">↗</span> Messages</Link>
+              <Link href="/communities" className="feed-rail-link"><span className="feed-rail-glyph">▦</span> Communities</Link>
+            </div>
+
+            <div className="feed-rail-group">
+              <div className="feed-rail-heading-row"><p className="feed-rail-heading">YOUR COMMUNITIES</p><Link href="/communities" aria-label="Browse communities">＋</Link></div>
+              {communities.slice(0, 5).map((community) => <Link key={community.id} href={\`/communities/\${community.slug}\`} className="feed-rail-link"><span className="feed-community-mark">{community.name.charAt(0).toUpperCase()}</span><span className="feed-rail-truncate">{community.name}</span></Link>)}
+              {!communities.length && <p className="feed-rail-empty">Your communities will appear here.</p>}
+              {communities.length > 5 && <Link href="/communities" className="feed-rail-more">Explore all communities →</Link>}
+            </div>
+
+            <div className="feed-rail-group">
+              <div className="feed-rail-heading-row"><p className="feed-rail-heading">OPEN TOPICS</p><Link href="/communities" aria-label="Explore topics">↗</Link></div>
+              {topics.slice(0, 4).map((topic) => <Link key={topic.id} href={\`/topics/\${topic.id}\`} className="feed-topic-link"><span className={topic.type === "RESEARCH" ? "feed-topic-link__kind is-research" : "feed-topic-link__kind"}>{topic.type === "RESEARCH" ? "R" : "D"}</span><span>{topic.title}</span></Link>)}
+              {!topics.length && <p className="feed-rail-empty">Start a topic to get a research thread going.</p>}
+            </div>
+          </aside>
           <section className="min-w-0">
-            <div className="overflow-hidden rounded-3xl border border-white/[0.1] bg-[#101815]/80">
-              <button type="button" onClick={() => setComposerOpen((open) => !open)} className="flex w-full items-center justify-between border-b border-white/[0.08] px-5 py-4 text-left sm:px-6">
+            <div className="feed-composer overflow-hidden rounded-3xl border border-white/[0.1] bg-[#101815]/80">
+              <button type="button" onClick={() => setComposerOpen((open) => !open)} className="feed-composer__toggle flex w-full items-center justify-between border-b border-white/[0.08] px-5 py-4 text-left sm:px-6">
                 <div>
                   <p className="text-sm font-semibold">Add to the conversation</p>
                   <p className="mt-1 text-[11px] text-white/40">Share progress, ask a question, or pass on a resource.</p>
@@ -481,8 +503,8 @@ export default function ActivityFeedPage() {
               </form>}
             </div>
 
-            <div className="mt-7 flex items-center justify-between gap-3">
-              <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">The community pulse</p><h2 className="mt-1.5 text-xl font-semibold tracking-[-0.04em]">Latest activity</h2></div>
+            <div className="feed-stream-heading mt-7 flex items-center justify-between gap-3">
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">THE STREAM</p><h2 className="mt-1.5 text-xl font-semibold tracking-[-0.04em]">Latest activity</h2></div>
               <button type="button" onClick={() => { setLoading(true); void loadFeed(viewerId ?? undefined); }} disabled={loading} className="rounded-full border border-white/12 px-3.5 py-2 text-[10px] font-semibold text-white/55 hover:border-emerald-200/20 hover:text-white disabled:opacity-40">↻ Refresh</button>
             </div>
             {(activeFilterCommunity || activeFilterTopic) && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200/15 bg-emerald-200/[0.035] px-4 py-3">
@@ -499,7 +521,7 @@ export default function ActivityFeedPage() {
               : posts.length && visiblePosts.length ? <div className="mt-4 grid gap-4">{visiblePosts.map((post) => {
                 const author = authors[post.author_id];
                 const typeInfo = postTypes.find((type) => type.value === post.post_type) ?? postTypes[0];
-                return <article key={post.id} className="overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/80 transition hover:border-white/[0.14]">
+                return <article key={post.id} className="feed-post overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/80 transition hover:border-white/[0.14]">
                   <div className="px-5 pt-5 sm:px-6 sm:pt-6">
                     <div className="flex items-start gap-3">
                       <Link href={author ? `/u/${author.username || author.id}` : "/people"} className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.08] text-sm font-bold text-emerald-100">
@@ -539,7 +561,7 @@ export default function ActivityFeedPage() {
                           <Link href={comment.author ? `/u/${comment.author.username || comment.author.id}` : "/people"} className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/10 bg-emerald-200/[0.06] text-[9px] font-bold text-emerald-100">
                             {comment.author?.avatar_url ? <img src={comment.author.avatar_url} alt="" className="size-full object-cover" /> : initials(comment.author?.display_name ?? "Member")}
                           </Link>
-                          <div className="min-w-0 flex-1 rounded-2xl border border-white/[0.07] bg-white/[0.025] px-3.5 py-3">
+                          <div className="feed-comment-body min-w-0 flex-1 rounded-2xl border border-white/[0.07] bg-white/[0.025] px-3.5 py-3">
                             <div className="flex flex-wrap items-center gap-2"><Link href={comment.author ? `/u/${comment.author.username || comment.author.id}` : "/people"} className="text-[11px] font-semibold text-white/75 hover:text-emerald-100">{comment.author?.display_name ?? "Converge member"}</Link><time dateTime={comment.created_at} className="text-[9px] text-white/30">{timeLabel(comment.created_at)}</time></div>
                             <p className="mt-2 whitespace-pre-wrap break-words text-xs leading-5 text-white/65">{comment.body}</p>
                           </div>
@@ -573,7 +595,7 @@ export default function ActivityFeedPage() {
               </div>}
           </section>
 
-          <aside className="grid gap-4 lg:sticky lg:top-[96px]">
+          <aside className="converge-feed-right-rail grid gap-4 lg:sticky lg:top-[96px]">
             <section className="rounded-2xl border border-white/[0.09] bg-[#101815]/70 p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">A good contribution</p>
               <h2 className="mt-2 text-lg font-semibold tracking-[-0.04em]">Bring something people can build on.</h2>
