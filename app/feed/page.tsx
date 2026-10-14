@@ -52,7 +52,7 @@ function timeLabel(value: string) {
 }
 function friendlyError(value: string) {
   if (value.includes("activity_posts") || value.includes("activity_comments") || value.includes("activity_likes")) {
-    return "The activity feed database is not ready yet. Apply the Converge activity feed migration in Supabase, then refresh this page.";
+    return `Feed database query failed: ${value}`;
   }
   return value;
 }
@@ -98,6 +98,7 @@ export default function ActivityFeedPage() {
     ]);
 
     if (postError) {
+      console.error("[Converge Activity Feed] Posts query failed", postError);
       setLoadError(friendlyError(postError.message));
       setLoading(false);
       return;
@@ -120,6 +121,7 @@ export default function ActivityFeedPage() {
     ]);
 
     if (likesError || commentsError) {
+      console.error("[Converge Activity Feed] Likes/comments query failed", likesError ?? commentsError);
       setLoadError(friendlyError((likesError ?? commentsError)?.message ?? "Feed activity could not be loaded."));
     }
     const likes = (likesData ?? []) as LikeRow[];
@@ -245,6 +247,7 @@ export default function ActivityFeedPage() {
       .order("created_at", { ascending: true })
       .limit(100);
     if (error) {
+      console.error("[Converge Activity Feed] Comments query failed", error);
       setNotice(friendlyError(error.message));
       setLoadingComments(null);
       return;
