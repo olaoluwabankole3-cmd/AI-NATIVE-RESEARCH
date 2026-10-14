@@ -162,10 +162,10 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto max-w-[1380px] px-4 pb-16 sm:px-7 lg:px-10">
-        <section className="border-b border-white/[0.09] py-9 sm:py-12">
+        <section className="converge-page-intro border-b border-white/[0.09] py-9 sm:py-12">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div className="max-w-3xl">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Organisations</p>

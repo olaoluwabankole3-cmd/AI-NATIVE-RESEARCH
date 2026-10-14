@@ -222,14 +222,14 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]"><SiteHeader /><div className="mx-auto max-w-5xl px-5 py-20"><div className="h-6 w-44 animate-pulse rounded bg-white/10" /><div className="mt-5 h-48 animate-pulse rounded-2xl border border-white/10 bg-white/[0.02]" /></div></main>;
+    return <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]"><SiteHeader /><div className="mx-auto max-w-5xl px-5 py-20"><div className="h-6 w-44 animate-pulse rounded bg-white/10" /><div className="mt-5 h-48 animate-pulse rounded-2xl border border-white/10 bg-white/[0.02]" /></div></main>;
   }
 
   return (
-    <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="mx-auto max-w-[1240px] px-4 pb-16 sm:px-7 lg:px-10">
-        <section className="border-b border-white/[0.09] py-8 sm:py-10">
+        <section className="converge-page-intro border-b border-white/[0.09] py-8 sm:py-10">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Your identity / Profile</p>
           <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>

@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 export default async function AgentsPage() {
   const agents = await getRegisteredAgents();
   return (
-    <main className="min-h-screen bg-[#07110f] text-white">
+    <main className="converge-app-page min-h-screen bg-[#07110f] text-white">
       <SiteHeader />
 
       <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
-        <section className="relative overflow-hidden border-y border-white/10 py-10 sm:py-14">
+        <section className="converge-page-intro relative overflow-hidden border-y border-white/10 py-10 sm:py-14">
           <div className="pointer-events-none absolute right-0 top-0 h-full w-1/3 bg-gradient-to-l from-emerald-300/[0.04] to-transparent" />
           <p className="relative text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">
             Agent Registry
