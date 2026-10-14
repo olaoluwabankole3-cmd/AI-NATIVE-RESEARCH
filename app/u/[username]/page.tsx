@@ -1,24 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 
 type PublicProfile = {
-  id: string;
-  username: string | null;
-  display_name: string;
-  headline: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  location: string | null;
-  organization: string | null;
-  website_url: string | null;
-  interests: string[] | null;
-  profile_visibility: "public" | "members" | "private";
-  created_at: string;
+  id: string; username: string | null; display_name: string;
+  headline: string | null; bio: string | null; avatar_url: string | null;
+  location: string | null; organization: string | null; website_url: string | null;
+  interests: string[] | null; profile_visibility: "public" | "members" | "private"; created_at: string;
+};
+type ConnectionStatus = "NONE" | "SELF" | "CONNECTED" | "INCOMING" | "OUTGOING";
+type SocialSummary = {
+  follower_count: number; following_count: number; connection_count: number;
+  followed_by_me: boolean; connection_status: ConnectionStatus; connection_request_id: string | null;
+};
+const emptySocial: SocialSummary = {
+  follower_count: 0, following_count: 0, connection_count: 0, followed_by_me: false,
+  connection_status: "NONE", connection_request_id: null,
 };
 
 function initials(name: string) {
@@ -26,25 +27,59 @@ function initials(name: string) {
 }
 
 export default function PublicProfilePage() {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
   const params = useParams<{ username: string }>();
   const username = decodeURIComponent(params.username ?? "").toLowerCase();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [viewerId, setViewerId] = useState<string | null>(null);
+  const [social, setSocial] = useState<SocialSummary>(emptySocial);
   const [loading, setLoading] = useState(true);
+  const [socialBusy, setSocialBusy] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [socialMessage, setSocialMessage] = useState("");
+  const [socialMessageTone, setSocialMessageTone] = useState<"success" | "error">("success");
+
+  async function refreshSocial(profileId: string) {
+    const { data, error } = await supabase.rpc("get_profile_social_summary", { p_profile_id: profileId }).maybeSingle();
+    if (error) return;
+    if (data) setSocial({
+      follower_count: Number(data.follower_count ?? 0),
+      following_count: Number(data.following_count ?? 0),
+      connection_count: Number(data.connection_count ?? 0),
+      followed_by_me: Boolean(data.followed_by_me),
+      connection_status: (data.connection_status ?? "NONE") as ConnectionStatus,
+      connection_request_id: data.connection_request_id ?? null,
+    });
+  }
 
   useEffect(() => {
     let active = true;
     async function load() {
-      const { data, error } = await supabase.from("profiles")
-        .select("id, username, display_name, headline, bio, avatar_url, location, organization, website_url, interests, profile_visibility, created_at")
-        .eq("username", username)
-        .maybeSingle();
+      const [{ data: authData }, { data, error }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from("profiles")
+          .select("id, username, display_name, headline, bio, avatar_url, location, organization, website_url, interests, profile_visibility, created_at")
+          .eq("username", username)
+          .maybeSingle(),
+      ]);
       if (!active) return;
+      setViewerId(authData.user?.id ?? null);
       if (error || !data) {
         setNotFound(true);
       } else {
         setProfile(data as PublicProfile);
+        const { data: summaryData } = await supabase.rpc("get_profile_social_summary", { p_profile_id: data.id }).maybeSingle();
+        if (active && summaryData) {
+          setSocial({
+            follower_count: Number(summaryData.follower_count ?? 0),
+            following_count: Number(summaryData.following_count ?? 0),
+            connection_count: Number(summaryData.connection_count ?? 0),
+            followed_by_me: Boolean(summaryData.followed_by_me),
+            connection_status: (summaryData.connection_status ?? "NONE") as ConnectionStatus,
+            connection_request_id: summaryData.connection_request_id ?? null,
+          });
+        }
       }
       setLoading(false);
     }
@@ -52,6 +87,53 @@ export default function PublicProfilePage() {
     else { setNotFound(true); setLoading(false); }
     return () => { active = false; };
   }, [supabase, username]);
+
+  async function handleFollow() {
+    if (!profile) return;
+    if (!viewerId) { router.push(`/sign-in?next=${encodeURIComponent(`/u/${username}`)}`); return; }
+    setSocialBusy(true); setSocialMessage("");
+    const { data, error } = await supabase.rpc("toggle_follow_user", { p_following_id: profile.id });
+    if (error) {
+      setSocialMessage(error.message); setSocialMessageTone("error");
+    } else {
+      await refreshSocial(profile.id);
+      setSocial((current) => ({ ...current, followed_by_me: Boolean(data) }));
+      setSocialMessage(data ? `You’re now following ${profile.display_name}.` : `You unfollowed ${profile.display_name}.`);
+      setSocialMessageTone("success");
+    }
+    setSocialBusy(false);
+  }
+
+  async function handleConnect() {
+    if (!profile) return;
+    if (!viewerId) { router.push(`/sign-in?next=${encodeURIComponent(`/u/${username}`)}`); return; }
+    setSocialBusy(true); setSocialMessage("");
+    const { data, error } = await supabase.rpc("send_connection_request", { p_recipient_id: profile.id });
+    if (error) {
+      setSocialMessage(error.message); setSocialMessageTone("error");
+    } else {
+      await refreshSocial(profile.id);
+      setSocialMessage(data === "CONNECTED" ? `You’re connected with ${profile.display_name}.` : "Connection request sent.");
+      setSocialMessageTone("success");
+    }
+    setSocialBusy(false);
+  }
+
+  async function handleRequestResponse(action: "accept" | "decline" | "cancel") {
+    if (!profile || !social.connection_request_id) return;
+    setSocialBusy(true); setSocialMessage("");
+    const { error } = await supabase.rpc("respond_connection_request", {
+      p_request_id: social.connection_request_id, p_action: action,
+    });
+    if (error) {
+      setSocialMessage(error.message); setSocialMessageTone("error");
+    } else {
+      await refreshSocial(profile.id);
+      setSocialMessage(action === "accept" ? `You’re connected with ${profile.display_name}.` : action === "decline" ? "Connection request declined." : "Connection request cancelled.");
+      setSocialMessageTone("success");
+    }
+    setSocialBusy(false);
+  }
 
   return (
     <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
@@ -77,7 +159,19 @@ export default function PublicProfilePage() {
                   <div className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-[27px] border-[5px] border-[#101815] bg-emerald-200/[0.12] text-2xl font-bold text-emerald-100 sm:size-28">
                     {profile.avatar_url ? <img src={profile.avatar_url} alt={profile.display_name} className="size-full object-cover" /> : initials(profile.display_name)}
                   </div>
-                  <Link href="/sign-in" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/75 transition hover:border-emerald-200/30 hover:text-emerald-100">Join the conversation <span>↗</span></Link>
+                  <div className="flex flex-wrap gap-2">
+                    {social.connection_status === "SELF" || viewerId === profile.id ? (
+                      <Link href="/profile" className="inline-flex items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] hover:bg-emerald-100">Edit your profile ↗</Link>
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => void handleFollow()} disabled={socialBusy} className={["inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition disabled:opacity-50", social.followed_by_me ? "border-emerald-200/30 bg-emerald-200/[0.08] text-emerald-100 hover:border-red-200/25 hover:text-red-100" : "border-white/15 text-white/75 hover:border-emerald-200/30 hover:text-emerald-100"].join(" ")}>{social.followed_by_me ? "Following" : "Follow"} <span aria-hidden="true">{social.followed_by_me ? "✓" : "+"}</span></button>
+                        {social.connection_status === "CONNECTED" ? <Link href="/network" className="inline-flex items-center gap-2 rounded-full border border-emerald-200/30 bg-emerald-200/[0.08] px-4 py-2.5 text-xs font-semibold text-emerald-100">Connected ✓</Link>
+                          : social.connection_status === "INCOMING" ? <><button type="button" onClick={() => void handleRequestResponse("accept")} disabled={socialBusy} className="rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] disabled:opacity-50">Accept request</button><button type="button" onClick={() => void handleRequestResponse("decline")} disabled={socialBusy} className="rounded-full border border-white/15 px-3 py-2.5 text-xs font-semibold text-white/55 disabled:opacity-50">Decline</button></>
+                          : social.connection_status === "OUTGOING" ? <button type="button" onClick={() => void handleRequestResponse("cancel")} disabled={socialBusy} className="rounded-full border border-amber-200/20 bg-amber-200/[0.05] px-4 py-2.5 text-xs font-semibold text-amber-100 disabled:opacity-50">Request sent · Cancel</button>
+                          : <button type="button" onClick={() => void handleConnect()} disabled={socialBusy} className="inline-flex items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:opacity-50">{socialBusy ? "Please wait…" : "Connect"} <span aria-hidden="true">↗</span></button>}
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-5">
                   <h1 className="break-words text-3xl font-semibold tracking-[-0.055em] sm:text-4xl">{profile.display_name}</h1>
@@ -85,8 +179,15 @@ export default function PublicProfilePage() {
                   {profile.headline && <p className="mt-4 max-w-3xl text-base leading-7 text-white/80">{profile.headline}</p>}
                   {(profile.organization || profile.location) && <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/45"><span>{profile.organization}</span>{profile.organization && profile.location && <span aria-hidden="true">·</span>}<span>{profile.location}</span></p>}
                 </div>
+                <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/[0.08] pt-5">
+                  <Link href="/network?view=connections" className="text-xs text-white/55 transition hover:text-emerald-100"><strong className="mr-1 text-white">{social.connection_count}</strong> connections</Link>
+                  <span className="text-xs text-white/55"><strong className="mr-1 text-white">{social.follower_count}</strong> followers</span>
+                  <span className="text-xs text-white/55"><strong className="mr-1 text-white">{social.following_count}</strong> following</span>
+                </div>
               </div>
             </section>
+
+            {socialMessage && <p role={socialMessageTone === "error" ? "alert" : "status"} className={["mt-4 rounded-xl border px-4 py-3 text-xs leading-5", socialMessageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/20 bg-emerald-200/[0.05] text-emerald-100"].join(" ")}>{socialMessage}</p>}
 
             <div className="mt-5 grid gap-5 md:grid-cols-[minmax(0,1fr)_290px]">
               <section className="rounded-2xl border border-white/[0.09] bg-[#101815]/80 p-5 sm:p-7">
@@ -102,7 +203,7 @@ export default function PublicProfilePage() {
                   {profile.website_url && <div className="mt-4"><p className="text-[10px] uppercase tracking-[0.13em] text-white/35">Website</p><a href={profile.website_url} target="_blank" rel="noreferrer noopener" className="mt-1.5 inline-flex max-w-full items-center gap-2 break-all text-sm text-emerald-200 hover:text-emerald-100">{profile.website_url.replace(/^https?:\/\//i, "").replace(/\/$/, "")} <span aria-hidden="true">↗</span></a></div>}
                   <div className="mt-5 border-t border-white/[0.08] pt-4 text-[10px] text-white/35">Member since {new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date(profile.created_at))}</div>
                 </section>
-                <p className="px-1 text-[11px] leading-5 text-white/35">Converge profiles help people find shared interests, expertise, and research perspectives.</p>
+                <p className="px-1 text-[11px] leading-5 text-white/35">Build your network around shared interests, expertise, and research perspectives.</p>
               </aside>
             </div>
           </>
