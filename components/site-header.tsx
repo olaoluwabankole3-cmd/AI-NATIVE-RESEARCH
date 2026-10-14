@@ -22,6 +22,8 @@ export function SiteHeader() {
   const isHome = pathname === "/";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [authReady, setAuthReady] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const muted = "text-white/55 hover:text-white";
@@ -32,10 +34,12 @@ export function SiteHeader() {
     supabase.auth.getUser().then(({ data }) => {
       if (!active) return;
       setUserEmail(data.user?.email ?? null);
+      setUserId(data.user?.id ?? null);
       setAuthReady(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email ?? null);
+      setUserId(session?.user?.id ?? null);
       setAuthReady(true);
     });
     return () => {
@@ -43,6 +47,38 @@ export function SiteHeader() {
       subscription.unsubscribe();
     };
   }, [supabase]);
+
+  useEffect(() => {
+    if (!userId) {
+      setUnreadNotifications(0);
+      return;
+    }
+
+    let active = true;
+    async function loadUnreadCount() {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", userId)
+        .eq("is_read", false);
+      if (active && !error) setUnreadNotifications(count ?? 0);
+    }
+
+    void loadUnreadCount();
+    const channel = supabase.channel(`header-notifications-${userId}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "notifications",
+        filter: `recipient_id=eq.${userId}`,
+      }, () => { void loadUnreadCount(); })
+      .subscribe();
+
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [supabase, userId]);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -79,6 +115,10 @@ export function SiteHeader() {
         <div className="flex items-center gap-2 sm:gap-3">
           {authReady && userEmail ? (
             <>
+              <Link href="/notifications" aria-label={unreadNotifications ? `Notifications, ${unreadNotifications} unread` : "Notifications"} title="Notifications" className={["relative grid size-10 shrink-0 place-items-center rounded-full border transition", pathname === "/notifications" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="size-[17px]" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>
+                {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 min-w-4 rounded-full bg-emerald-200 px-1 text-center text-[9px] font-black leading-4 text-[#0b1710]">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
+              </Link>
               <Link href="/profile" className={["hidden rounded-full border px-3.5 py-2 text-[12px] font-semibold transition sm:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
               <span className="hidden max-w-[160px] truncate text-xs text-white/40 xl:block">{userEmail}</span>
               <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white sm:inline-flex">
@@ -112,6 +152,7 @@ export function SiteHeader() {
             })}
             {userEmail ? (
               <>
+                <Link href="/notifications" onClick={() => setMobileOpen(false)} className={["flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold", pathname === "/notifications" ? "bg-emerald-200/[0.08] text-emerald-100" : "text-white/70"].join(" ")}><span>Notifications</span>{unreadNotifications > 0 && <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-[10px] font-bold text-[#0b1710]">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
                 <Link href="/profile" onClick={() => setMobileOpen(false)} className={["rounded-xl px-3 py-3 text-sm font-semibold", pathname === "/profile" ? "bg-emerald-200/[0.08] text-emerald-100" : "text-emerald-200"].join(" ")}>My profile ↗</Link>
                 <p className="truncate px-3 py-2 text-xs text-white/40">{userEmail}</p>
                 <button type="button" onClick={handleSignOut} disabled={signingOut} className="px-3 py-3 text-left text-sm font-medium text-white/65">{signingOut ? "Signing out…" : "Sign out"}</button>
