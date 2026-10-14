@@ -195,6 +195,24 @@ export default function PeopleDirectoryPage() {
     setBusyAction(null);
   }
 
+  async function handleMessage(person: PersonProfile) {
+    if (!viewerId) {
+      router.push("/sign-in?next=/people");
+      return;
+    }
+    setBusyAction(`message:${person.id}`);
+    setMessage("");
+    const { data, error } = await supabase.rpc("start_direct_conversation", { p_other_user_id: person.id });
+    if (error || !data) {
+      setMessage(error?.message ?? "Could not open this conversation. Please try again.");
+      setMessageTone("error");
+      setBusyAction(null);
+      return;
+    }
+    router.push(`/messages/${data}`);
+    setBusyAction(null);
+  }
+
   async function handleRespond(person: PersonProfile, action: "accept" | "decline" | "cancel") {
     const relationship = relationships[person.id];
     if (!relationship?.requestId) return;
@@ -283,7 +301,7 @@ export default function PeopleDirectoryPage() {
                       {!!person.interests?.length && <div className="mt-3 flex flex-wrap gap-1.5">{person.interests.slice(0, 3).map((interest) => <span key={interest} className="rounded-full border border-emerald-200/12 bg-emerald-200/[0.04] px-2.5 py-1.5 text-[9px] text-emerald-100/75">{interest}</span>)}</div>}
                       <div className="mt-5 flex flex-wrap gap-2 border-t border-white/[0.07] pt-4">
                         <button type="button" onClick={() => void handleFollow(person)} disabled={actionBusy} className={["rounded-full border px-3.5 py-2.5 text-[10px] font-semibold transition disabled:opacity-40", relation.followedByMe ? "border-emerald-200/25 bg-emerald-200/[0.07] text-emerald-100" : "border-white/15 text-white/65 hover:border-emerald-200/30 hover:text-emerald-100"].join(" ")}>{busyAction === `follow:${person.id}` ? "…" : relation.followedByMe ? "Following ✓" : "Follow +"}</button>
-                        {relation.connectionStatus === "CONNECTED" ? <Link href="/network" className="inline-flex items-center rounded-full border border-emerald-200/25 bg-emerald-200/[0.07] px-3.5 py-2.5 text-[10px] font-semibold text-emerald-100">Connected ✓</Link>
+                        {relation.connectionStatus === "CONNECTED" ? <><Link href="/network" className="inline-flex items-center rounded-full border border-emerald-200/25 bg-emerald-200/[0.07] px-3.5 py-2.5 text-[10px] font-semibold text-emerald-100">Connected ✓</Link><button type="button" onClick={() => void handleMessage(person)} disabled={actionBusy} className="rounded-full bg-emerald-200 px-3.5 py-2.5 text-[10px] font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:opacity-40">{busyAction === `message:${person.id}` ? "Opening…" : "Message ↗"}</button></>
                           : relation.connectionStatus === "INCOMING" ? <button type="button" onClick={() => void handleRespond(person, "accept")} disabled={actionBusy} className="rounded-full bg-emerald-200 px-3.5 py-2.5 text-[10px] font-bold text-[#0b1710] disabled:opacity-40">Accept request</button>
                           : relation.connectionStatus === "OUTGOING" ? <button type="button" onClick={() => void handleRespond(person, "cancel")} disabled={actionBusy} className="rounded-full border border-amber-200/20 bg-amber-200/[0.04] px-3.5 py-2.5 text-[10px] font-semibold text-amber-100 disabled:opacity-40">Request sent · Cancel</button>
                           : <button type="button" onClick={() => void handleConnect(person)} disabled={actionBusy} className="rounded-full bg-emerald-200 px-3.5 py-2.5 text-[10px] font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:opacity-40">{busyAction === `connect:${person.id}` ? "Sending…" : "Connect ↗"}</button>}

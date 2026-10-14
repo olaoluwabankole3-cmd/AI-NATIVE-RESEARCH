@@ -10,6 +10,7 @@ const links = [
   { href: "/people", label: "People" },
   { href: "/organizations", label: "Organisations" },
   { href: "/network", label: "Network" },
+  { href: "/messages", label: "Messages" },
   { href: "/agents", label: "AI registry" },
 ];
 

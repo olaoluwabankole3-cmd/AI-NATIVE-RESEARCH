@@ -48,6 +48,7 @@ export default function PublicProfilePage() {
   const [social, setSocial] = useState<SocialSummary>(emptySocial);
   const [loading, setLoading] = useState(true);
   const [socialBusy, setSocialBusy] = useState(false);
+  const [messageBusy, setMessageBusy] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [socialMessage, setSocialMessage] = useState("");
   const [socialMessageTone, setSocialMessageTone] = useState<"success" | "error">("success");
@@ -117,6 +118,25 @@ export default function PublicProfilePage() {
     setSocialBusy(false);
   }
 
+  async function handleMessage() {
+    if (!profile) return;
+    if (!viewerId) {
+      router.push(`/sign-in?next=${encodeURIComponent(`/u/${username}`)}`);
+      return;
+    }
+    setMessageBusy(true);
+    setSocialMessage("");
+    const { data, error } = await supabase.rpc("start_direct_conversation", { p_other_user_id: profile.id });
+    if (error || !data) {
+      setSocialMessage(error?.message ?? "Could not open this conversation. Please try again.");
+      setSocialMessageTone("error");
+      setMessageBusy(false);
+      return;
+    }
+    router.push(`/messages/${data}`);
+    setMessageBusy(false);
+  }
+
   async function handleRequestResponse(action: "accept" | "decline" | "cancel") {
     if (!profile || !social.connection_request_id) return;
     setSocialBusy(true); setSocialMessage("");
@@ -163,7 +183,7 @@ export default function PublicProfilePage() {
                     ) : (
                       <>
                         <button type="button" onClick={() => void handleFollow()} disabled={socialBusy} className={["inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-xs font-semibold transition disabled:opacity-50", social.followed_by_me ? "border-emerald-200/30 bg-emerald-200/[0.08] text-emerald-100 hover:border-red-200/25 hover:text-red-100" : "border-white/15 text-white/75 hover:border-emerald-200/30 hover:text-emerald-100"].join(" ")}>{social.followed_by_me ? "Following" : "Follow"} <span aria-hidden="true">{social.followed_by_me ? "✓" : "+"}</span></button>
-                        {social.connection_status === "CONNECTED" ? <Link href="/network" className="inline-flex items-center gap-2 rounded-full border border-emerald-200/30 bg-emerald-200/[0.08] px-4 py-2.5 text-xs font-semibold text-emerald-100">Connected ✓</Link>
+                        {social.connection_status === "CONNECTED" ? <><Link href="/network" className="inline-flex items-center gap-2 rounded-full border border-emerald-200/30 bg-emerald-200/[0.08] px-4 py-2.5 text-xs font-semibold text-emerald-100">Connected ✓</Link><button type="button" onClick={() => void handleMessage()} disabled={messageBusy} className="inline-flex items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:opacity-50">{messageBusy ? "Opening…" : "Message ↗"}</button></>
                           : social.connection_status === "INCOMING" ? <><button type="button" onClick={() => void handleRequestResponse("accept")} disabled={socialBusy} className="rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] disabled:opacity-50">Accept request</button><button type="button" onClick={() => void handleRequestResponse("decline")} disabled={socialBusy} className="rounded-full border border-white/15 px-3 py-2.5 text-xs font-semibold text-white/55 disabled:opacity-50">Decline</button></>
                           : social.connection_status === "OUTGOING" ? <button type="button" onClick={() => void handleRequestResponse("cancel")} disabled={socialBusy} className="rounded-full border border-amber-200/20 bg-amber-200/[0.05] px-4 py-2.5 text-xs font-semibold text-amber-100 disabled:opacity-50">Request sent · Cancel</button>
                           : <button type="button" onClick={() => void handleConnect()} disabled={socialBusy} className="inline-flex items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:opacity-50">{socialBusy ? "Please wait…" : "Connect"} <span aria-hidden="true">↗</span></button>}
