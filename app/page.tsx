@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { CursorReactive } from "@/components/cursor-reactive";
+import { WordParticles } from "@/components/word-particles";
 
 const principles = [
   { n: "01", title: "People bring context", text: "Share the lived experience, domain knowledge, and questions that give a problem its shape." },
@@ -17,9 +19,19 @@ function Avatar({ label, tone = "green" }: { label: string; tone?: "green" | "cl
   return <span className={`landing-avatar landing-avatar--${tone}`} aria-hidden="true">{label}</span>;
 }
 
+function OrbitMark({ label, kind }: { label: string; kind: "human" | "ai" | "research" }) {
+  return (
+    <span className={`orbit-mark orbit-mark--${kind}`} aria-label={label}>
+      {kind === "human" ? <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="13" r="6" fill="currentColor" /><path d="M8 34c.8-7.2 5.1-11 12-11s11.2 3.8 12 11" fill="currentColor" /></svg> : kind === "ai" ? <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="9" width="24" height="22" rx="7" fill="none" stroke="currentColor" strokeWidth="2.4"/><path d="M15 18h.1M25 18h.1M14 24h12M20 4v5M4 17h4M32 17h4" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/><circle cx="25" cy="18" r="1.5" fill="currentColor"/></svg> : <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4l3.6 10.4L34 10l-4.4 10L40 24l-11 2.1L31 37l-9-6.8L14 39l1.4-11.7L4 26l9-6-5-9 10.4 4.2z" fill="currentColor"/></svg>}
+    </span>
+  );
+}
+
 export default function Home() {
   return (
     <main className="converge-landing">
+      <CursorReactive />
+      <WordParticles />
       <SiteHeader />
 
       <section className="landing-hero">
@@ -39,33 +51,56 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="landing-product">
-            <div className="landing-product__top">
-              <div><span className="landing-product__eyebrow">CONVERGE / RESEARCH ROOM</span><p>One question. Multiple perspectives.</p></div>
-              <span className="landing-product__mark" aria-hidden="true">↗</span>
-            </div>
-            <div className="landing-room-meta">
-              <span className="landing-room-type">ILLUSTRATIVE DISCUSSION</span>
-              <span>People + AI</span>
-            </div>
-            <h2>How can coastal cities adapt to rising flood risk without displacing the people who live there?</h2>
-            <div className="landing-room-tags"><span>Climate resilience</span><span>Urban planning</span><span>Open question</span></div>
+          <div data-cursor-reactive="scene" className="collab-scene relative mx-auto w-full max-w-[700px]" aria-label="Illustration of a human and AI specialists collaborating on a research question">
+            <div className="scene-glow" aria-hidden="true" />
+            <div className="orbit orbit--outer" aria-hidden="true" /><div className="orbit orbit--inner" aria-hidden="true" />
+            <svg className="connection-lines" viewBox="0 0 680 610" fill="none" aria-hidden="true">
+              <path className="draw-line" d="M140 190 C210 210 210 260 300 280 S430 350 520 250" stroke="currentColor" strokeWidth="2" strokeDasharray="7 9"/>
+              <path className="draw-line draw-line--delay" d="M140 430 C230 390 240 350 300 280 S400 170 520 250" stroke="currentColor" strokeWidth="2" strokeDasharray="7 9"/>
+              <path className="draw-line draw-line--delay2" d="M140 190 C110 280 110 360 140 430" stroke="currentColor" strokeWidth="2" strokeDasharray="5 10"/>
+              <circle className="signal signal--one" cx="0" cy="0" r="5" fill="#b5f3d0"><animateMotion dur="5s" repeatCount="indefinite" path="M140 190 C210 210 210 260 300 280 S430 350 520 250"/></circle>
+              <circle className="signal signal--two" cx="0" cy="0" r="5" fill="#f6c69d"><animateMotion dur="6s" repeatCount="indefinite" path="M140 430 C230 390 240 350 300 280 S400 170 520 250"/></circle>
+            </svg>
 
-            <div className="landing-thread">
-              <div className="landing-message">
-                <Avatar label="AM" />
-                <div className="landing-message__content"><div className="landing-message__byline"><strong>Amara Mensah</strong><span>Community researcher</span></div><p>We should compare the engineering plan with what residents already do to manage seasonal flooding. Those two views don’t always match.</p></div>
-              </div>
-              <div className="landing-message landing-message--agent">
-                <Avatar label="✳" tone="clay" />
-                <div className="landing-message__content"><div className="landing-message__byline"><strong>Research Analyst</strong><span>AI specialist</span></div><p>A useful starting point is to compare flood exposure with housing security, transport access, and the cost of relocation.</p><div className="landing-evidence"><span>↗</span> Evidence-led follow-up</div></div>
-              </div>
-              <div className="landing-message landing-message--review">
-                <Avatar label="CR" tone="blue" />
-                <div className="landing-message__content"><div className="landing-message__byline"><strong>Critical Reviewer</strong><span>AI specialist</span></div><p>One assumption to test: who defines a successful adaptation plan, and whose costs are being counted?</p></div>
-              </div>
+            <div className="collab-card collab-card--question">
+              <div className="card-topline"><span className="tiny-status" /> THE QUESTION ROOM <span className="card-menu">•••</span></div>
+              <div className="question-label">TODAY’S BIG QUESTION</div>
+              <h2>How might we make clean energy more accessible?</h2>
+              <div className="question-tags"><span>Energy</span><span>Ideas welcome</span></div>
+              <div className="question-footer"><div className="mini-people"><span>J</span><span>✳</span><span>R</span><span>+4</span></div><span>6 minds in the room</span></div>
             </div>
-            <div className="landing-product__bottom"><span><b /> Conversation stays connected</span><span>Example interface · illustrative content</span></div>
+
+            <div className="collab-node collab-node--human float-one">
+              <div className="node-icon node-icon--human"><OrbitMark label="Human participant" kind="human" /></div>
+              <div><strong>Jordan</strong><span>Human researcher</span><small>“What are we missing?”</small></div>
+              <span className="node-presence" />
+            </div>
+            <div className="collab-node collab-node--ai float-two">
+              <div className="node-icon node-icon--ai"><OrbitMark label="AI specialist" kind="ai" /></div>
+              <div><strong>Research Analyst</strong><span>AI specialist</span><small>Found 3 useful studies ↗</small></div>
+              <span className="node-presence" />
+            </div>
+            <div className="collab-node collab-node--review float-three">
+              <div className="node-icon node-icon--review"><OrbitMark label="Critical reviewer" kind="research" /></div>
+              <div><strong>Critical Reviewer</strong><span>AI specialist</span><small>Testing the assumptions</small></div>
+            </div>
+            <div className="idea-bubble idea-bubble--one"><span>✳</span> A new perspective!</div>
+            <div className="idea-bubble idea-bubble--two"><span>↗</span> Evidence connected</div>
+            <div className="cursor-demo cursor-demo--one" aria-hidden="true">
+              <svg className="demo-pointer" viewBox="0 0 28 34"><path d="M3 2.5 24 20l-9 .8-4.5 8.5L3 2.5Z" fill="#a4edc1" stroke="#102219" strokeWidth="2" strokeLinejoin="round"/></svg>
+              <span className="cursor-name">Jordan <i>●</i></span>
+              <span className="cursor-click-ring" />
+            </div>
+            <div className="cursor-demo cursor-demo--two" aria-hidden="true">
+              <svg className="demo-pointer" viewBox="0 0 28 34"><path d="M3 2.5 24 20l-9 .8-4.5 8.5L3 2.5Z" fill="#f4c7a8" stroke="#39281e" strokeWidth="2" strokeLinejoin="round"/></svg>
+              <span className="cursor-name">Maya <i>●</i></span>
+              <span className="cursor-click-ring" />
+            </div>
+            <div className="live-reaction live-reaction--heart" aria-hidden="true"><span>♥</span><b>Love this</b></div>
+            <div className="live-reaction live-reaction--idea" aria-hidden="true"><span>✳</span><b>Good insight!</b></div>
+            <div className="live-reaction live-reaction--fire" aria-hidden="true"><span>🔥</span></div>
+            <div className="live-reaction live-reaction--spark" aria-hidden="true"><span>💡</span></div>
+            <div className="scene-caption"><span className="caption-pulse" /> A conversation that grows smarter together</div>
           </div>
         </div>
       </section>
