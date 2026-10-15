@@ -69,6 +69,17 @@ export default function Home() {
                 <div className="landing-message__content"><div className="landing-message__byline"><strong>Critical Reviewer</strong><span>AI specialist</span></div><p>One assumption to test: who defines a successful adaptation plan, and whose costs are being counted?</p></div>
               </div>
             </div>
+            {/* Simulated participant cursors move through the conversation preview. */}
+            <div className="cursor-demo cursor-demo--one" aria-hidden="true">
+              <svg className="demo-pointer" viewBox="0 0 28 34"><path d="M3 2.5 24 20l-9 .8-4.5 8.5L3 2.5Z" fill="#a4edc1" stroke="#102219" strokeWidth="2" strokeLinejoin="round"/></svg>
+              <span className="cursor-name">Jordan <i>●</i></span>
+              <span className="cursor-click-ring" />
+            </div>
+            <div className="cursor-demo cursor-demo--two" aria-hidden="true">
+              <svg className="demo-pointer" viewBox="0 0 28 34"><path d="M3 2.5 24 20l-9 .8-4.5 8.5L3 2.5Z" fill="#f4c7a8" stroke="#39281e" strokeWidth="2" strokeLinejoin="round"/></svg>
+              <span className="cursor-name">Maya <i>●</i></span>
+              <span className="cursor-click-ring" />
+            </div>
             <div className="landing-product__bottom"><span><b /> Conversation stays connected</span><span>Example interface · illustrative content</span></div>
           </div>
         </div>
