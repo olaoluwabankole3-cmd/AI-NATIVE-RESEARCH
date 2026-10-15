@@ -1259,3 +1259,37 @@ main:not(.converge-home):has(> header) button:focus-visible {
   .converge-topic-hero h1 { font-size: clamp(29px, 8vw, 36px) !important; }
   .converge-topic-hero > div.mt-6.whitespace-pre-wrap { font-size: 13px !important; line-height: 1.85 !important; }
 }
+
+
+/* Restore the original particle/cursor motion without the floating collaboration illustration. */
+.converge-landing {
+  position: relative;
+  isolation: isolate;
+}
+.converge-landing > .word-particles {
+  z-index: 0;
+  opacity: .34;
+  filter: blur(6px);
+}
+.converge-landing > .cursor-aura { z-index: 3; }
+.converge-landing > header,
+.converge-landing > section,
+.converge-landing > footer {
+  position: relative;
+  z-index: 2;
+}
+.converge-landing .landing-hero {
+  background: radial-gradient(ellipse at 82% 37%, rgba(72, 143, 96, .12), transparent 36%), rgba(11, 17, 16, .68);
+}
+.converge-landing .landing-principles { background: rgba(14, 21, 18, .78); }
+.converge-landing .landing-capabilities { background: rgba(11, 17, 16, .77); }
+.converge-landing .landing-close {
+  background: linear-gradient(105deg, rgba(17, 29, 22, .88), rgba(14, 21, 18, .86) 64%, rgba(16, 25, 22, .88));
+}
+.converge-landing .landing-footer { background: rgba(9, 14, 12, .9); }
+@media (max-width: 680px) {
+  .converge-landing > .word-particles { opacity: .28; filter: blur(4.5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .converge-landing > .word-particles { opacity: .18; }
+}
