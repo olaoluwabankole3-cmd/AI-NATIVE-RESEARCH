@@ -89,6 +89,8 @@ export default function ActivityFeedPage() {
   const [loadingComments, setLoadingComments] = useState<string | null>(null);
   const [commentBusy, setCommentBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [leftRailOpen, setLeftRailOpen] = useState(true);
+  const [messagesRailOpen, setMessagesRailOpen] = useState(true);
 
   const loadFeed = useCallback(async (knownViewerId?: string) => {
     const currentViewerId = knownViewerId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
@@ -387,13 +389,17 @@ export default function ActivityFeedPage() {
             <h1>What are people thinking about?</h1>
             <p>Ideas in progress, research worth sharing, and conversations that move work forward.</p>
           </div>
-          <button type="button" onClick={() => setComposerOpen(true)} className="feed-masthead__action"><span aria-hidden="true">＋</span> Start a discussion</button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => setLeftRailOpen((open) => !open)} aria-expanded={leftRailOpen} className="hidden rounded-full border border-white/10 px-3 py-2.5 text-[11px] font-semibold text-white/60 transition hover:border-emerald-200/25 hover:text-white lg:inline-flex">{leftRailOpen ? "Hide sidebar" : "Show sidebar"}</button>
+            <button type="button" onClick={() => setMessagesRailOpen((open) => !open)} aria-expanded={messagesRailOpen} className="hidden rounded-full border border-white/10 px-3 py-2.5 text-[11px] font-semibold text-white/60 transition hover:border-emerald-200/25 hover:text-white lg:inline-flex">{messagesRailOpen ? "Hide messages" : "Show messages"}</button>
+            <button type="button" onClick={() => setComposerOpen(true)} className="feed-masthead__action"><span aria-hidden="true">＋</span> Start a discussion</button>
+          </div>
         </section>
 
         {(loadError || notice) && <p role={loadError ? "alert" : "status"} className={["mt-5 rounded-xl border px-4 py-3 text-sm leading-6", loadError ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/20 bg-emerald-200/[0.05] text-emerald-100"].join(" ")}>{loadError || notice}</p>}
 
-        <div className="converge-feed-grid mt-8 grid items-start gap-7 lg:grid-cols-[200px_minmax(0,1fr)_260px] xl:gap-9">
-          <aside className="converge-feed-left-rail hidden lg:block">
+        <div className={["converge-feed-grid mt-8 grid items-start gap-7 xl:gap-9", leftRailOpen && messagesRailOpen ? "lg:grid-cols-[200px_minmax(0,1fr)_260px]" : leftRailOpen ? "lg:grid-cols-[200px_minmax(0,1fr)]" : messagesRailOpen ? "lg:grid-cols-[minmax(0,1fr)_260px]" : "lg:grid-cols-1"].join(" ")}>
+          {leftRailOpen && <aside className="converge-feed-left-rail hidden lg:block">
             <div className="feed-profile">
               <Link href="/profile" className="feed-profile__top">
                 <span className="feed-profile__avatar">{viewerProfile?.avatar_url ? <img src={viewerProfile.avatar_url} alt="" /> : initials(viewerProfile?.display_name ?? "You")}</span>
@@ -423,7 +429,7 @@ export default function ActivityFeedPage() {
               {topics.slice(0, 4).map((topic) => <Link key={topic.id} href={`/topics/${topic.id}`} className="feed-topic-link"><span className={topic.type === "RESEARCH" ? "feed-topic-link__kind is-research" : "feed-topic-link__kind"}>{topic.type === "RESEARCH" ? "R" : "D"}</span><span>{topic.title}</span></Link>)}
               {!topics.length && <p className="feed-rail-empty">Start a topic to get a research thread going.</p>}
             </div>
-          </aside>
+          </aside>}
           <section className="min-w-0">
             <div className="feed-composer overflow-hidden rounded-3xl border border-white/[0.1] bg-[#101815]/80">
               <button type="button" onClick={() => setComposerOpen((open) => !open)} className="feed-composer__toggle flex w-full items-center justify-between border-b border-white/[0.08] px-5 py-4 text-left sm:px-6">
@@ -587,26 +593,29 @@ export default function ActivityFeedPage() {
               </div>}
           </section>
 
-          <aside className="converge-feed-right-rail grid gap-4 lg:sticky lg:top-[96px]">
-            <section className="rounded-2xl border border-white/[0.09] bg-[#101815]/70 p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">A good contribution</p>
-              <h2 className="mt-2 text-lg font-semibold tracking-[-0.04em]">Bring something people can build on.</h2>
-              <div className="mt-4 space-y-3 text-xs leading-5 text-white/50">
-                <p><strong className="text-white/75">Share context.</strong> Explain what you are exploring and what you have learned.</p>
-                <p><strong className="text-white/75">Ask clearly.</strong> Specific questions make it easier for others to help.</p>
-                <p><strong className="text-white/75">Credit sources.</strong> Add a link when you reference research, data, or a tool.</p>
+          {messagesRailOpen && <aside className="converge-feed-right-rail grid gap-4 lg:sticky lg:top-[96px]">
+            <section className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#101815]/70">
+              <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">Your inbox</p>
+                  <h2 className="mt-1 text-base font-semibold tracking-[-0.03em]">Messages</h2>
+                </div>
+                <Link href="/messages" aria-label="Open all messages" className="grid size-8 place-items-center rounded-full border border-white/10 text-sm text-emerald-200 transition hover:border-emerald-200/25">↗</Link>
+              </div>
+              <div className="p-4">
+                <div className="rounded-xl border border-dashed border-white/[0.12] px-3 py-6 text-center">
+                  <span className="mx-auto grid size-10 place-items-center rounded-xl border border-emerald-200/15 bg-emerald-200/[0.05] text-lg text-emerald-100">✉</span>
+                  <p className="mt-3 text-sm font-semibold text-white/80">Keep the conversation going</p>
+                  <p className="mt-1 text-xs leading-5 text-white/40">Your direct conversations live here.</p>
+                  <Link href="/messages" className="mt-4 inline-flex rounded-full bg-emerald-200 px-4 py-2.5 text-[11px] font-bold text-[#0b1710] transition hover:bg-emerald-100">Open messages</Link>
+                </div>
+                <div className="mt-3 grid gap-2">
+                  <Link href="/network" className="flex items-center justify-between rounded-xl border border-white/[0.08] px-3 py-3 text-xs font-semibold text-white/60 transition hover:border-emerald-200/20 hover:text-white">Find people to message <span className="text-emerald-200">↗</span></Link>
+                  <Link href="/communities" className="flex items-center justify-between rounded-xl border border-white/[0.08] px-3 py-3 text-xs font-semibold text-white/60 transition hover:border-emerald-200/20 hover:text-white">Explore communities <span className="text-emerald-200">↗</span></Link>
+                </div>
               </div>
             </section>
-            <section className="rounded-2xl border border-white/[0.09] bg-[#101815]/70 p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">Continue collaborating</p>
-              <div className="mt-4 grid gap-2">
-                <Link href="/communities" className="flex items-center justify-between rounded-xl border border-white/[0.08] px-3.5 py-3 text-xs font-semibold text-white/65 transition hover:border-emerald-200/20 hover:text-white">Communities <span className="text-emerald-200">↗</span></Link>
-                <Link href="/people" className="flex items-center justify-between rounded-xl border border-white/[0.08] px-3.5 py-3 text-xs font-semibold text-white/65 transition hover:border-emerald-200/20 hover:text-white">Discover members <span className="text-emerald-200">↗</span></Link>
-                <Link href="/messages" className="flex items-center justify-between rounded-xl border border-white/[0.08] px-3.5 py-3 text-xs font-semibold text-white/65 transition hover:border-emerald-200/20 hover:text-white">Direct messages <span className="text-emerald-200">↗</span></Link>
-                <Link href="/network" className="flex items-center justify-between rounded-xl border border-white/[0.08] px-3.5 py-3 text-xs font-semibold text-white/65 transition hover:border-emerald-200/20 hover:text-white">Your network <span className="text-emerald-200">↗</span></Link>
-              </div>
-            </section>
-          </aside>
+          </aside>}
         </div>
       </div>
     </main>
