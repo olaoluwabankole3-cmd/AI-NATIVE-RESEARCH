@@ -982,45 +982,6 @@ main:not(.converge-home):has(> header) button:focus-visible {
 }
 
 
-/* --- Proportion and spacing pass: give each region room to breathe --- */
-.landing-shell { width: min(1360px, calc(100% - 88px)); }
-.landing-hero { padding-top: 86px; padding-bottom: 94px; }
-.landing-hero__grid {
-  grid-template-columns: minmax(0, .82fr) minmax(520px, 1.18fr);
-  gap: clamp(64px, 6.5vw, 104px);
-}
-.landing-copy { max-width: 560px; }
-.landing-copy h1 { font-size: clamp(62px, 6vw, 84px); line-height: 1.02; }
-.landing-lede { max-width: 455px; font-size: 15px; line-height: 1.9; }
-.landing-signals { gap: 13px; margin-top: 38px; }
-.landing-product { max-width: 790px; }
-.landing-product__top { padding: 23px 27px; }
-.landing-room-meta { padding: 27px 27px 0; }
-.landing-product h2 { margin: 15px 27px 0; max-width: 600px; font-size: clamp(23px, 2vw, 29px); line-height: 1.32; }
-.landing-room-tags { padding: 20px 27px 23px; gap: 9px; }
-.landing-thread { padding: 1px 27px; }
-.landing-message { gap: 14px; padding: 22px 0; }
-.landing-avatar { width: 35px; height: 35px; flex-basis: 35px; }
-.landing-message__byline strong { font-size: 12px; }
-.landing-message__byline span { font-size: 10px; }
-.landing-message__content p { font-size: 12px; line-height: 1.85; }
-.landing-product__bottom { padding: 16px 27px; }
-.landing-principles { padding-top: 104px; padding-bottom: 108px; }
-.landing-principles .landing-shell { gap: 88px; grid-template-columns: minmax(280px, .83fr) minmax(0, 1.17fr); }
-.landing-principle { grid-template-columns: 48px minmax(0,1fr); gap: 21px; padding: 27px 0; }
-.landing-principle h3 { font-size: 16px; }
-.landing-principle p { font-size: 13px; line-height: 1.85; }
-.landing-capabilities { padding-top: 110px; padding-bottom: 116px; }
-.landing-capabilities__heading { column-gap: 76px; }
-.landing-capability-grid { margin-top: 52px; }
-.landing-capability { min-height: 225px; padding-top: 30px; padding-bottom: 34px; }
-.landing-capability + .landing-capability { padding-left: 34px; }
-.landing-capability h3 { margin-top: 28px; font-size: 21px; }
-.landing-capability p { margin-top: 12px; font-size: 13px; line-height: 1.85; }
-.landing-close { padding-top: 100px; padding-bottom: 104px; }
-.landing-close__inner { gap: 90px; }
-.landing-close__action > p { font-size: 14px; line-height: 1.9; }
-
 .converge-feed-page > .mx-auto {
   max-width: 1480px;
   padding-left: clamp(22px, 3vw, 46px);
@@ -1103,32 +1064,6 @@ main:not(.converge-home):has(> header) button:focus-visible {
   .converge-feed-grid { grid-template-columns: minmax(0, 1fr); row-gap: 36px; }
 }
 @media (max-width: 680px) {
-  .landing-shell { width: min(100% - 36px, 540px); }
-  .landing-hero { padding-top: 48px; padding-bottom: 62px; }
-  .landing-hero__grid { grid-template-columns: minmax(0,1fr); gap: 45px; }
-  .landing-copy { padding-top: 0; }
-  .landing-copy h1 { font-size: clamp(48px, 13.5vw, 68px); line-height: 1.04; }
-  .landing-product__top { padding: 16px; }
-  .landing-room-meta { padding: 18px 16px 0; }
-  .landing-product h2 { margin-inline: 16px; font-size: 21px; line-height: 1.35; }
-  .landing-room-tags { padding: 15px 16px 17px; }
-  .landing-thread { padding-inline: 16px; }
-  .landing-message { gap: 10px; padding: 17px 0; }
-  .landing-avatar { width: 31px; height: 31px; flex-basis: 31px; }
-  .landing-message__byline strong { font-size: 11px; }
-  .landing-message__content p { font-size: 11px; }
-  .landing-product__bottom { padding: 13px 16px; }
-  .landing-principles, .landing-capabilities { padding-top: 66px; padding-bottom: 70px; }
-  .landing-principles .landing-shell { grid-template-columns: minmax(0,1fr); gap: 32px; }
-  .landing-principle { grid-template-columns: 32px minmax(0,1fr); gap: 12px; padding: 23px 0; }
-  .landing-capability-grid { margin-top: 30px; }
-  .landing-capability { min-height: auto; padding: 22px 28px 26px 0; }
-  .landing-capability + .landing-capability { padding-left: 0; }
-  .landing-capability h3 { margin-top: 15px; font-size: 19px; }
-  .landing-capability p { font-size: 12px; }
-  .landing-close { padding-top: 68px; padding-bottom: 70px; }
-  .landing-close__inner { grid-template-columns: minmax(0,1fr); gap: 28px; }
-  .landing-close h2 { font-size: 44px; }
   .converge-feed-page > .mx-auto { padding-left: 16px; padding-right: 16px; }
   .feed-masthead { padding-top: 25px; padding-bottom: 22px; gap: 18px; }
   .feed-masthead h1 { font-size: clamp(28px, 8vw, 34px); line-height: 1.12; }
@@ -1147,7 +1082,6 @@ main:not(.converge-home):has(> header) button:focus-visible {
   .converge-feed-right-rail { display: none !important; }
 }
 @media (max-width: 380px) {
-  .landing-signals { gap: 6px; font-size: 8px; }
   .feed-post .mt-5.border-t { align-items: flex-start; flex-direction: column; }
 }
 
@@ -1324,50 +1258,4 @@ main:not(.converge-home):has(> header) button:focus-visible {
   .converge-topic-hero { padding-top: 20px !important; padding-bottom: 23px !important; }
   .converge-topic-hero h1 { font-size: clamp(29px, 8vw, 36px) !important; }
   .converge-topic-hero > div.mt-6.whitespace-pre-wrap { font-size: 13px !important; line-height: 1.85 !important; }
-}
-
-
-/* Restore Converge's signature motion without undoing the cleaner landing-page layout. */
-.converge-landing {
-  position: relative;
-  isolation: isolate;
-}
-.converge-landing > .word-particles {
-  z-index: 0;
-  opacity: .34;
-  filter: blur(6px);
-}
-.converge-landing > .cursor-aura { z-index: 3; }
-.converge-landing > header,
-.converge-landing > section,
-.converge-landing > footer {
-  position: relative;
-  z-index: 2;
-}
-.converge-landing .landing-hero {
-  background: radial-gradient(ellipse at 82% 37%, rgba(72, 143, 96, .12), transparent 36%), rgba(11, 17, 16, .68);
-}
-.converge-landing .landing-principles { background: rgba(14, 21, 18, .78); }
-.converge-landing .landing-capabilities { background: rgba(11, 17, 16, .77); }
-.converge-landing .landing-close {
-  background: linear-gradient(105deg, rgba(17, 29, 22, .88), rgba(14, 21, 18, .86) 64%, rgba(16, 25, 22, .88));
-}
-.converge-landing .landing-footer { background: rgba(9, 14, 12, .9); }
-.converge-landing .collab-scene {
-  min-width: 0;
-  width: 100%;
-  max-width: 700px;
-}
-@media (max-width: 1100px) {
-  .converge-landing .collab-scene {
-    width: min(100%, 700px);
-    margin-inline: auto;
-  }
-}
-@media (max-width: 680px) {
-  .converge-landing > .word-particles { opacity: .28; filter: blur(4.5px); }
-  .converge-landing .collab-scene { min-height: 470px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .converge-landing > .word-particles { opacity: .18; }
 }
