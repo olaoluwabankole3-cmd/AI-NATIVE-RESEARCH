@@ -35,6 +35,9 @@ type RawPost = Omit<FeedPost, "like_count" | "comment_count" | "liked_by_me">;
 type LikeRow = { post_id: string; user_id: string };
 type CommentRow = { id: string; post_id: string; author_id: string; body: string; created_at: string };
 type DisplayComment = CommentRow & { author: MemberProfile | null };
+type ConversationRow = { id: string; user_low_id: string; user_high_id: string; last_message_at: string };
+type InboxMember = { id: string; username: string | null; display_name: string; avatar_url: string | null; headline: string | null };
+type InboxMessage = { id: string; conversation_id: string; sender_id: string; body: string; created_at: string };
 
 const postTypes: { value: PostType; label: string; help: string }[] = [
   { value: "update", label: "Research update", help: "Share progress, a result, or something you have learned." },
@@ -91,6 +94,10 @@ export default function ActivityFeedPage() {
   const [notice, setNotice] = useState("");
   const [leftRailOpen, setLeftRailOpen] = useState(true);
   const [messagesRailOpen, setMessagesRailOpen] = useState(true);
+  const [recentConversations, setRecentConversations] = useState<ConversationRow[]>([]);
+  const [inboxMembers, setInboxMembers] = useState<Record<string, InboxMember>>({});
+  const [inboxPreviews, setInboxPreviews] = useState<Record<string, InboxMessage>>({});
+  const [inboxLoading, setInboxLoading] = useState(true);
 
   const loadFeed = useCallback(async (knownViewerId?: string) => {
     const currentViewerId = knownViewerId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
@@ -204,6 +211,47 @@ export default function ActivityFeedPage() {
 
   const [authors, setAuthors] = useState<Record<string, MemberProfile>>({});
 
+  const loadRecentMessages = useCallback(async (knownViewerId?: string) => {
+    const currentViewerId = knownViewerId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+    if (!currentViewerId) return;
+    const { data, error } = await supabase
+      .from("direct_conversations")
+      .select("id, user_low_id, user_high_id, last_message_at")
+      .or("user_low_id.eq." + currentViewerId + ",user_high_id.eq." + currentViewerId)
+      .order("last_message_at", { ascending: false })
+      .limit(5);
+    if (error) {
+      console.error("[Converge Home] Recent conversations could not be loaded", error);
+      setInboxLoading(false);
+      return;
+    }
+    const rows = (data ?? []) as ConversationRow[];
+    setRecentConversations(rows);
+    if (!rows.length) {
+      setInboxMembers({});
+      setInboxPreviews({});
+      setInboxLoading(false);
+      return;
+    }
+    const otherIds = [...new Set(rows.map((row) => row.user_low_id === currentViewerId ? row.user_high_id : row.user_low_id))];
+    const conversationIds = rows.map((row) => row.id);
+    const [{ data: memberData }, { data: messageData, error: messageError }] = await Promise.all([
+      supabase.from("profiles").select("id, username, display_name, avatar_url, headline").in("id", otherIds),
+      supabase.from("direct_messages").select("id, conversation_id, sender_id, body, created_at")
+        .in("conversation_id", conversationIds).order("created_at", { ascending: false }).limit(100),
+    ]);
+    if (messageError) console.error("[Converge Home] Message previews could not be loaded", messageError);
+    const memberMap: Record<string, InboxMember> = {};
+    for (const member of (memberData ?? []) as InboxMember[]) memberMap[member.id] = member;
+    const previewMap: Record<string, InboxMessage> = {};
+    for (const message of (messageData ?? []) as InboxMessage[]) {
+      if (!previewMap[message.conversation_id]) previewMap[message.conversation_id] = message;
+    }
+    setInboxMembers(memberMap);
+    setInboxPreviews(previewMap);
+    setInboxLoading(false);
+  }, [supabase]);
+
   useEffect(() => {
     let active = true;
     async function start() {
@@ -213,11 +261,11 @@ export default function ActivityFeedPage() {
         router.replace("/sign-in?next=/feed");
         return;
       }
-      await loadFeed(user.id);
+      await Promise.all([loadFeed(user.id), loadRecentMessages(user.id)]);
     }
     void start();
     return () => { active = false; };
-  }, [loadFeed, router, supabase]);
+  }, [loadFeed, loadRecentMessages, router, supabase]);
 
   async function publishPost(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -597,24 +645,39 @@ export default function ActivityFeedPage() {
             <section className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#101815]/70">
               <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-4">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">Your inbox</p>
-                  <h2 className="mt-1 text-base font-semibold tracking-[-0.03em]">Messages</h2>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">YOUR INBOX</p>
+                  <h2 className="mt-1 text-base font-semibold tracking-[-0.03em]">Messages <span className="ml-1 text-xs font-medium text-white/30">{recentConversations.length || ""}</span></h2>
                 </div>
                 <Link href="/messages" aria-label="Open all messages" className="grid size-8 place-items-center rounded-full border border-white/10 text-sm text-emerald-200 transition hover:border-emerald-200/25">↗</Link>
               </div>
-              <div className="p-4">
-                <div className="rounded-xl border border-dashed border-white/[0.12] px-3 py-6 text-center">
-                  <span className="mx-auto grid size-10 place-items-center rounded-xl border border-emerald-200/15 bg-emerald-200/[0.05] text-lg text-emerald-100">✉</span>
-                  <p className="mt-3 text-sm font-semibold text-white/80">Keep the conversation going</p>
-                  <p className="mt-1 text-xs leading-5 text-white/40">Your direct conversations live here.</p>
-                  <Link href="/messages" className="mt-4 inline-flex rounded-full bg-emerald-200 px-4 py-2.5 text-[11px] font-bold text-[#0b1710] transition hover:bg-emerald-100">Open messages</Link>
-                </div>
-                <div className="mt-3 grid gap-2">
-                  <Link href="/network" className="flex items-center justify-between rounded-xl border border-white/[0.08] px-3 py-3 text-xs font-semibold text-white/60 transition hover:border-emerald-200/20 hover:text-white">Find people to message <span className="text-emerald-200">↗</span></Link>
-                  <Link href="/communities" className="flex items-center justify-between rounded-xl border border-white/[0.08] px-3 py-3 text-xs font-semibold text-white/60 transition hover:border-emerald-200/20 hover:text-white">Explore communities <span className="text-emerald-200">↗</span></Link>
-                </div>
+              <div className="p-2">
+                {inboxLoading ? <div className="grid gap-1 p-2">{[0, 1, 2].map((item) => <div key={item} className="h-[66px] animate-pulse rounded-xl bg-white/[0.025]" />)}</div>
+                  : recentConversations.length ? <div className="grid gap-1">
+                    {recentConversations.map((conversation) => {
+                      const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
+                      const member = inboxMembers[otherId] ?? { id: otherId, username: null, display_name: "Converge member", avatar_url: null, headline: null };
+                      const preview = inboxPreviews[conversation.id];
+                      return <Link key={conversation.id} href={"/messages/" + conversation.id} className="flex items-center gap-3 rounded-xl px-2.5 py-3 transition hover:bg-white/[0.045]">
+                        <span className="relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-[14px] border border-emerald-200/15 bg-emerald-200/[0.08] text-xs font-bold text-emerald-100">
+                          {member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center justify-between gap-2"><strong className="truncate text-xs font-semibold text-white/85">{member.display_name}</strong><time className="shrink-0 text-[9px] text-white/30">{timeLabel(preview?.created_at ?? conversation.last_message_at)}</time></span>
+                          <span className="mt-1 block truncate text-[10px] text-white/40">{preview ? (preview.sender_id === viewerId ? "You: " : "") + preview.body : "No messages yet — say hello."}</span>
+                        </span>
+                      </Link>;
+                    })}
+                    <Link href="/messages" className="mx-2 mt-1 flex items-center justify-center rounded-xl border border-white/[0.08] px-3 py-3 text-[10px] font-semibold text-emerald-100/75 transition hover:border-emerald-200/20 hover:bg-emerald-200/[0.035]">View all conversations ↗</Link>
+                  </div>
+                  : <div className="px-4 py-7 text-center">
+                    <span className="mx-auto grid size-10 place-items-center rounded-xl border border-emerald-200/15 bg-emerald-200/[0.05] text-lg text-emerald-100">✉</span>
+                    <p className="mt-3 text-sm font-semibold text-white/80">No conversations yet</p>
+                    <p className="mt-1 text-xs leading-5 text-white/40">Your active conversations will appear here.</p>
+                    <Link href="/people" className="mt-4 inline-flex rounded-full bg-emerald-200 px-4 py-2.5 text-[11px] font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
+                  </div>}
               </div>
             </section>
+            <Link href="/network" className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-[#101815]/45 px-4 py-3 text-xs font-semibold text-white/55 transition hover:border-emerald-200/20 hover:text-white">Grow your network <span className="text-emerald-200">↗</span></Link>
           </aside>}
         </div>
       </div>
