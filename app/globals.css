@@ -1293,3 +1293,20 @@ main:not(.converge-home):has(> header) button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .converge-landing > .word-particles { opacity: .18; }
 }
+
+/* Keep the animated participant cursors inside the existing chatbot preview. */
+.landing-product > .cursor-demo {
+  z-index: 12;
+}
+.landing-product > .cursor-demo--one {
+  left: 7%;
+  top: 55%;
+}
+.landing-product > .cursor-demo--two {
+  right: 5%;
+  top: 17%;
+}
+@media (max-width: 639px) {
+  .landing-product > .cursor-demo--one { left: 3%; top: 53%; }
+  .landing-product > .cursor-demo--two { right: 0; top: 16%; }
+}
