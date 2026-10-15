@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { CursorReactive } from "@/components/cursor-reactive";
+import { WordParticles } from "@/components/word-particles";
 
 const principles = [
   { n: "01", title: "People bring context", text: "Share the lived experience, domain knowledge, and questions that give a problem its shape." },
@@ -20,6 +22,8 @@ function Avatar({ label, tone = "green" }: { label: string; tone?: "green" | "cl
 export default function Home() {
   return (
     <main className="converge-landing">
+      <CursorReactive />
+      <WordParticles />
       <SiteHeader />
 
       <section className="landing-hero">
