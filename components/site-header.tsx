@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "more";
+type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "workspaces" | "more";
 
 const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/communities", label: "Communities", icon: "communities" },
@@ -15,6 +15,7 @@ const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/network", label: "Network", icon: "network" },
   { href: "/messages", label: "Messages", icon: "messages" },
   { href: "/agents", label: "AI registry", icon: "agents" },
+  { href: "/workspaces", label: "Workspaces", icon: "workspaces" },
 ];
 
 const desktopLinks: { href: string; label: string; icon: TopNavIconName }[] = [
@@ -25,7 +26,7 @@ const desktopLinks: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/notifications", label: "Notifications", icon: "notifications" },
 ];
 
-const moreLinks = links.filter((link) => ["/people", "/organizations", "/agents"].includes(link.href));
+const moreLinks = links.filter((link) => ["/people", "/organizations", "/agents", "/workspaces"].includes(link.href));
 
 function TopNavGlyph({ name }: { name: TopNavIconName }) {
   const common = {
@@ -57,6 +58,8 @@ function TopNavGlyph({ name }: { name: TopNavIconName }) {
       return <svg {...common}><path d="m12 2.8 2.4 6.1 6.2 2.4-6.2 2.4-2.4 6.2-2.4-6.2-6.1-2.4 6.1-2.4L12 2.8Z" /><path d="m19.5 15.5 1.1 2.8 2.6 1.1-2.6 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.8Z" /></svg>;
     case "notifications":
       return <svg {...common}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>;
+    case "workspaces":
+      return <svg {...common}><rect x="3" y="3" width="7" height="7" rx="1.4" /><rect x="14" y="3" width="7" height="7" rx="1.4" /><rect x="3" y="14" width="7" height="7" rx="1.4" /><rect x="14" y="14" width="7" height="7" rx="1.4" /><path d="M10 6.5h4M6.5 10v4M17.5 10v4M10 17.5h4" /></svg>;
     case "more":
       return <svg {...common}><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none" /></svg>;
   }
