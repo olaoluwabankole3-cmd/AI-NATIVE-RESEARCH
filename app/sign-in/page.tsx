@@ -6,6 +6,18 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { WordParticles } from "@/components/word-particles";
 
+function safePostSignInDestination(): string {
+  const requested = new URLSearchParams(window.location.search).get("redirect");
+  if (!requested || !requested.startsWith("/") || requested.startsWith("//")) return "/communities";
+  try {
+    const destination = new URL(requested, window.location.origin);
+    if (destination.origin !== window.location.origin) return "/communities";
+    return `${destination.pathname}${destination.search}${destination.hash}`;
+  } catch {
+    return "/communities";
+  }
+}
+
 export default function SignInPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -28,7 +40,7 @@ export default function SignInPage() {
       return;
     }
 
-    router.push("/communities");
+    router.push(safePostSignInDestination());
     router.refresh();
   }
 
