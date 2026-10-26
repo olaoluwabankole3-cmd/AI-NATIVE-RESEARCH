@@ -108,7 +108,7 @@ export default function OAuthConsent({ authorizationId }: { authorizationId: str
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">Requesting workspace</p>
             <h2 className="mt-2 text-[19px] font-bold tracking-[-0.03em]">{details.client?.name ?? "Connected workspace"}</h2>
             <p className="mt-2 text-[12px] leading-5 text-white/55">
-              This request shares your verified identity details only. It does not grant access to your Converge research, conversations, or community data.
+              This request is for identity claims needed to sign in, not for your research, conversations, or community content. Access to Converge resources remains governed by Converge's own permissions and row-level security.
             </p>
             {scopes.length > 0 && (
               <div className="mt-5 border-t border-white/[0.08] pt-4">
