@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +26,13 @@ export default function SignInPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    const authError = new URLSearchParams(window.location.search).get("auth_error");
+    if (authError === "provider") setMessage("Google sign-in could not be completed. Check that Google is enabled for Converge Auth, then try again.");
+    else if (authError === "configuration") setMessage("Converge authentication is not fully configured. Please contact the platform administrator.");
+    else if (authError === "callback") setMessage("We could not complete sign-in. Please try again.");
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
