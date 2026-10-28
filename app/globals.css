@@ -1373,3 +1373,29 @@ main:not(.converge-home):has(> header) button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .converge-account-trigger, .converge-account-caret, .converge-account-menu__item { transition: none !important; }
 }
+
+
+/* Use the original Converge wordmark asset throughout the signed-in application header. */
+.converge-brand-link {
+  display: inline-flex;
+  width: 164px;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-start;
+  text-decoration: none;
+}
+.converge-brand-image {
+  display: block;
+  width: 164px;
+  height: 55px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  object-position: left center;
+}
+@media (max-width: 680px) {
+  .converge-brand-link,
+  .converge-brand-image {
+    width: 142px;
+  }
+  .converge-brand-image { height: 47.5px; }
+}

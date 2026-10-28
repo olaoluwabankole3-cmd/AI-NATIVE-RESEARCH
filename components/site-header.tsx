@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -245,18 +246,15 @@ export function SiteHeader() {
     <>
     <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
       <div className="converge-site-header__inner mx-auto grid h-[72px] max-w-[1480px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-5 sm:px-8 lg:px-14">
-        <Link href={userEmail ? "/communities" : "/"} className="group flex items-center gap-3 justify-self-start" onClick={() => setMobileOpen(false)}>
-          <span className="relative grid size-9 place-items-center rounded-[11px] border border-emerald-200/25 bg-[#15231b] text-emerald-200 transition group-hover:border-emerald-100/50 group-hover:bg-[#1b3024]" aria-hidden="true">
-            <svg viewBox="0 0 36 36" className="size-[25px]" fill="none">
-              <path d="M7.5 8.5 18 18 28.5 8.5M18 18l10.5 9.5M18 18 7.5 27.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="7.5" cy="8.5" r="3" fill="currentColor" />
-              <circle cx="28.5" cy="8.5" r="3" fill="currentColor" />
-              <circle cx="7.5" cy="27.5" r="3" fill="currentColor" />
-              <circle cx="28.5" cy="27.5" r="3" fill="currentColor" />
-              <circle cx="18" cy="18" r="4.2" fill="#EAB58E" stroke="#15231B" strokeWidth="1.7" />
-            </svg>
-          </span>
-          <span className="text-[17px] font-bold tracking-[-0.055em]">converge<span className="ml-0.5 text-emerald-300">.</span></span>
+        <Link href={userEmail ? "/communities" : "/"} className="converge-brand-link justify-self-start" aria-label="Converge home" onClick={() => setMobileOpen(false)}>
+          <Image
+            src="/converge-wordmark.svg"
+            alt="Converge"
+            width={164}
+            height={55}
+            priority
+            className="converge-brand-image"
+          />
         </Link>
 
         <nav aria-label="Main navigation" className="converge-primary-nav hidden items-center gap-0.5 justify-self-center lg:flex">
