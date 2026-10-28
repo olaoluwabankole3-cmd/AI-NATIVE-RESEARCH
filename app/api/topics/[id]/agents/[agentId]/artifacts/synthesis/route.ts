@@ -18,12 +18,13 @@ export async function POST(_request: Request, { params }: Params) {
   const userId = user.id;
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!serviceKey || !supabaseUrl) {
     return NextResponse.json({ error: "Agent runtime is not configured: server database access is missing." }, { status: 503 });
   }
 
   const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    supabaseUrl,
     serviceKey,
     { auth: { autoRefreshToken: false, persistSession: false } },
   );

@@ -102,6 +102,12 @@ export default function TopicPage() {
     if (!options.silent) {
       setLoading(true);
       setMessage("");
+      setTopic(null);
+      setCommunity(null);
+      setPosts([]);
+      setCurrentParticipantId(null);
+      setTopicParticipants([]);
+      setIsCommunityMember(false);
     }
 
     const {

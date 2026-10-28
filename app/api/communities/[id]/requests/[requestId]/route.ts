@@ -13,6 +13,15 @@ export async function PATCH(request: Request, { params }: Params) {
   const { data: { user } } = await auth.auth.getUser();
   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
+  const { data: existingRequest, error: requestLookupError } = await auth
+    .from("community_join_requests")
+    .select("id, community_id, status")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (requestLookupError || !existingRequest || existingRequest.community_id !== id) {
+    return NextResponse.json({ error: "Join request not found for this community." }, { status: 404 });
+  }
+
   const { data, error } = await auth.rpc("review_community_join_request", {
     p_request_id: requestId,
     p_decision: decision,
