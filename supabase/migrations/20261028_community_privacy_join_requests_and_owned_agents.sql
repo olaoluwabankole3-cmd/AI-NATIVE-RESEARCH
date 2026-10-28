@@ -64,6 +64,12 @@ drop trigger if exists communities_add_owner_membership on public.communities;
 create trigger communities_add_owner_membership
 after insert on public.communities for each row execute function public.add_community_owner_membership();
 
+-- Backfill ownership membership for communities created before the automatic trigger existed.
+insert into public.community_members (community_id, user_id, role)
+select c.id, c.created_by, 'OWNER'
+from public.communities c
+on conflict (community_id, user_id) do update set role = 'OWNER';
+
 drop policy if exists "Authenticated users can view communities" on public.communities;
 create policy "Authenticated users can view communities"
 on public.communities for select to authenticated using (true);
@@ -277,10 +283,6 @@ on public.community_join_requests for insert to authenticated with check (
   and not exists (select 1 from public.community_members cm where cm.community_id = community_join_requests.community_id and cm.user_id = auth.uid())
 );
 drop policy if exists "Owners can update community join requests" on public.community_join_requests;
-create policy "Owners can update community join requests"
-on public.community_join_requests for update to authenticated
-using (exists (select 1 from public.communities c where c.id = community_join_requests.community_id and c.created_by = auth.uid()))
-with check (exists (select 1 from public.communities c where c.id = community_join_requests.community_id and c.created_by = auth.uid()));
 drop policy if exists "Requesters can cancel pending join requests" on public.community_join_requests;
 create policy "Requesters can cancel pending join requests"
 on public.community_join_requests for delete to authenticated using (user_id = auth.uid() and status = 'PENDING');
@@ -308,7 +310,7 @@ on public.community_agents for delete to authenticated using (exists (select 1 f
 
 revoke all on public.community_agent_prompts from anon, authenticated;
 grant all on public.community_agent_prompts to service_role;
-grant select, insert, update, delete on public.community_join_requests to authenticated;
+grant select, insert, delete on public.community_join_requests to authenticated;
 grant select, insert, update, delete on public.community_agents to authenticated;
 
 create or replace function public.review_community_join_request(p_request_id uuid, p_decision text)
