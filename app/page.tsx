@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { MarketingHeader, MarketingFooter } from "@/components/marketing-shell";
+import { MarketingFooter } from "@/components/marketing-shell";
+import { MarketingHeader } from "@/components/marketing-header";
 import { CursorReactive } from "@/components/cursor-reactive";
 import { WordParticles } from "@/components/word-particles";
 import { RotatingHeadline } from "@/components/rotating-headline";
