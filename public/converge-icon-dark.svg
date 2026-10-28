@@ -1,1 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none"><rect x="12" y="12" width="488" height="488" rx="118" fill="#FFFFFF"/><g stroke="#137C79" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M112 118 L256 256 L400 118"/><path d="M112 394 L256 256 L400 394"/></g><circle cx="112" cy="118" r="17" fill="#137C79"/><circle cx="400" cy="118" r="17" fill="#137C79"/><circle cx="112" cy="394" r="17" fill="#137C79"/><circle cx="400" cy="394" r="17" fill="#137C79"/><circle cx="256" cy="256" r="29" fill="#48B99A" stroke="#FFFFFF" stroke-width="9"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="t">
+<title id="t">Converge monochrome white C icon for dark backgrounds</title>
+<rect x="12" y="12" width="488" height="488" rx="118" fill="#0B1110"/>
+<g aria-label="Converging rays and C icon" fill="none">
+<g stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+<path d="M62 145 L180 205"/><path d="M48 198 L180 229"/><path d="M42 256 L180 256"/><path d="M48 314 L180 283"/><path d="M62 367 L180 307"/>
+</g>
+<path d="M387 175 C355 145 319 132 280 132 C213 132 169 184 169 256 C169 328 213 380 280 380 C319 380 355 367 387 337" stroke="#FFFFFF" stroke-width="39" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>
