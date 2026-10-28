@@ -8,8 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "workspaces" | "more";
 
 const links: { href: string; label: string; icon: TopNavIconName }[] = [
-  { href: "/communities", label: "Communities", icon: "communities" },
-  { href: "/feed", label: "Activity", icon: "activity" },
+  { href: "/communities", label: "Research spaces", icon: "communities" },
   { href: "/people", label: "People", icon: "people" },
   { href: "/organizations", label: "Organisations", icon: "organizations" },
   { href: "/network", label: "Network", icon: "network" },
@@ -19,14 +18,13 @@ const links: { href: string; label: string; icon: TopNavIconName }[] = [
 ];
 
 const desktopLinks: { href: string; label: string; icon: TopNavIconName }[] = [
-  { href: "/feed", label: "Home", icon: "home" },
-  { href: "/network", label: "My Network", icon: "network" },
-  { href: "/communities", label: "Communities", icon: "communities" },
+  { href: "/communities", label: "Research", icon: "communities" },
+  { href: "/agents", label: "AI registry", icon: "agents" },
   { href: "/messages", label: "Messaging", icon: "messages" },
   { href: "/notifications", label: "Notifications", icon: "notifications" },
 ];
 
-const moreLinks = links.filter((link) => ["/people", "/organizations", "/agents", "/workspaces"].includes(link.href));
+const moreLinks = links.filter((link) => ["/people", "/organizations", "/network", "/workspaces"].includes(link.href));
 
 function TopNavGlyph({ name }: { name: TopNavIconName }) {
   const common = {
@@ -66,17 +64,18 @@ function TopNavGlyph({ name }: { name: TopNavIconName }) {
 }
 
 const mobileLinksPrimary = [
-  { href: "/communities", label: "Spaces", kind: "spaces" },
-  { href: "/feed", label: "Activity", kind: "activity" },
-  { href: "/people", label: "People", kind: "people" },
+  { href: "/communities", label: "Research", kind: "spaces" },
+  { href: "/agents", label: "AI", kind: "agents" },
   { href: "/messages", label: "Inbox", kind: "inbox" },
+  { href: "/notifications", label: "Alerts", kind: "notifications" },
 ] as const;
 
 function MobileGlyph({ name }: { name: (typeof mobileLinksPrimary)[number]["kind"] | "more" }) {
   const common = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
   switch (name) {
     case "spaces": return <svg {...common}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>;
-    case "activity": return <svg {...common}><path d="M3 12h4l2.2-6 4.4 12 2.2-6H21" /></svg>;
+    case "agents": return <svg {...common}><path d="m12 2.8 2.4 6.1 6.2 2.4-6.2 2.4-2.4 6.2-2.4-6.2-6.1-2.4 6.1-2.4L12 2.8Z" /><path d="m19.5 15.5 1.1 2.8 2.6 1.1-2.6 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.8Z" /></svg>;
+    case "notifications": return <svg {...common}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>;
     case "people": return <svg {...common}><circle cx="9" cy="8" r="3.2" /><path d="M3.5 20v-1.4a5.5 5.5 0 0 1 11 0V20M16 5.4a3.2 3.2 0 0 1 0 6.2M17 15a4.8 4.8 0 0 1 3.5 4.6" /></svg>;
     case "inbox": return <svg {...common}><path d="M4 4.5h16v15H4z" /><path d="m4 8 8 5.2L20 8M9 15h6" /></svg>;
     default: return <svg {...common}><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" /></svg>;
@@ -182,7 +181,7 @@ export function SiteHeader() {
     <>
     <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-5 sm:px-8 lg:px-14">
-        <Link href={userEmail ? "/feed" : "/"} className="group flex items-center gap-3" onClick={() => setMobileOpen(false)}>
+        <Link href={userEmail ? "/communities" : "/"} className="group flex items-center gap-3" onClick={() => setMobileOpen(false)}>
           <span className="relative grid size-9 place-items-center rounded-[11px] border border-emerald-200/25 bg-[#15231b] text-emerald-200 transition group-hover:border-emerald-100/50 group-hover:bg-[#1b3024]" aria-hidden="true">
             <svg viewBox="0 0 36 36" className="size-[25px]" fill="none">
               <path d="M7.5 8.5 18 18 28.5 8.5M18 18l10.5 9.5M18 18 7.5 27.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

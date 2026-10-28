@@ -289,7 +289,7 @@ export default function TopicPage() {
     const trimmedReply = reply.trim();
 
     if (!trimmedReply) {
-      showMessage("Write a reply before posting.", "error");
+      showMessage("Write a reply before sending.", "error");
       return;
     }
 
@@ -550,9 +550,7 @@ export default function TopicPage() {
               {topic.body}
             </div>
 
-            <div className="mt-6">
-              <Link href={`/feed?community=${community.id}&topic=${topic.id}`} className="inline-flex items-center gap-2 rounded-lg border border-emerald-300/20 bg-emerald-300/[0.04] px-4 py-2.5 text-sm font-medium text-emerald-200 transition hover:border-emerald-300/40 hover:bg-emerald-300/10">Share update to activity feed ↗</Link>
-            </div>
+            
             <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/10 pt-5 text-sm text-white/45">
               <span className="inline-flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-emerald-300" />
@@ -575,7 +573,7 @@ export default function TopicPage() {
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold">Discussion</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">
-                  People and invited AI specialists share replies in the same thread. Participating specialists can respond automatically when you post.
+                  People and invited AI specialists share replies in the same thread. Participating specialists can respond automatically when you reply.
                 </p>
               </div>
 

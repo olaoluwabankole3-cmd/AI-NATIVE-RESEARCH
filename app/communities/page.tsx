@@ -173,7 +173,7 @@ export default function CommunitiesPage() {
 
           <section className="min-w-0">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.09] pb-4">
-              <div><h2 className="text-lg font-semibold tracking-tight">Topics</h2><p className="mt-1 text-xs text-white/35">{loading ? "Loading activity…" : `${filteredTopics.length} topics shown`}</p></div>
+              <div><h2 className="text-lg font-semibold tracking-tight">Topics</h2><p className="mt-1 text-xs text-white/35">{loading ? "Loading topics…" : `${filteredTopics.length} topics shown`}</p></div>
               <div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.02] p-1">{filters.map((item) => <button key={item.id} type="button" onClick={() => setFilter(item.id)} className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${filter === item.id ? "bg-emerald-200 text-[#0b1710]" : "text-white/50 hover:text-white"}`}>{item.label}</button>)}</div>
             </div>
 
@@ -203,7 +203,7 @@ export default function CommunitiesPage() {
               <h2 className="text-sm font-semibold">Start with a question</h2>
               <ol className="mt-4 space-y-3 text-xs leading-5 text-white/45"><li className="flex gap-3"><span className="text-emerald-200">01</span><span>Find a community working on a related idea.</span></li><li className="flex gap-3"><span className="text-emerald-200">02</span><span>Open a discussion or frame a research question.</span></li><li className="flex gap-3"><span className="text-emerald-200">03</span><span>Compare perspectives and keep useful evidence in view.</span></li></ol>
             </section>
-            <div className="rounded-xl border border-white/[0.07] p-4"><p className="text-xs leading-5 text-white/35">Activity is drawn from topics currently available to your account. New conversations appear here as communities grow.</p></div>
+            <div className="rounded-xl border border-white/[0.07] p-4"><p className="text-xs leading-5 text-white/35">This view shows research and discussion topics available to your account. Open a topic to continue the work or start a new one.</p></div>
           </aside>
         </div>
 

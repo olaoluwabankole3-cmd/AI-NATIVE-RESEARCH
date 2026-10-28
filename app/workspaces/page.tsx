@@ -30,13 +30,13 @@ export default function WorkspacesPage() {
     <main className="min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <header className="border-b border-white/[0.08] bg-[#0b1110]/90">
         <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between px-5 sm:px-8 lg:px-12">
-          <Link href="/feed" aria-label="Converge home" className="flex items-center gap-3">
+          <Link href="/communities" aria-label="Converge home" className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-[11px] border border-emerald-200/25 bg-[#15231b] text-emerald-200">
               <WorkspaceMark kind="research" />
             </span>
             <span className="text-[17px] font-bold tracking-[-0.055em]">converge<span className="text-emerald-300">.</span></span>
           </Link>
-          <Link href="/feed" className="rounded-full border border-white/10 px-4 py-2.5 text-[12px] font-semibold text-white/65 transition hover:border-white/20 hover:text-white">
+          <Link href="/communities" className="rounded-full border border-white/10 px-4 py-2.5 text-[12px] font-semibold text-white/65 transition hover:border-white/20 hover:text-white">
             Back to Converge
           </Link>
         </div>
@@ -97,7 +97,7 @@ export default function WorkspacesPage() {
 
         <div className="mt-7 flex flex-col gap-3 border-t border-white/[0.08] pt-5 text-[11px] leading-6 text-white/40 sm:flex-row sm:items-center sm:justify-between">
           <span>Converge is the platform. Each workspace is designed around its own users, permissions and workflows.</span>
-          <Link href="/feed" className="inline-flex w-fit items-center gap-2 font-semibold text-emerald-200 transition hover:text-emerald-100">Return to your activity <span aria-hidden="true">→</span></Link>
+          <Link href="/communities" className="inline-flex w-fit items-center gap-2 font-semibold text-emerald-200 transition hover:text-emerald-100">Return to research spaces <span aria-hidden="true">→</span></Link>
         </div>
       </div>
     </main>
