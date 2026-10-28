@@ -1310,3 +1310,66 @@ main:not(.converge-home):has(> header) button:focus-visible {
   .landing-product > .cursor-demo--one { left: 3%; top: 53%; }
   .landing-product > .cursor-demo--two { right: 0; top: 16%; }
 }
+
+
+/* Header alignment: fixed left brand, truly centred navigation, right-aligned account control. */
+.converge-site-header__inner {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+.converge-site-header__inner > a:first-child { justify-self: start; }
+.converge-site-header__inner > .converge-primary-nav { justify-self: center; }
+.converge-site-header__actions { min-width: 0; }
+@media (min-width: 1024px) {
+  .converge-primary-nav { gap: 0 !important; padding-right: 0 !important; padding-left: 0 !important; }
+  .converge-primary-nav__link { min-width: 72px !important; padding-right: 5px !important; padding-left: 5px !important; }
+  .converge-primary-nav__button { min-width: 72px !important; }
+}
+.converge-account-menu { position: relative; display: flex; align-items: center; justify-content: flex-end; }
+.converge-account-trigger {
+  display: inline-flex; min-width: 43px; min-height: 43px; align-items: center; justify-content: center; gap: 7px;
+  border: 1px solid rgba(190, 224, 198, .18); border-radius: 999px; background: rgba(255, 255, 255, .025); padding: 3px;
+  color: #e9f4ec; cursor: pointer; transition: border-color 150ms ease, background 150ms ease;
+}
+.converge-account-trigger:hover, .converge-account-trigger[aria-expanded="true"] { border-color: rgba(164, 237, 193, .42); background: rgba(164, 237, 193, .07); }
+.converge-account-avatar {
+  display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; overflow: hidden;
+  border: 1px solid rgba(164, 237, 193, .24); border-radius: 50%; background: #1a3023; color: #c4f1d2;
+  font-size: 11px; font-weight: 800; letter-spacing: -.02em;
+}
+.converge-account-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.converge-account-caret { display: block; width: 15px; height: 15px; margin-right: 6px; color: #97aa9d; transition: transform 150ms ease; }
+.converge-account-trigger[aria-expanded="true"] .converge-account-caret { transform: rotate(180deg); }
+.converge-account-menu__panel {
+  position: absolute; z-index: 100; top: calc(100% + 11px); right: 0; width: 276px; max-height: min(74dvh, 520px); overflow-y: auto;
+  padding: 8px; border: 1px solid rgba(185, 220, 194, .17); border-radius: 14px; background: rgba(12, 20, 15, .985);
+  box-shadow: 0 22px 64px rgba(0, 0, 0, .48), inset 0 1px rgba(255, 255, 255, .035);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.converge-account-menu__identity { display: flex; align-items: center; gap: 11px; padding: 11px 10px 12px; }
+.converge-account-avatar--large { width: 40px; height: 40px; flex-basis: 40px; }
+.converge-account-menu__identity-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 4px; }
+.converge-account-menu__identity-copy strong { overflow: hidden; color: #edf6ef; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.converge-account-menu__identity-copy > span { overflow: hidden; color: #819287; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.converge-account-menu__divider { height: 1px; margin: 5px 7px; background: rgba(185, 220, 194, .1); }
+.converge-account-menu__item {
+  display: flex; width: 100%; min-height: 41px; align-items: center; gap: 11px; border: 0; border-radius: 9px; background: transparent;
+  padding: 0 10px; color: #b6c5bb; text-align: left; font-size: 12px; font-weight: 570; text-decoration: none; cursor: pointer;
+  transition: color 140ms ease, background 140ms ease;
+}
+.converge-account-menu__item > svg { width: 17px; height: 17px; flex: 0 0 17px; color: #8eaa98; }
+.converge-account-menu__item:hover, .converge-account-menu__item.is-active { color: #d5f5df; background: rgba(141, 228, 187, .085); }
+.converge-account-menu__item:hover > svg, .converge-account-menu__item.is-active > svg { color: #b8efca; }
+.converge-account-menu__arrow { margin-left: auto; color: #6f8978; font-size: 12px; }
+.converge-account-menu__count { margin-left: auto; border-radius: 999px; background: #eab58e; padding: 2px 6px; color: #172119; font-size: 9px; font-weight: 800; }
+.converge-account-menu__signout { color: #d9b8a8; }
+.converge-account-menu__signout > svg { color: #c99a83; }
+.converge-account-menu__signout:hover { background: rgba(232, 157, 124, .09); color: #f0c7b4; }
+.converge-account-trigger:focus-visible, .converge-account-menu__item:focus-visible { outline: 2px solid rgba(164, 237, 193, .7); outline-offset: 2px; }
+@media (max-width: 680px) {
+  .converge-site-header__inner { padding-right: 14px; padding-left: 14px; }
+  .converge-account-menu__panel { width: min(276px, calc(100vw - 24px)); max-height: calc(100dvh - 104px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .converge-account-trigger, .converge-account-caret, .converge-account-menu__item { transition: none !important; }
+}

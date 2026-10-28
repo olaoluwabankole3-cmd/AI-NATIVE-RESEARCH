@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "workspaces" | "more";
+type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "workspaces" | "more" | "profile" | "settings" | "signout" | "help";
 
 const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/communities", label: "Research spaces", icon: "communities" },
@@ -60,6 +60,14 @@ function TopNavGlyph({ name }: { name: TopNavIconName }) {
       return <svg {...common}><rect x="3" y="3" width="7" height="7" rx="1.4" /><rect x="14" y="3" width="7" height="7" rx="1.4" /><rect x="3" y="14" width="7" height="7" rx="1.4" /><rect x="14" y="14" width="7" height="7" rx="1.4" /><path d="M10 6.5h4M6.5 10v4M17.5 10v4M10 17.5h4" /></svg>;
     case "more":
       return <svg {...common}><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none" /></svg>;
+    case "profile":
+      return <svg {...common}><circle cx="12" cy="8" r="3.4" /><path d="M4.5 20v-1.2a7.5 7.5 0 0 1 15 0V20" /></svg>;
+    case "settings":
+      return <svg {...common}><circle cx="12" cy="12" r="3.1" /><path d="M19.4 13.9 21 15l-1.8 3.1-1.9-.6a7.9 7.9 0 0 1-1.6 1l-.4 2h-3.6l-.4-2a7.9 7.9 0 0 1-1.6-1l-1.9.6L6 15l1.6-1.1a7.2 7.2 0 0 1 0-1.9L6 10.9l1.8-3.1 1.9.6a7.9 7.9 0 0 1 1.6-1l.4-2h3.6l.4 2a7.9 7.9 0 0 1 1.6 1l1.9-.6 1.8 3.1-1.6 1.1a7.2 7.2 0 0 1 0 1.9Z" /></svg>;
+    case "signout":
+      return <svg {...common}><path d="M10 5H5.5v14H10M14 8l4 4-4 4M8 12h10" /></svg>;
+    case "help":
+      return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M9.7 9a2.4 2.4 0 1 1 4.1 1.7c-1.1 1-1.8 1.2-1.8 2.8M12 17h.01" /></svg>;
   }
 }
 
@@ -81,15 +89,23 @@ function MobileGlyph({ name }: { name: (typeof mobileLinksPrimary)[number]["kind
   }
 }
 
+function getInitials(value: string) {
+  return value.trim().split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "C";
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [profileName, setProfileName] = useState("");
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [authReady, setAuthReady] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -97,6 +113,8 @@ export function SiteHeader() {
 
   useEffect(() => {
     setMoreOpen(false);
+    setAccountOpen(false);
+    setMobileOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -116,16 +134,40 @@ export function SiteHeader() {
   }, [moreOpen]);
 
   useEffect(() => {
+    if (!accountOpen) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (event.target instanceof Node && !accountMenuRef.current?.contains(event.target)) setAccountOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setAccountOpen(false);
+    }
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [accountOpen]);
+
+  useEffect(() => {
     let active = true;
     supabase.auth.getUser().then(({ data }) => {
       if (!active) return;
       setUserEmail(data.user?.email ?? null);
       setUserId(data.user?.id ?? null);
+      const metadataName = data.user?.user_metadata?.full_name ?? data.user?.user_metadata?.name ?? "";
+      const metadataAvatar = data.user?.user_metadata?.avatar_url ?? data.user?.user_metadata?.picture;
+      setProfileName(typeof metadataName === "string" ? metadataName : "");
+      setProfileAvatarUrl(typeof metadataAvatar === "string" ? metadataAvatar : null);
       setAuthReady(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email ?? null);
       setUserId(session?.user?.id ?? null);
+      const metadataName = session?.user?.user_metadata?.full_name ?? session?.user?.user_metadata?.name ?? "";
+      const metadataAvatar = session?.user?.user_metadata?.avatar_url ?? session?.user?.user_metadata?.picture;
+      setProfileName(typeof metadataName === "string" ? metadataName : "");
+      setProfileAvatarUrl(typeof metadataAvatar === "string" ? metadataAvatar : null);
       setAuthReady(true);
     });
     return () => {
@@ -133,6 +175,29 @@ export function SiteHeader() {
       subscription.unsubscribe();
     };
   }, [supabase]);
+
+  useEffect(() => {
+    let active = true;
+    if (!userId) {
+      setProfileName("");
+      setProfileAvatarUrl(null);
+      return () => { active = false; };
+    }
+
+    async function loadProfileBadge() {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!active || error || !data) return;
+      setProfileName(data.display_name ?? "");
+      setProfileAvatarUrl(data.avatar_url ?? null);
+    }
+
+    void loadProfileBadge();
+    return () => { active = false; };
+  }, [supabase, userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -179,8 +244,8 @@ export function SiteHeader() {
   return (
     <>
     <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
-      <div className="mx-auto flex h-[72px] max-w-[1480px] items-center justify-between px-5 sm:px-8 lg:px-14">
-        <Link href={userEmail ? "/communities" : "/"} className="group flex items-center gap-3" onClick={() => setMobileOpen(false)}>
+      <div className="converge-site-header__inner mx-auto grid h-[72px] max-w-[1480px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-5 sm:px-8 lg:px-14">
+        <Link href={userEmail ? "/communities" : "/"} className="group flex items-center gap-3 justify-self-start" onClick={() => setMobileOpen(false)}>
           <span className="relative grid size-9 place-items-center rounded-[11px] border border-emerald-200/25 bg-[#15231b] text-emerald-200 transition group-hover:border-emerald-100/50 group-hover:bg-[#1b3024]" aria-hidden="true">
             <svg viewBox="0 0 36 36" className="size-[25px]" fill="none">
               <path d="M7.5 8.5 18 18 28.5 8.5M18 18l10.5 9.5M18 18 7.5 27.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -194,7 +259,7 @@ export function SiteHeader() {
           <span className="text-[17px] font-bold tracking-[-0.055em]">converge<span className="ml-0.5 text-emerald-300">.</span></span>
         </Link>
 
-        <nav aria-label="Main navigation" className="converge-primary-nav hidden items-center gap-0.5 lg:flex">
+        <nav aria-label="Main navigation" className="converge-primary-nav hidden items-center gap-0.5 justify-self-center lg:flex">
           {desktopLinks.map((link) => {
             const active = pathname === link.href || pathname.startsWith(link.href + "/");
             return (
@@ -230,15 +295,57 @@ export function SiteHeader() {
           </div>
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="converge-site-header__actions flex items-center justify-self-end">
           {authReady && userEmail ? (
-            <>
-              <Link href="/profile" className={["hidden rounded-full border px-3 py-2 text-[11px] font-semibold transition lg:inline-flex", pathname === "/profile" ? "border-emerald-200/35 bg-emerald-200/[0.08] text-emerald-100" : "border-white/10 text-white/65 hover:border-emerald-200/25 hover:text-white"].join(" ")}>My profile <span className="ml-1 text-emerald-200">↗</span></Link>
-              <span className="hidden max-w-[160px] truncate text-xs text-white/40 xl:block">{userEmail}</span>
-              <button type="button" onClick={handleSignOut} disabled={signingOut} className="hidden rounded-full border border-white/15 px-4 py-2.5 text-[12px] font-semibold text-white/70 transition hover:border-white/30 hover:text-white xl:inline-flex">
-                {signingOut ? "Signing out…" : "Sign out"}
+            <div className="converge-account-menu" ref={accountMenuRef}>
+              <button
+                type="button"
+                aria-label={`Open account menu for ${profileName || userEmail}`}
+                aria-haspopup="menu"
+                aria-expanded={accountOpen}
+                aria-controls="converge-account-menu-panel"
+                onClick={() => setAccountOpen((open) => !open)}
+                className="converge-account-trigger"
+              >
+                <span className="converge-account-avatar" aria-hidden="true">
+                  {profileAvatarUrl ? <img src={profileAvatarUrl} alt="" /> : <span>{getInitials(profileName || userEmail)}</span>}
+                </span>
+                <svg className="converge-account-caret" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m5.5 7.5 4.5 4.5 4.5-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </button>
-            </>
+              {accountOpen && (
+                <div id="converge-account-menu-panel" className="converge-account-menu__panel" role="menu" aria-label="Account menu">
+                  <div className="converge-account-menu__identity">
+                    <span className="converge-account-avatar converge-account-avatar--large" aria-hidden="true">
+                      {profileAvatarUrl ? <img src={profileAvatarUrl} alt="" /> : <span>{getInitials(profileName || userEmail)}</span>}
+                    </span>
+                    <span className="converge-account-menu__identity-copy">
+                      <strong>{profileName.trim() || userEmail.split("@")[0] || "Converge member"}</strong>
+                      <span>{userEmail}</span>
+                    </span>
+                  </div>
+                  <div className="converge-account-menu__divider" />
+                  <Link href="/profile" role="menuitem" onClick={() => setAccountOpen(false)} className={["converge-account-menu__item", pathname === "/profile" ? "is-active" : ""].join(" ")}>
+                    <TopNavGlyph name="profile" /><span>My profile</span><span className="converge-account-menu__arrow">↗</span>
+                  </Link>
+                  <Link href="/settings" role="menuitem" onClick={() => setAccountOpen(false)} className={["converge-account-menu__item", pathname === "/settings" ? "is-active" : ""].join(" ")}>
+                    <TopNavGlyph name="settings" /><span>Settings</span><span className="converge-account-menu__arrow">↗</span>
+                  </Link>
+                  <Link href="/notifications" role="menuitem" onClick={() => setAccountOpen(false)} className={["converge-account-menu__item", pathname === "/notifications" ? "is-active" : ""].join(" ")}>
+                    <TopNavGlyph name="notifications" /><span>Notifications</span>{unreadNotifications > 0 && <span className="converge-account-menu__count">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
+                  </Link>
+                  <Link href="/communities" role="menuitem" onClick={() => setAccountOpen(false)} className={["converge-account-menu__item", pathname.startsWith("/communities") ? "is-active" : ""].join(" ")}>
+                    <TopNavGlyph name="communities" /><span>Research spaces</span><span className="converge-account-menu__arrow">↗</span>
+                  </Link>
+                  <Link href="/agents" role="menuitem" onClick={() => setAccountOpen(false)} className={["converge-account-menu__item", pathname.startsWith("/agents") ? "is-active" : ""].join(" ")}>
+                    <TopNavGlyph name="agents" /><span>AI registry</span><span className="converge-account-menu__arrow">↗</span>
+                  </Link>
+                  <div className="converge-account-menu__divider" />
+                  <button type="button" role="menuitem" onClick={() => { setAccountOpen(false); void handleSignOut(); }} disabled={signingOut} className="converge-account-menu__item converge-account-menu__signout">
+                    <TopNavGlyph name="signout" /><span>{signingOut ? "Signing out…" : "Sign out"}</span>
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <Link href="/sign-in" className={["hidden px-2 py-2 text-[13px] font-semibold transition xl:block", muted].join(" ")}>Sign in</Link>
@@ -268,6 +375,7 @@ export function SiteHeader() {
               <>
                 <Link href="/notifications" onClick={() => setMobileOpen(false)} className={["flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold", pathname === "/notifications" ? "bg-emerald-200/[0.08] text-emerald-100" : "text-white/70"].join(" ")}><span>Notifications</span>{unreadNotifications > 0 && <span className="rounded-full bg-emerald-200 px-2 py-0.5 text-[10px] font-bold text-[#0b1710]">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}</Link>
                 <Link href="/profile" onClick={() => setMobileOpen(false)} className={["rounded-xl px-3 py-3 text-sm font-semibold", pathname === "/profile" ? "bg-emerald-200/[0.08] text-emerald-100" : "text-emerald-200"].join(" ")}>My profile ↗</Link>
+                <Link href="/settings" onClick={() => setMobileOpen(false)} className={["rounded-xl px-3 py-3 text-sm font-semibold", pathname === "/settings" ? "bg-emerald-200/[0.08] text-emerald-100" : "text-emerald-200"].join(" ")}>Settings ↗</Link>
                 <p className="truncate px-3 py-2 text-xs text-white/40">{userEmail}</p>
                 <button type="button" onClick={handleSignOut} disabled={signingOut} className="px-3 py-3 text-left text-sm font-medium text-white/65">{signingOut ? "Signing out…" : "Sign out"}</button>
               </>
