@@ -22,6 +22,8 @@ type Community = {
   id: string;
   name: string;
   slug: string;
+  visibility: "PUBLIC" | "PRIVATE";
+  created_by: string;
 };
 
 type Profile = {
@@ -77,6 +79,8 @@ export default function TopicPage() {
 
   const [topic, setTopic] = useState<Topic | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
+  const [isCommunityMember, setIsCommunityMember] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [posts, setPosts] = useState<PostView[]>([]);
   const [currentParticipantId, setCurrentParticipantId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
@@ -124,6 +128,7 @@ export default function TopicPage() {
     }
 
     setTopic(topicData);
+    setCurrentParticipantId(null);
 
     const [
       { data: communityData, error: communityError },
@@ -132,7 +137,7 @@ export default function TopicPage() {
     ] = await Promise.all([
       supabase
         .from("communities")
-        .select("id, name, slug")
+        .select("id, name, slug, visibility, created_by")
         .eq("id", topicData.community_id)
         .single(),
       supabase
@@ -164,15 +169,31 @@ export default function TopicPage() {
       return;
     }
 
-    setCommunity(communityData);
+    const { data: membershipRow, error: membershipError } = await supabase
+      .from("community_members")
+      .select("user_id")
+      .eq("community_id", communityData.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (membershipError) {
+      showMessage("Could not verify your community access. Please refresh and try again.", "error");
+      setLoading(false);
+      return;
+    }
+
+    const isMember = communityData.created_by === user.id || Boolean(membershipRow);
+    setCommunity(communityData as Community);
+    setIsCommunityMember(isMember);
+    setCurrentUserId(user.id);
 
     let participants = participantData ?? [];
-    let ownParticipant = participants.find(
+    let ownParticipant = isMember ? participants.find(
       (participant) =>
         participant.participant_type === "HUMAN" && participant.user_id === user.id,
-    );
+    ) : undefined;
 
-    if (!ownParticipant) {
+    if (isMember && !ownParticipant) {
       const { data: createdParticipant, error: createParticipantError } = await supabase
         .from("topic_participants")
         .insert({
@@ -194,7 +215,7 @@ export default function TopicPage() {
       participants = [...participants, createdParticipant];
     }
 
-    setCurrentParticipantId(ownParticipant.id);
+    setCurrentParticipantId(ownParticipant?.id ?? null);
     setTopicParticipants(participants);
 
     const userIds = Array.from(
@@ -224,9 +245,15 @@ export default function TopicPage() {
 
     const registryResponse = await fetch("/api/agents", { cache: "no-store" });
     const registryPayload = await registryResponse.json().catch(() => null);
-    const registeredAgents: Agent[] = registryResponse.ok && Array.isArray(registryPayload?.agents)
+    const platformAgents: Agent[] = registryResponse.ok && Array.isArray(registryPayload?.agents)
       ? registryPayload.agents as Agent[]
       : [];
+    const communityAgentsResponse = await fetch("/api/communities/" + communityData.id + "/agents", { cache: "no-store" });
+    const communityAgentsPayload = await communityAgentsResponse.json().catch(() => null);
+    const communityAgents: Agent[] = communityAgentsResponse.ok && Array.isArray(communityAgentsPayload?.agents)
+      ? communityAgentsPayload.agents as Agent[]
+      : [];
+    const registeredAgents = [...platformAgents, ...communityAgents.filter((agent) => !platformAgents.some((platformAgent) => platformAgent.id === agent.id))];
     setAgents(registeredAgents);
 
     const participantMap = new Map(participants.map((participant) => [participant.id, participant]));
@@ -530,6 +557,7 @@ export default function TopicPage() {
             </Link>
             <span aria-hidden="true">/</span>
             <span className="text-white/65">Topic</span>
+            {community.created_by === currentUserId && <Link href={"/communities/" + community.slug + "/settings"} className="ml-auto text-xs text-emerald-200 hover:text-white">Community settings ↗</Link>}
           </nav>
 
           <article className="converge-topic-hero mt-5 rounded-2xl border border-white/10 bg-[#0b1714] p-6 sm:p-8">
@@ -577,13 +605,15 @@ export default function TopicPage() {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowAgentPicker((open) => !open)}
-                className="rounded-xl border border-emerald-300/20 bg-emerald-300/[0.04] px-4 py-2.5 text-sm font-medium text-emerald-200 transition hover:border-emerald-300/40 hover:bg-emerald-300/10"
-              >
-                + Add agent
-              </button>
+              {isCommunityMember ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAgentPicker((open) => !open)}
+                  className="rounded-xl border border-emerald-300/20 bg-emerald-300/[0.04] px-4 py-2.5 text-sm font-medium text-emerald-200 transition hover:border-emerald-300/40 hover:bg-emerald-300/10"
+                >
+                  + Add agent
+                </button>
+              ) : null}
             </div>
 
             <div className="mt-5 rounded-2xl border border-white/10 bg-[#0b1714] p-4 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:px-5">
@@ -624,7 +654,7 @@ export default function TopicPage() {
                   <div>
                     <h3 className="font-semibold">Add a specialist</h3>
                     <p className="mt-1 text-sm leading-6 text-white/40">
-                      Add a platform-level AI participant to this topic. This does not create a human account.
+                      Choose a platform specialist or an AI agent created by this community's owner.
                     </p>
                   </div>
                   <button
@@ -747,6 +777,7 @@ export default function TopicPage() {
               )}
             </div>
 
+            {isCommunityMember && currentParticipantId ? (
             <form
               onSubmit={handleReply}
               className="mt-8 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-5 sm:p-6"
@@ -781,6 +812,19 @@ export default function TopicPage() {
                 </button>
               </div>
             </form>
+            ) : (
+              <div className="mt-8 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-5 sm:p-6">
+                <h3 className="font-semibold">{community.visibility === "PUBLIC" ? "Join to participate" : "Community membership required"}</h3>
+                <p className="mt-2 text-sm leading-6 text-white/45">
+                  {community.visibility === "PUBLIC"
+                    ? "You can read this public topic, but you need to join its community before replying or inviting AI specialists."
+                    : "Only approved members can participate in this private community."}
+                </p>
+                <Link href={"/communities/" + community.slug} className="mt-4 inline-flex rounded-lg bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200">
+                  {community.visibility === "PUBLIC" ? "Join community →" : "Request access →"}
+                </Link>
+              </div>
+            )}
           </section>
         </div>
       </div>
