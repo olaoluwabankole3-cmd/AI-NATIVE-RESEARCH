@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { getAgent, getAgents, runAgent, type AgentArtifactContext } from "@/lib/agent-runtime";
+import { getAgents, runAgent, type AgentArtifactContext } from "@/lib/agent-runtime";
+import { getAgentForTopic, getCommunityAccess, getCommunityAgents } from "@/lib/community-access";
 import type { Agent } from "@/lib/agents";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
@@ -10,12 +11,6 @@ export const maxDuration = 60;
 
 export async function POST(_request: Request, { params }: Params) {
   const { id: topicId, agentId } = await params;
-  const resolvedAgent = await getAgent(agentId);
-  if (!resolvedAgent) return NextResponse.json({ error: "Agent not found." }, { status: 404 });
-  const agent: Agent = resolvedAgent;
-  if (agent.status !== "AVAILABLE") {
-    return NextResponse.json({ error: "This agent is not currently available to run." }, { status: 409 });
-  }
 
   const authClient = await createServerClient();
   const { data: { user } } = await authClient.auth.getUser();
@@ -23,29 +18,36 @@ export async function POST(_request: Request, { params }: Params) {
   const userId = user.id;
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) {
-    return NextResponse.json(
-      { error: "Agent runtime is not configured: SUPABASE_SERVICE_ROLE_KEY is missing." },
-      { status: 503 },
-    );
+  if (!serviceKey || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return NextResponse.json({ error: "Agent runtime is not configured: server database access is missing." }, { status: 503 });
   }
 
   const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
     serviceKey,
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
+  const { data: topic, error: topicError } = await admin.from("topics")
+    .select("id, community_id, title, body, type").eq("id", topicId).maybeSingle();
+  if (topicError || !topic) return NextResponse.json({ error: "Topic not found." }, { status: 404 });
+
+  const access = await getCommunityAccess(admin, topic.community_id, userId);
+  if (!access.community) return NextResponse.json({ error: "Community not found." }, { status: 404 });
+  if (!access.canParticipate) return NextResponse.json({ error: "Join this community before generating research." }, { status: 403 });
+
   const { data: humanParticipant } = await admin.from("topic_participants")
     .select("id").eq("topic_id", topicId).eq("participant_type", "HUMAN")
     .eq("user_id", userId).maybeSingle();
-  if (!humanParticipant) {
-    return NextResponse.json({ error: "Join the topic before generating research." }, { status: 403 });
+  if (!humanParticipant) return NextResponse.json({ error: "Open this topic as a community member before generating research." }, { status: 403 });
+
+  const resolvedAgent = await getAgentForTopic(admin, topicId, agentId);
+  if (!resolvedAgent) return NextResponse.json({ error: "Agent not found, inactive, or not available to this community." }, { status: 404 });
+  const agent: Agent = resolvedAgent;
+  if (agent.status !== "AVAILABLE" || agent.isActive === false) {
+    return NextResponse.json({ error: "This agent is not currently available to run." }, { status: 409 });
   }
 
-  const { data: topic, error: topicError } = await admin.from("topics")
-    .select("id, title, body, type").eq("id", topicId).single();
-  if (topicError || !topic) return NextResponse.json({ error: "Topic not found." }, { status: 404 });
   if (topic.type !== "RESEARCH") {
     return NextResponse.json({ error: "Synthesis artifacts are available for research topics only." }, { status: 409 });
   }
@@ -79,7 +81,7 @@ export async function POST(_request: Request, { params }: Params) {
 
   const profileMap = new Map((profiles ?? []).map((profile) => [profile.id, profile.display_name || profile.username || "Human"]));
   const participantMap = new Map((participants ?? []).map((participant) => [participant.id, participant]));
-  const registryAgents = await getAgents();
+  const registryAgents = [...await getAgents(), ...await getCommunityAgents(admin, topic.community_id)];
   const registryAgentMap = new Map(registryAgents.map((registeredAgent) => [registeredAgent.id, registeredAgent]));
   const contextPosts = chronologicalPosts.map((post) => {
     const participant = participantMap.get(post.participant_id);
