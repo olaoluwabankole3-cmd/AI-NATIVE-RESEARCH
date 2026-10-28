@@ -5,6 +5,7 @@ import { getAgents, runAgent, type AgentArtifactContext } from "@/lib/agent-runt
 import type { Agent } from "@/lib/agents";
 import { selectAgentsForResponse } from "@/lib/agent-routing";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { getCommunityAccess, getCommunityAgents } from "@/lib/community-access";
 
 export const maxDuration = 60;
 
@@ -40,11 +41,15 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   const admin = createClient(supabaseUrl, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
-  const { data: topic, error: topicError } = await admin.from("topics").select("id, title, body, type").eq("id", topicId).single();
+  const { data: topic, error: topicError } = await admin.from("topics").select("id, community_id, title, body, type").eq("id", topicId).single();
   if (topicError || !topic) return NextResponse.json({ error: "Topic not found." }, { status: 404 });
 
+  const communityAccess = await getCommunityAccess(admin, topic.community_id, userId);
+  if (!communityAccess.community) return NextResponse.json({ error: "Community not found." }, { status: 404 });
+  if (!communityAccess.canParticipate) return NextResponse.json({ error: "Join this community before replying." }, { status: 403 });
+
   const { data: humanParticipant } = await admin.from("topic_participants").select("id").eq("topic_id", topicId).eq("participant_type", "HUMAN").eq("user_id", userId).maybeSingle();
-  if (!humanParticipant) return NextResponse.json({ error: "Join the topic before replying." }, { status: 403 });
+  if (!humanParticipant) return NextResponse.json({ error: "Open the topic as a community member before replying." }, { status: 403 });
 
   const postFields = "id, topic_id, participant_id, body, created_at, updated_at";
   const { data: insertedHumanPost, error: postError } = await admin
@@ -87,7 +92,7 @@ export async function POST(request: Request, { params }: Params) {
     });
   }
 
-  const registryAgents = await getAgents();
+  const registryAgents = [...await getAgents(), ...await getCommunityAgents(admin, topic.community_id)];
   const registryAgentMap = new Map(registryAgents.map((agent) => [agent.id, agent]));
   const attachedAgentIds = (allParticipants ?? [])
     .filter((p) => p.participant_type === "AGENT" && p.agent_id)
