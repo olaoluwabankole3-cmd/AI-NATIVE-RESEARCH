@@ -1,13 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="420" viewBox="0 0 1800 420" fill="none" role="img" aria-labelledby="title desc">
 <title id="title">Converge header lockup for light interfaces</title>
 <desc id="desc">Horizontal converge header lockup in bold lowercase geometric lettering, with inward converging rays on either side.</desc>
-<g>
-<polygon points="55,90 73,90 292,166" fill="#137C79"/>
-<polygon points="35,203 35,220 292,210" fill="#137C79"/>
-<polygon points="55,332 73,332 292,247" fill="#137C79"/>
-<polygon points="1507,166 1727,90 1745,90" fill="#137C79"/>
-<polygon points="1508,210 1765,203 1765,220" fill="#137C79"/>
-<polygon points="1508,247 1727,332 1745,332" fill="#137C79"/>
+<g aria-label="Converging rays and C icon" fill="none">
+<g stroke="#137C79" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M52 148 L184 194"/><path d="M39 178 L176 202"/><path d="M31 210 L165 210"/><path d="M39 242 L176 218"/><path d="M52 272 L184 226"/></g>
+<path d="M303 163 C284 145 263 138 239 138 C200 138 173 167 173 210 C173 253 200 282 239 282 C263 282 284 275 303 257" stroke="#137C79" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
 </g>
 <g aria-label="converge wordmark">
 <path fill="#137C79" transform="translate(352.563 270.000) scale(0.1123047 -0.1123047)" d="M598 -24C897 -24 1109 160 1116 418H783C770 315 707 249 605 249C477 249 401 355 401 528C401 701 476 807 605 807C707 807 773 742 784 641H1116C1101 900 892 1080 598 1080C271 1080 52 856 52 528C52 199 271 -24 598 -24Z"/>
