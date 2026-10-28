@@ -1378,7 +1378,7 @@ main:not(.converge-home):has(> header) button:focus-visible {
 /* Use the original Converge wordmark asset throughout the signed-in application header. */
 .converge-brand-link {
   display: inline-flex;
-  width: 164px;
+  width: 180px;
   min-width: 0;
   align-items: center;
   justify-content: flex-start;
@@ -1386,8 +1386,8 @@ main:not(.converge-home):has(> header) button:focus-visible {
 }
 .converge-brand-image {
   display: block;
-  width: 164px;
-  height: 55px;
+  width: 180px;
+  height: 42px;
   flex: 0 0 auto;
   object-fit: contain;
   object-position: left center;
@@ -1395,7 +1395,7 @@ main:not(.converge-home):has(> header) button:focus-visible {
 @media (max-width: 680px) {
   .converge-brand-link,
   .converge-brand-image {
-    width: 142px;
+    width: 146px;
   }
-  .converge-brand-image { height: 47.5px; }
+  .converge-brand-image { height: 34px; }
 }

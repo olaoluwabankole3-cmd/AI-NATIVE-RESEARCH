@@ -248,10 +248,10 @@ export function SiteHeader() {
       <div className="converge-site-header__inner mx-auto grid h-[72px] max-w-[1480px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-5 sm:px-8 lg:px-14">
         <Link href={userEmail ? "/communities" : "/"} className="converge-brand-link justify-self-start" aria-label="Converge home" onClick={() => setMobileOpen(false)}>
           <Image
-            src="/converge-wordmark.svg"
+            src="/converge-header-lockup.svg"
             alt="Converge"
-            width={164}
-            height={55}
+            width={180}
+            height={42}
             priority
             className="converge-brand-image"
           />
