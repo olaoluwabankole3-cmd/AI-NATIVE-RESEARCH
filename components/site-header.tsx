@@ -76,7 +76,6 @@ function MobileGlyph({ name }: { name: (typeof mobileLinksPrimary)[number]["kind
     case "spaces": return <svg {...common}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>;
     case "agents": return <svg {...common}><path d="m12 2.8 2.4 6.1 6.2 2.4-6.2 2.4-2.4 6.2-2.4-6.2-6.1-2.4 6.1-2.4L12 2.8Z" /><path d="m19.5 15.5 1.1 2.8 2.6 1.1-2.6 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.8Z" /></svg>;
     case "notifications": return <svg {...common}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>;
-    case "people": return <svg {...common}><circle cx="9" cy="8" r="3.2" /><path d="M3.5 20v-1.4a5.5 5.5 0 0 1 11 0V20M16 5.4a3.2 3.2 0 0 1 0 6.2M17 15a4.8 4.8 0 0 1 3.5 4.6" /></svg>;
     case "inbox": return <svg {...common}><path d="M4 4.5h16v15H4z" /><path d="m4 8 8 5.2L20 8M9 15h6" /></svg>;
     default: return <svg {...common}><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" /></svg>;
   }
