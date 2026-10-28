@@ -310,6 +310,7 @@ on public.community_agents for delete to authenticated using (exists (select 1 f
 
 revoke all on public.community_agent_prompts from anon, authenticated;
 grant all on public.community_agent_prompts to service_role;
+revoke update on public.community_join_requests from authenticated;
 grant select, insert, delete on public.community_join_requests to authenticated;
 grant select, insert, update, delete on public.community_agents to authenticated;
 
