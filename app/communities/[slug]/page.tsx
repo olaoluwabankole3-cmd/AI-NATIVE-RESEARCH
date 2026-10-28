@@ -64,6 +64,10 @@ export default function CommunityPage() {
   async function loadCommunity() {
     setLoading(true);
     setMessage("");
+    setCommunity(null);
+    setTopics([]);
+    setMemberCount(0);
+    setIsMember(false);
     setJoinRequest(null);
     setPendingRequestCount(0);
     const { data: { user } } = await supabase.auth.getUser();

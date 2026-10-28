@@ -358,3 +358,41 @@ create policy "Activity likes follow parent visibility"
 on public.activity_likes for select to authenticated using (
   exists (select 1 from public.activity_posts p where p.id = activity_likes.post_id)
 );
+
+-- A topic creator who has left a community must not retain modify/delete access to its topics.
+drop policy if exists "Topic creators can update topics" on public.topics;
+create policy "Topic creators can update topics while in community"
+on public.topics for update to authenticated
+using (
+  auth.uid() = created_by
+  and exists (
+    select 1 from public.communities c
+    where c.id = topics.community_id
+      and (c.created_by = auth.uid() or exists (
+        select 1 from public.community_members cm where cm.community_id = c.id and cm.user_id = auth.uid()
+      ))
+  )
+)
+with check (
+  auth.uid() = created_by
+  and exists (
+    select 1 from public.communities c
+    where c.id = topics.community_id
+      and (c.created_by = auth.uid() or exists (
+        select 1 from public.community_members cm where cm.community_id = c.id and cm.user_id = auth.uid()
+      ))
+  )
+);
+drop policy if exists "Topic creators can delete topics" on public.topics;
+create policy "Topic creators can delete topics while in community"
+on public.topics for delete to authenticated
+using (
+  auth.uid() = created_by
+  and exists (
+    select 1 from public.communities c
+    where c.id = topics.community_id
+      and (c.created_by = auth.uid() or exists (
+        select 1 from public.community_members cm where cm.community_id = c.id and cm.user_id = auth.uid()
+      ))
+  )
+);
