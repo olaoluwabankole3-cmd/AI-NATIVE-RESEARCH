@@ -10,6 +10,8 @@ type Community = {
   name: string;
   slug: string;
   description: string | null;
+  visibility: "PUBLIC" | "PRIVATE";
+  created_by: string;
 };
 type Topic = {
   id: string;
@@ -43,6 +45,7 @@ export default function CommunitiesPage() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FeedFilter>("LATEST");
   const [message, setMessage] = useState("");
@@ -51,7 +54,7 @@ export default function CommunitiesPage() {
   async function loadWorkspace() {
     setLoading(true);
     const [{ data: communityData, error: communityError }, { data: topicData, error: topicError }] = await Promise.all([
-      supabase.from("communities").select("id, name, slug, description").order("created_at", { ascending: false }),
+      supabase.from("communities").select("id, name, slug, description, visibility, created_by").order("created_at", { ascending: false }),
       supabase.from("topics").select("id, title, body, type, created_at, community_id").order("created_at", { ascending: false }).limit(40),
     ]);
     if (communityError) {
@@ -106,17 +109,13 @@ export default function CommunitiesPage() {
       setMessage("Your session has expired. Please sign in again."); setMessageTone("error"); setCreating(false); return;
     }
     const { data: community, error: communityError } = await supabase.from("communities")
-      .insert({ name: trimmedName, slug, description: trimmedDescription || null, created_by: user.id })
-      .select("id, name, slug, description").single();
+      .insert({ name: trimmedName, slug, description: trimmedDescription || null, visibility, members_can_create_topics: true, created_by: user.id })
+      .select("id, name, slug, description, visibility, created_by").single();
     if (communityError) {
       setMessage(communityError.message); setMessageTone("error"); setCreating(false); return;
     }
-    const { error: membershipError } = await supabase.from("community_members").insert({ community_id: community.id, user_id: user.id, role: "OWNER" });
-    if (membershipError) {
-      setMessage(membershipError.message); setMessageTone("error"); setCreating(false); return;
-    }
     setCommunities((current) => [community, ...current]);
-    setName(""); setDescription(""); setShowForm(false);
+    setName(""); setDescription(""); setVisibility("PUBLIC"); setShowForm(false);
     setMessage("Community created. Start a topic to open the conversation."); setMessageTone("success"); setCreating(false);
   }
 
@@ -147,6 +146,7 @@ export default function CommunitiesPage() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block"><span className="mb-2 block text-xs font-medium text-white/65">Community name</span><input value={name} onChange={(event) => setName(event.target.value)} required maxLength={80} placeholder="e.g. AI Safety Research" className="w-full rounded-lg border border-white/10 bg-[#0b1110] px-3.5 py-3 text-sm outline-none focus:border-emerald-200/50" /></label>
             <label className="block"><span className="mb-2 block text-xs font-medium text-white/65">Description</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} maxLength={500} placeholder="What should people explore here?" className="w-full resize-y rounded-lg border border-white/10 bg-[#0b1110] px-3.5 py-3 text-sm outline-none focus:border-emerald-200/50" /></label>
+            <label className="block"><span className="mb-2 block text-xs font-medium text-white/65">Who can access this community?</span><select value={visibility} onChange={(event) => setVisibility(event.target.value as "PUBLIC" | "PRIVATE")} className="w-full rounded-lg border border-white/10 bg-[#0b1110] px-3.5 py-3 text-sm outline-none focus:border-emerald-200/50"><option value="PUBLIC">Public — anyone can join</option><option value="PRIVATE">Private — approval required</option></select><span className="mt-2 block text-xs leading-5 text-white/35">{visibility === "PUBLIC" ? "Anyone can discover, join, and view topics." : "People must request approval before they can see topics or discussions."}</span></label>
           </div>
           <div className="mt-4 flex flex-wrap gap-3"><button disabled={creating} className="rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] disabled:opacity-50">{creating ? "Creating…" : "Create community"}</button><button type="button" onClick={() => setShowForm(false)} className="px-3 py-2.5 text-sm text-white/50 hover:text-white">Cancel</button></div>
         </form>}
@@ -159,7 +159,7 @@ export default function CommunitiesPage() {
               <div className="flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[0.13em] text-white/65">Your spaces</h2><span className="text-xs tabular-nums text-white/35">{communities.length}</span></div>
               <label className="mt-4 block"><span className="sr-only">Search communities and topics</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search everything…" className="w-full rounded-lg border border-white/10 bg-black/15 px-3 py-2.5 text-xs outline-none placeholder:text-white/25 focus:border-emerald-200/40" /></label>
               <div className="mt-3 space-y-1">
-                {loading ? <p className="px-2 py-3 text-xs text-white/35">Loading spaces…</p> : filteredCommunities.slice(0, 8).map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-white/65 transition hover:bg-white/[0.045] hover:text-emerald-100"><span className="grid size-6 shrink-0 place-items-center rounded-md bg-emerald-200/10 text-[10px] font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><span className="min-w-0 flex-1 truncate">{community.name}</span></Link>)}
+                {loading ? <p className="px-2 py-3 text-xs text-white/35">Loading spaces…</p> : filteredCommunities.slice(0, 8).map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-white/65 transition hover:bg-white/[0.045] hover:text-emerald-100"><span className="grid size-6 shrink-0 place-items-center rounded-md bg-emerald-200/10 text-[10px] font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><span className="min-w-0 flex-1 truncate">{community.name}</span><span title={community.visibility === "PRIVATE" ? "Private community" : "Public community"} className="text-[10px] text-white/30">{community.visibility === "PRIVATE" ? "▣" : "◉"}</span></Link>)}
                 {!loading && filteredCommunities.length === 0 && <p className="px-2 py-3 text-xs text-white/35">{search ? "No spaces match this search." : "No communities yet."}</p>}
                 {communities.length > 8 && <Link href="#communities-directory" className="mt-1 block px-2 py-2 text-xs font-medium text-emerald-200 hover:text-white">Browse all communities →</Link>}
               </div>
