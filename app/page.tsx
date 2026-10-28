@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
+import { MarketingHeader, MarketingFooter } from "@/components/marketing-shell";
 import { CursorReactive } from "@/components/cursor-reactive";
 import { WordParticles } from "@/components/word-particles";
 import { RotatingHeadline } from "@/components/rotating-headline";
@@ -20,10 +20,10 @@ function OrbitMark({ label, kind }: { label: string; kind: "human" | "ai" | "res
 
 export default function Home() {
   return (
-    <main className="converge-home min-h-screen overflow-hidden">
+    <main className="converge-home min-h-screen overflow-hidden marketing-site">
       <CursorReactive />
       <WordParticles />
-      <SiteHeader />
+      <MarketingHeader />
       <section className="hero-stage relative isolate">
         <div className="hero-grain" aria-hidden="true" />
         <div className="hero-layout mx-auto grid max-w-[1440px] items-center gap-10 px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-20 lg:min-h-[700px] lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 lg:px-14 lg:pb-24 lg:pt-16">
@@ -35,7 +35,7 @@ export default function Home() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link href="/sign-up" className="hero-primary">Find your people <span aria-hidden="true">↗</span></Link>
-              <Link href="/communities" className="hero-secondary">Explore communities <span aria-hidden="true">→</span></Link>
+              <Link href="/platform" className="hero-secondary">Explore the platform <span aria-hidden="true">→</span></Link>
             </div>
             <div className="hero-proof mt-10"><div className="proof-avatars"><span>H</span><span>✳</span><span>AI</span></div><span>Human curiosity. Specialist perspectives. Shared discovery.</span></div>
           </div>
@@ -109,15 +109,89 @@ export default function Home() {
         </div>
       </section>
 
+
+      <section className="marketing-band marketing-band--soft">
+        <div className="marketing-band__inner">
+          <p className="marketing-eyebrow">What Converge brings together</p>
+          <h2 className="marketing-section-heading">A shared space for the question, the people and the <em>thinking.</em></h2>
+          <p className="marketing-section-intro">We are building Converge around the full process of exploring a problem—not just the moment of asking an AI for an answer.</p>
+          <div className="marketing-grid marketing-grid--3">
+            <article className="marketing-feature">
+              <span className="marketing-feature__number">01 / COLLABORATION</span>
+              <div className="marketing-feature__symbol">↔</div>
+              <h3>People can think together</h3>
+              <p>Bring a question into a shared space where people contribute context, experience and different points of view.</p>
+            </article>
+            <article className="marketing-feature">
+              <span className="marketing-feature__number">02 / SPECIALIST AI</span>
+              <div className="marketing-feature__symbol">✳</div>
+              <h3>Different kinds of intelligence</h3>
+              <p>Use AI specialists to explore evidence, examine assumptions and consider a problem from more than one angle.</p>
+              <Link href="/ai-research">Explore AI research <span>→</span></Link>
+            </article>
+            <article className="marketing-feature">
+              <span className="marketing-feature__number">03 / CONTINUITY</span>
+              <div className="marketing-feature__symbol">≋</div>
+              <h3>Knowledge stays connected</h3>
+              <p>Keep useful research outputs linked to the work they came from, so teams can return to the thinking and build on it.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="marketing-band">
+        <div className="marketing-split">
+          <div className="marketing-split__copy">
+            <p className="marketing-eyebrow">A platform with room to grow</p>
+            <h2 className="marketing-section-heading">Made for meaningful questions across <em>different kinds of work.</em></h2>
+            <p>Converge is being developed for people and teams working through questions that need research, collaboration and considered judgement. The platform will continue to grow around real needs, rather than features for their own sake.</p>
+            <ul className="marketing-check-list">
+              <li><span>✓</span><span>Research groups exploring complex topics and evidence.</span></li>
+              <li><span>✓</span><span>Organisations that want their shared knowledge and thinking to remain useful.</span></li>
+              <li><span>✓</span><span>Specialised workspaces, including Converge Medical Intelligence for healthcare operations.</span></li>
+            </ul>
+            <div className="marketing-actions">
+              <Link href="/for-organizations" className="marketing-text-link">Explore use cases <span>→</span></Link>
+              <Link href="/medical-intelligence" className="marketing-text-link">Medical Intelligence <span>→</span></Link>
+            </div>
+          </div>
+          <div className="marketing-diagram">
+            <div className="marketing-diagram__top"><span>THE CONVERGE ECOSYSTEM</span><span className="marketing-diagram__status">Connected</span></div>
+            <div style={{ display: "flex", justifyContent: "center", marginTop: 26 }}>
+              <div className="marketing-diagram__node"><strong>Converge</strong><small>Shared identity and platform foundation</small></div>
+            </div>
+            <div className="marketing-diagram__line" style={{ margin: "0 auto" }} />
+            <div className="marketing-diagram__branch">
+              <div className="marketing-diagram__node"><strong>Research & collaboration</strong><small>Questions, people and specialist AI</small></div>
+              <div className="marketing-diagram__node"><strong>Medical Intelligence</strong><small>Patient requests and hospital operations</small></div>
+            </div>
+            <div className="marketing-diagram__outcome">Connected experiences, with each workspace keeping its own appropriate access rules.</div>
+          </div>
+        </div>
+      </section>
+
+      <section className="marketing-band marketing-band--soft">
+        <div className="marketing-band__inner">
+          <p className="marketing-eyebrow">How we approach AI</p>
+          <h2 className="marketing-section-heading">Useful intelligence. <em>Human judgement.</em></h2>
+          <div className="marketing-grid marketing-grid--3">
+            <article className="marketing-feature"><span className="marketing-feature__number">01</span><h3>AI has a role, not a disguise</h3><p>Specialist AI participants are identified as AI. They contribute perspectives; they do not pretend to be human experts.</p></article>
+            <article className="marketing-feature"><span className="marketing-feature__number">02</span><h3>Context matters</h3><p>Research is more useful when the question, sources and earlier work remain connected to the output.</p></article>
+            <article className="marketing-feature"><span className="marketing-feature__number">03</span><h3>People stay accountable</h3><p>AI output should be assessed critically. Important decisions still require human responsibility and appropriate permissions.</p></article>
+          </div>
+          <div className="marketing-actions"><Link href="/about" className="marketing-text-link">What Converge stands for <span>→</span></Link><Link href="/how-it-works" className="marketing-text-link">See how it works <span>→</span></Link></div>
+        </div>
+      </section>
+
       <section className="closing-section px-5 pb-16 sm:px-8 lg:px-14 lg:pb-20">
         <div data-cursor-reactive="panel" className="closing-panel mx-auto max-w-[1280px]">
           <div className="closing-orbit closing-orbit--one" aria-hidden="true" /><div className="closing-orbit closing-orbit--two" aria-hidden="true" />
-          <div className="relative z-10 max-w-[700px]"><p className="section-eyebrow">Your seat is waiting</p><h2>Come curious.<br /><span>Leave connected.</span></h2><p>Bring the idea you can’t stop thinking about. There’s room to explore it here.</p><div className="mt-7 flex flex-wrap gap-3"><Link href="/sign-up" className="hero-primary">Join Converge <span aria-hidden="true">↗</span></Link><Link href="/communities" className="closing-link">Find a community →</Link></div></div>
+          <div className="relative z-10 max-w-[700px]"><p className="section-eyebrow">Your seat is waiting</p><h2>Come curious.<br /><span>Leave connected.</span></h2><p>Bring the idea you can’t stop thinking about. There’s room to explore it here.</p><div className="mt-7 flex flex-wrap gap-3"><Link href="/sign-up" className="hero-primary">Join Converge <span aria-hidden="true">↗</span></Link><Link href="/how-it-works" className="closing-link">How it works →</Link></div></div>
           <div className="closing-sticker" aria-hidden="true"><span>HUMAN</span><b>+</b><span>AI</span><strong>✳</strong></div>
         </div>
       </section>
 
-      <footer className="converge-footer"><div className="mx-auto flex max-w-[1280px] flex-col gap-4 px-5 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-14"><Link href="/" className="footer-wordmark">converge<span>.</span></Link><span>Better questions. Shared understanding.</span><span>© {new Date().getFullYear()} Converge</span></div></footer>
+      <MarketingFooter />
     </main>
   );
 }
