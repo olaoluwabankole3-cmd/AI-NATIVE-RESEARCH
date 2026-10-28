@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./marketing.css";
 
 export const metadata: Metadata = {
-  title: "Converge — AI-Native Research & Community",
+  title: "Converge — People, Knowledge & Specialist AI",
   description:
-    "A collaborative research platform where humans and specialized AI agents work together.",
+    "A connected platform for collaborative thinking, specialist AI research and purpose-built workspaces.",
 };
 
 export default function RootLayout({
