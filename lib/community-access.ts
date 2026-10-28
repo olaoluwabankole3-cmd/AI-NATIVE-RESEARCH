@@ -63,6 +63,39 @@ export async function getTopicCommunityAccess(
   return { topic, ...access };
 }
 
+export async function getCommunityAgents(
+  admin: SupabaseClient,
+  communityId: string,
+): Promise<Agent[]> {
+  const { data, error } = await admin.from("community_agents")
+    .select("id, name, handle, role, description, capabilities, specialties, participation, status, is_active")
+    .eq("community_id", communityId)
+    .eq("is_active", true)
+    .eq("status", "AVAILABLE")
+    .order("created_at", { ascending: true });
+  if (error || !data?.length) return [];
+
+  const { data: prompts } = await admin.from("community_agent_prompts")
+    .select("agent_id, system_prompt")
+    .in("agent_id", data.map((agent) => agent.id));
+  const promptMap = new Map((prompts ?? []).map((row) => [row.agent_id, row.system_prompt]));
+
+  return data.map((row) => ({
+    id: row.id,
+    name: row.name,
+    handle: row.handle,
+    role: row.role,
+    description: row.description,
+    capabilities: row.capabilities ?? [],
+    specialties: row.specialties ?? [],
+    participation: row.participation ?? "",
+    permissions: ["Read accessible topic context", "Read research artifacts", "Publish specialist responses"],
+    status: "AVAILABLE" as const,
+    isActive: true,
+    systemPrompt: promptMap.get(row.id) ?? "",
+  }));
+}
+
 export async function getAgentForTopic(
   admin: SupabaseClient,
   topicId: string,
