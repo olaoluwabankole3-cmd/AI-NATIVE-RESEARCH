@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -22,8 +23,14 @@ export function MarketingHeader() {
     <header className="marketing-header">
       <div className="marketing-header__inner">
         <Link href="/" className="marketing-wordmark" aria-label="Converge home" onClick={() => setMenuOpen(false)}>
-          <span className="marketing-wordmark__mark" aria-hidden="true"><i /><i /><i /></span>
-          <span>converge<span className="marketing-wordmark__dot">.</span></span>
+          <Image
+            src="/converge-header-lockup.svg"
+            alt="Converge"
+            width={218}
+            height={51}
+            priority
+            className="marketing-wordmark__image"
+          />
         </Link>
         <button
           type="button"

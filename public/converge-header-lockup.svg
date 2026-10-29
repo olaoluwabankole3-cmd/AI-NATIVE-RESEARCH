@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="420" viewBox="0 0 1800 420" fill="none" role="img" aria-labelledby="title desc">
-<title id="title">Converge header lockup — white C with mint rays</title>
-<desc id="desc">Bold lowercase converge wordmark paired with a C symbol and three lines converging behind its left edge.</desc>
-<g transform="translate(0 10) scale(0.78)" aria-label="C with three converging rays">
-<g fill="none" stroke="#48B99A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
-<path d="M 65 164 L 240 256"/>
-<path d="M 52 256 L 240 256"/>
-<path d="M 65 348 L 240 256"/>
-</g>
-<path d="M 383 185 C 361 164 335 153 304 153 C 241 153 200 199 200 256 C 200 313 241 359 304 359 C 335 359 361 348 383 327 L 348 293 C 335 305 320 314 304 314 C 274 314 252 290 252 256 C 252 222 274 198 304 198 C 320 198 335 207 348 219 Z" fill="#FFFFFF"/>
+<title id="title">Converge approved wordmark: white text and mint rays</title>
+<desc id="desc">Horizontal converge header lockup in bold lowercase geometric lettering, with inward converging rays on either side.</desc>
+<g>
+<polygon points="55,90 73,90 292,166" fill="#48B99A"/>
+<polygon points="35,203 35,220 292,210" fill="#48B99A"/>
+<polygon points="55,332 73,332 292,247" fill="#48B99A"/>
+<polygon points="1507,166 1727,90 1745,90" fill="#48B99A"/>
+<polygon points="1508,210 1765,203 1765,220" fill="#48B99A"/>
+<polygon points="1508,247 1727,332 1745,332" fill="#48B99A"/>
 </g>
 <g aria-label="converge wordmark">
 <path fill="#FFFFFF" transform="translate(352.563 270.000) scale(0.1123047 -0.1123047)" d="M598 -24C897 -24 1109 160 1116 418H783C770 315 707 249 605 249C477 249 401 355 401 528C401 701 476 807 605 807C707 807 773 742 784 641H1116C1101 900 892 1080 598 1080C271 1080 52 856 52 528C52 199 271 -24 598 -24Z"/>

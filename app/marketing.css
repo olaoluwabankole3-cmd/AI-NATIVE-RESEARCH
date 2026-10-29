@@ -30,13 +30,8 @@
   margin: 0 auto;
   padding: 0 clamp(20px, 4.5vw, 70px);
 }
-.marketing-wordmark { display: inline-flex; align-items: center; gap: 10px; flex: none; font-size: 20px; font-weight: 850; letter-spacing: -.07em; }
-.marketing-wordmark__dot { color: var(--m-accent); }
-.marketing-wordmark__mark { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 29px; height: 29px; border: 1px solid rgba(164, 237, 193, .44); border-radius: 9px; overflow: hidden; }
-.marketing-wordmark__mark i { position: absolute; bottom: 5px; width: 2px; height: 14px; border-radius: 3px; background: var(--m-accent); transform-origin: bottom; }
-.marketing-wordmark__mark i:nth-child(1) { transform: translateX(-5px) rotate(-35deg); height: 12px; }
-.marketing-wordmark__mark i:nth-child(2) { height: 19px; }
-.marketing-wordmark__mark i:nth-child(3) { transform: translateX(5px) rotate(35deg); height: 12px; }
+.marketing-wordmark { display: inline-flex; align-items: center; flex: none; width: 218px; text-decoration: none; }
+.marketing-wordmark__image { display: block; width: 100%; height: auto; object-fit: contain; object-position: left center; }
 .marketing-nav { display: flex; align-items: center; justify-content: flex-end; gap: clamp(11px, 1.55vw, 25px); }
 .marketing-nav__link { color: #a8b5ac !important; font-size: 11px; font-weight: 650; white-space: nowrap; transition: color .18s ease; }
 .marketing-nav__link:hover, .marketing-nav__link.is-active { color: #f4fbf6 !important; }
@@ -152,6 +147,7 @@
   .marketing-bottom-cta__actions { flex-wrap: wrap; }
 }
 @media (max-width: 720px) {
+  .marketing-wordmark { width: 172px; }
   .marketing-header__inner { padding-right: 18px; padding-left: 18px; }
   .marketing-page-hero { padding: 64px 21px 49px; }
   .marketing-page-hero h1 { font-size: clamp(42px, 12vw, 68px); }
