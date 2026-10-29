@@ -1,0 +1,74 @@
+name: Build Converge brand identity kit
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "brand-identity/README.md"
+      - "public/converge-*.svg"
+      - "docs/CONVERGE_BRAND_IDENTITY.md"
+      - ".github/workflows/build-converge-brand-kit.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: converge-brand-kit
+  cancel-in-progress: false
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install SVG renderer and ZIP utility
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin zip
+
+      - name: Export all approved logos and icons to PNG
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p brand-identity/logos/svg brand-identity/logos/png
+          mkdir -p brand-identity/icons/svg brand-identity/icons/png
+
+          for file in public/converge-header-lockup*.svg public/converge-wordmark*.svg; do
+            [ -f "$file" ] || continue
+            name="$(basename "$file")"
+            cp "$file" "brand-identity/logos/svg/$name"
+            rsvg-convert -w 1800 "$file" -o "brand-identity/logos/png/${name%.svg}.png"
+          done
+
+          for file in public/converge-icon*.svg public/converge-symbol*.svg; do
+            [ -f "$file" ] || continue
+            name="$(basename "$file")"
+            cp "$file" "brand-identity/icons/svg/$name"
+            rsvg-convert -w 1024 -h 1024 "$file" -o "brand-identity/icons/png/${name%.svg}.png"
+          done
+
+          cp docs/CONVERGE_BRAND_IDENTITY.md brand-identity/CONVERGE_BRAND_IDENTITY.md
+
+      - name: Package SVG and PNG exports together
+        run: |
+          set -euo pipefail
+          rm -f brand-identity/converge-brand-identity.zip
+          cd brand-identity
+          zip -qr converge-brand-identity.zip README.md CONVERGE_BRAND_IDENTITY.md logos icons
+
+      - name: Commit downloadable kit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add brand-identity/README.md brand-identity/CONVERGE_BRAND_IDENTITY.md brand-identity/logos brand-identity/icons brand-identity/converge-brand-identity.zip
+          if git diff --cached --quiet; then
+            echo "The brand kit is already up to date."
+            exit 0
+          fi
+          git commit -m "Add PNG exports to Converge brand identity kit"
+          git push

@@ -1,15 +1,15 @@
 # Converge Brand Identity Kit
 
 ## Download the complete kit
-Download **[converge-brand-identity.zip](./converge-brand-identity.zip)** for all of the current vector logo variants, app icons and brand guidelines.
 
-## Important logo distinction
-- **Main/header logo:** lowercase `converge.` with three converging rays on the left and three on the right. This remains the approved wordmark.
-- **Standalone app icon:** a bold capital `C` with three converging lines behind its left edge. This is separate and does not replace the main wordmark.
+**[Download converge-brand-identity.zip](./converge-brand-identity.zip)** — contains both SVG and PNG exports for every wordmark, header logo, and icon, plus the brand identity guide.
 
-## Contents
-- Main/header logo lockups: green, white-and-mint, white, charcoal and mint.
-- Standalone app icons: dark background, light background, monochrome and pale mint.
-- Brand colour palette and usage guide.
+## What's inside
 
-The live source files remain in the repository's `public/` directory. The ZIP is a convenient download bundle.
+- `logos/svg/` and `logos/png/`: the approved `converge.` wordmark with three converging rays on both sides, in green, white-and-mint, monochrome white, charcoal, and mint variants.
+- `icons/svg/` and `icons/png/`: the standalone bold capital **C** with three lines converging behind its left edge, in dark, light, monochrome, and mint variants.
+- `CONVERGE_BRAND_IDENTITY.md`: brand colours, usage rules, and the distinction between the main logo and the separate icon.
+
+**Important:** the side-ray wordmark remains the main and header logo. The C-and-rays symbol is a separate app icon and does not replace the wordmark.
+
+PNG exports are transparent-background files where appropriate. Wordmark PNGs are rendered at 1800 px wide; standalone icons are rendered at 1024 × 1024 px.
