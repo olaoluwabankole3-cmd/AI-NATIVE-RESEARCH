@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { createClient } from "@/lib/supabase/client";
@@ -47,7 +48,7 @@ export default function SettingsPage() {
     return () => { active = false; };
   }, [router, supabase]);
 
-  async function handleDeleteAccount(event: React.FormEvent<HTMLFormElement>) {
+  async function handleDeleteAccount(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (deletePhrase !== "DELETE" || (accountEmail && emailConfirmation.trim().toLowerCase() !== accountEmail.toLowerCase()) || deletingAccount) return;
 
@@ -61,10 +62,9 @@ export default function SettingsPage() {
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) throw new Error(payload?.error || "Account deletion could not be completed.");
-      try { await supabase.auth.signOut(); } finally {
-        router.replace("/");
-        router.refresh();
-      }
+      await supabase.auth.signOut().catch(() => undefined);
+      router.replace("/");
+      router.refresh();
     } catch (caught) {
       setDeleteError(caught instanceof Error ? caught.message : "Account deletion could not be completed.");
       setDeletingAccount(false);
