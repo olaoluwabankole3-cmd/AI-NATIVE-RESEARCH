@@ -10,6 +10,8 @@ type ConversationRow = {
   id: string;
   user_low_id: string;
   user_high_id: string;
+  created_by: string;
+  request_status: "PENDING" | "ACCEPTED" | "IGNORED";
   created_at: string;
   last_message_at: string;
 };
@@ -49,6 +51,8 @@ export default function MessagesInboxPage() {
   const [previews, setPreviews] = useState<Record<string, MessageRow>>({});
   const [loading, setLoading] = useState(true);
   const [viewerId, setViewerId] = useState<string | null>(null);
+  const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
+  const [busyRequestId, setBusyRequestId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState("");
 
   const loadInbox = useCallback(async (knownUserId?: string) => {
@@ -58,12 +62,14 @@ export default function MessagesInboxPage() {
       return;
     }
 
-    const { data: conversationData, error: conversationError } = await supabase
-      .from("direct_conversations")
-      .select("id, user_low_id, user_high_id, created_at, last_message_at")
-      .or(`user_low_id.eq.${currentUserId},user_high_id.eq.${currentUserId}`)
-      .order("last_message_at", { ascending: false })
-      .limit(100);
+    const [{ data: conversationData, error: conversationError }, { data: blockData, error: blockError }] = await Promise.all([
+      supabase.from("direct_conversations")
+        .select("id, user_low_id, user_high_id, created_by, request_status, created_at, last_message_at")
+        .or(`user_low_id.eq.${currentUserId},user_high_id.eq.${currentUserId}`)
+        .order("last_message_at", { ascending: false })
+        .limit(100),
+      supabase.from("user_blocks").select("blocked_id").eq("blocker_id", currentUserId),
+    ]);
 
     if (conversationError) {
       setLoadError(conversationError.message);
@@ -71,27 +77,22 @@ export default function MessagesInboxPage() {
       return;
     }
 
+    if (blockError) setLoadError(blockError.message);
     setViewerId(currentUserId);
+    setBlockedUserIds((blockData ?? []).map((row: { blocked_id: string }) => row.blocked_id));
     const rows = (conversationData ?? []) as ConversationRow[];
     setConversations(rows);
     const conversationIds = rows.map((row) => row.id);
     const otherIds = [...new Set(rows.map((row) => row.user_low_id === currentUserId ? row.user_high_id : row.user_low_id))];
 
-    if (!conversationIds.length) {
-      setProfiles({});
-      setPreviews({});
-      setLoading(false);
-      return;
-    }
-
-    const [{ data: profileData }, { data: messageData, error: messageError }] = await Promise.all([
-      supabase.from("profiles").select("id, username, display_name, avatar_url, headline").in("id", otherIds),
-      supabase.from("direct_messages")
-        .select("id, conversation_id, sender_id, body, created_at")
-        .in("conversation_id", conversationIds)
-        .order("created_at", { ascending: false })
-        .limit(500),
-    ]);
+    const profilePromise = otherIds.length
+      ? supabase.from("profiles").select("id, username, display_name, avatar_url, headline").in("id", otherIds)
+      : Promise.resolve({ data: [], error: null });
+    const messagePromise = conversationIds.length
+      ? supabase.from("direct_messages").select("id, conversation_id, sender_id, body, created_at")
+          .in("conversation_id", conversationIds).order("created_at", { ascending: false }).limit(500)
+      : Promise.resolve({ data: [], error: null });
+    const [{ data: profileData }, { data: messageData, error: messageError }] = await Promise.all([profilePromise, messagePromise]);
 
     if (messageError) setLoadError(messageError.message);
     const profileMap: Record<string, MemberProfile> = {};
@@ -105,6 +106,36 @@ export default function MessagesInboxPage() {
     setPreviews(previewMap);
     setLoading(false);
   }, [router, supabase]);
+
+  const incomingRequests = conversations.filter((conversation) =>
+    conversation.request_status === "PENDING"
+    && conversation.created_by !== viewerId
+    && !blockedUserIds.includes(conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id)
+  );
+  const incomingRequestIds = new Set(incomingRequests.map((conversation) => conversation.id));
+  const regularConversations = conversations.filter((conversation) => !incomingRequestIds.has(conversation.id));
+
+  async function handleRequestAction(conversation: ConversationRow, action: "accept" | "ignore" | "block") {
+    if (!viewerId || busyRequestId) return;
+    const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
+    setBusyRequestId(conversation.id);
+    setLoadError("");
+    const response = action === "block"
+      ? await supabase.rpc("block_user", { p_blocked_user_id: otherId })
+      : await supabase.rpc("respond_direct_message_request", { p_conversation_id: conversation.id, p_action: action });
+    if (response.error) setLoadError(response.error.message);
+    else await loadInbox(viewerId);
+    setBusyRequestId(null);
+  }
+
+  async function unblockPerson(userId: string) {
+    if (!viewerId || busyRequestId) return;
+    setBusyRequestId(userId);
+    const { error } = await supabase.rpc("unblock_user", { p_blocked_user_id: userId });
+    if (error) setLoadError(error.message);
+    else await loadInbox(viewerId);
+    setBusyRequestId(null);
+  }
 
   useEffect(() => {
     let active = true;
@@ -138,39 +169,57 @@ export default function MessagesInboxPage() {
 
         {loading ? (
           <div className="mt-6 grid gap-3">{[0, 1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-white/[0.08] bg-white/[0.02]" />)}</div>
-        ) : conversations.length ? (
-          <section className="mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
-            {conversations.map((conversation, index) => {
-              const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
-              const member = profiles[otherId] ?? {
-                id: otherId, username: null, display_name: `Converge member · ${otherId.slice(0, 6)}`, avatar_url: null, headline: null,
-              };
-              const preview = previews[conversation.id];
-              return (
-                <Link key={conversation.id} href={`/messages/${conversation.id}`} className={["flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.035] sm:px-6", index > 0 ? "border-t border-white/[0.07]" : ""].join(" ")}>
-                  <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-[16px] border border-emerald-200/15 bg-emerald-200/[0.08] text-sm font-bold text-emerald-100">
-                    {member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-white/90">{member.display_name}</p>
-                      <span className="shrink-0 text-[10px] text-white/35">{timeLabel(preview?.created_at ?? conversation.last_message_at)}</span>
-                    </div>
-                    {member.headline && <p className="mt-1 truncate text-[11px] text-white/35">{member.headline}</p>}
-                    <p className="mt-2 truncate text-xs text-white/50">{preview ? `${preview.sender_id === viewerId ? "You: " : ""}${preview.body}` : "No messages yet — say hello."}</p>
-                  </div>
-                  <span aria-hidden="true" className="text-lg text-white/25">›</span>
-                </Link>
-              );
-            })}
-          </section>
         ) : (
-          <section className="mt-6 rounded-3xl border border-dashed border-white/[0.12] px-6 py-16 text-center sm:px-12">
-            <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.05] text-2xl text-emerald-100">↗</div>
-            <h2 className="mt-5 text-2xl font-semibold tracking-[-0.045em]">Your first conversation starts with a connection.</h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-white/45">Connect with a member first. Once they accept, open their profile or find them in People and choose Message. Your conversation will be saved here.</p>
-            <Link href="/people" className="mt-6 inline-flex rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Discover members ↗</Link>
-          </section>
+          <>
+            {incomingRequests.length > 0 && <section className="mt-6 rounded-3xl border border-amber-200/20 bg-amber-200/[0.025] p-4 sm:p-6">
+              <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-100/70">Needs your decision</p><h2 className="mt-2 text-xl font-semibold">Message requests <span className="text-sm font-medium text-amber-100/60">· {incomingRequests.length}</span></h2><p className="mt-2 text-xs leading-5 text-white/45">Accept to open the conversation, ignore to dismiss it, or block a person from contacting you.</p></div>
+              <div className="divide-y divide-white/[0.08]">
+                {incomingRequests.map((conversation) => {
+                  const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
+                  const member = profiles[otherId] ?? { id: otherId, username: null, display_name: `Converge member · ${otherId.slice(0, 6)}`, avatar_url: null, headline: null };
+                  const preview = previews[conversation.id];
+                  const busy = busyRequestId === conversation.id;
+                  return <article key={conversation.id} className="flex flex-col justify-between gap-4 py-4 sm:flex-row sm:items-center">
+                    <Link href={`/messages/${conversation.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
+                      <div className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-[14px] border border-amber-200/20 bg-amber-200/[0.08] text-sm font-bold text-amber-100">{member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}</div>
+                      <div className="min-w-0"><p className="truncate text-sm font-semibold text-white/90">{member.display_name}</p>{member.headline && <p className="mt-1 truncate text-[11px] text-white/35">{member.headline}</p>}<p className="mt-2 line-clamp-2 text-xs leading-5 text-white/55">{preview?.body ?? "This member wants to start a private conversation."}</p></div>
+                    </Link>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      <button type="button" disabled={busy} onClick={() => void handleRequestAction(conversation, "accept")} className="rounded-full bg-emerald-200 px-3.5 py-2 text-[10px] font-bold text-[#0b1710] disabled:opacity-40">{busy ? "…" : "Accept"}</button>
+                      <button type="button" disabled={busy} onClick={() => void handleRequestAction(conversation, "ignore")} className="rounded-full border border-white/15 px-3.5 py-2 text-[10px] font-semibold text-white/70 disabled:opacity-40">Ignore</button>
+                      <button type="button" disabled={busy} onClick={() => void handleRequestAction(conversation, "block")} className="rounded-full border border-red-300/20 px-3.5 py-2 text-[10px] font-semibold text-red-100/80 disabled:opacity-40">Block</button>
+                    </div>
+                  </article>;
+                })}
+              </div>
+            </section>}
+            {regularConversations.length ? <section className="mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
+              {regularConversations.map((conversation, index) => {
+                const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
+                const member = profiles[otherId] ?? { id: otherId, username: null, display_name: `Converge member · ${otherId.slice(0, 6)}`, avatar_url: null, headline: null };
+                const preview = previews[conversation.id];
+                const isBlocked = blockedUserIds.includes(otherId);
+                return <div key={conversation.id} className={["flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.035] sm:px-6", index > 0 ? "border-t border-white/[0.07]" : ""].join(" ")}>
+                  <Link href={`/messages/${conversation.id}`} className="flex min-w-0 flex-1 items-center gap-4 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
+                    <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-[16px] border border-emerald-200/15 bg-emerald-200/[0.08] text-sm font-bold text-emerald-100">{member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2"><p className="truncate text-sm font-semibold text-white/90">{member.display_name}</p><span className="shrink-0 text-[10px] text-white/35">{timeLabel(preview?.created_at ?? conversation.last_message_at)}</span></div>
+                      {member.headline && <p className="mt-1 truncate text-[11px] text-white/35">{member.headline}</p>}
+                      <p className="mt-2 truncate text-xs text-white/50">{isBlocked ? "You blocked this person · open to unblock" : conversation.request_status === "PENDING" && conversation.created_by === viewerId ? "Message request sent · awaiting response" : conversation.request_status === "IGNORED" ? "Message request ignored" : preview ? `${preview.sender_id === viewerId ? "You: " : ""}${preview.body}` : "No messages yet — say hello."}</p>
+                    </div>
+                  </Link>
+                  {isBlocked && <button type="button" disabled={busyRequestId === otherId} onClick={() => void unblockPerson(otherId)} className="shrink-0 rounded-full border border-emerald-200/20 px-3 py-2 text-[10px] font-semibold text-emerald-100 disabled:opacity-40">{busyRequestId === otherId ? "…" : "Unblock"}</button>}
+                  {!isBlocked && <Link href={`/messages/${conversation.id}`} aria-label={`Open conversation with ${member.display_name}`} className="text-lg text-white/25 hover:text-emerald-100">›</Link>}
+                </div>;
+              })}
+            </section> : null}
+            {!incomingRequests.length && !regularConversations.length && <section className="mt-6 rounded-3xl border border-dashed border-white/[0.12] px-6 py-16 text-center sm:px-12">
+              <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.05] text-2xl text-emerald-100">↗</div>
+              <h2 className="mt-5 text-2xl font-semibold tracking-[-0.045em]">Your inbox is clear.</h2>
+              <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-white/45">Find a member and send a message request. They can accept, ignore, or block the request before a conversation begins.</p>
+              <Link href="/people" className="mt-6 inline-flex rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Discover members ↗</Link>
+            </section>}
+          </>
         )}
       </div>
     </main>
