@@ -1734,3 +1734,211 @@ main:not(.converge-home):has(> header) button:focus-visible {
     transition: none !important;
   }
 }
+
+
+/* Authenticated mobile dock: More menu overlay */
+.converge-mobile-more-backdrop {
+  position: fixed;
+  z-index: 9998;
+  inset: 0;
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: rgba(0, 0, 0, .64);
+  padding: 0;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.converge-mobile-more-panel {
+  position: fixed;
+  z-index: 9999;
+  right: 12px;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  left: 12px;
+  width: auto;
+  max-height: min(620px, calc(100dvh - 160px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(185, 220, 194, .19);
+  border-radius: 22px;
+  background: #0d160f;
+  padding: 19px;
+  color: #edf6ef;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .55), inset 0 1px rgba(255, 255, 255, .035);
+  -webkit-overflow-scrolling: touch;
+}
+
+.converge-mobile-more-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.converge-mobile-more-panel__header p {
+  margin: 0;
+  color: #8da99a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .17em;
+}
+
+.converge-mobile-more-panel__header h2 {
+  margin: 5px 0 0;
+  color: #f0f8f2;
+  font-size: 27px;
+  font-weight: 750;
+  letter-spacing: -.055em;
+  line-height: 1.1;
+}
+
+.converge-mobile-more-panel__close {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  place-items: center;
+  border: 1px solid rgba(185, 220, 194, .16);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .035);
+  color: #c9d8ce;
+  font-size: 25px;
+  line-height: 1;
+}
+
+.converge-mobile-more-panel__label {
+  margin: 0 0 9px;
+  color: #779081;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.converge-mobile-more-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 21px;
+}
+
+.converge-mobile-more-link {
+  display: flex;
+  min-width: 0;
+  min-height: 48px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(185, 220, 194, .1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .025);
+  padding: 0 11px;
+  color: #b7c9bd;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.converge-mobile-more-link > span:nth-child(2) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.converge-mobile-more-link .converge-nav-icon,
+.converge-mobile-more-account .converge-nav-icon,
+.converge-mobile-more-panel__footer .converge-nav-icon {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+.converge-mobile-more-link.is-active,
+.converge-mobile-more-account a.is-active {
+  border-color: rgba(141, 228, 187, .2);
+  background: rgba(141, 228, 187, .09);
+  color: #c1f3d4;
+}
+
+.converge-mobile-more-link__arrow {
+  margin-left: auto;
+  color: #6f8c79;
+  font-size: 12px;
+}
+
+.converge-mobile-more-account {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 17px;
+}
+
+.converge-mobile-more-account a {
+  display: flex;
+  min-height: 43px;
+  align-items: center;
+  gap: 11px;
+  border-radius: 10px;
+  padding: 0 10px;
+  color: #bdcbbf;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.converge-mobile-more-count {
+  margin-left: auto;
+  border-radius: 999px;
+  background: #a4edc1;
+  padding: 3px 7px;
+  color: #102219;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.converge-mobile-more-panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(185, 220, 194, .11);
+  padding-top: 14px;
+}
+
+.converge-mobile-more-panel__footer > span {
+  min-width: 0;
+  overflow: hidden;
+  color: #819488;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.converge-mobile-more-panel__footer button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(234, 181, 142, .17);
+  border-radius: 10px;
+  background: rgba(234, 181, 142, .055);
+  padding: 9px 10px;
+  color: #e5bd9f;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.converge-mobile-more-panel__footer button:disabled {
+  opacity: .55;
+}
+
+@media (max-width: 380px) {
+  .converge-mobile-more-panel { right: 8px; left: 8px; padding: 15px; }
+  .converge-mobile-more-link { gap: 7px; padding-inline: 8px; font-size: 10px; }
+}
+
+@media (min-width: 1280px) {
+  .converge-mobile-more-backdrop,
+  .converge-mobile-more-panel { display: none !important; }
+}
