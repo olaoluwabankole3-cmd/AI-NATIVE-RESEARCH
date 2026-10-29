@@ -1,9 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1800" height="600" viewBox="0 0 1800 600" fill="none" role="img" aria-labelledby="title desc">
-<title id="title">Converge charcoal wordmark</title>
-<desc id="desc">Lowercase converge wordmark in a bold geometric sans style, framed by the original converging-ray structure.</desc>
-<g aria-label="Converging rays and C icon" fill="none">
-<g stroke="#101A16" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M52 250 L190 300"/><path d="M39 286 L190 312"/><path d="M34 326 L190 326"/><path d="M39 366 L190 340"/><path d="M52 402 L190 352"/></g>
-<path d="M331 278 C311 260 288 254 263 254 C222 254 192 284 192 326 C192 368 222 398 263 398 C288 398 311 392 331 374" stroke="#101A16" stroke-width="21" stroke-linecap="round" stroke-linejoin="round"/>
+<title id="title">Converge monochrome charcoal lockup</title>
+<desc id="desc">Bold lowercase converge wordmark paired with a C symbol and three lines converging behind its left edge.</desc>
+<g transform="translate(0 93) scale(0.83)" aria-label="C with three converging rays">
+<g fill="none" stroke="#101A16" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 65 164 L 240 256"/>
+<path d="M 52 256 L 240 256"/>
+<path d="M 65 348 L 240 256"/>
+</g>
+<path d="M 383 185 C 361 164 335 153 304 153 C 241 153 200 199 200 256 C 200 313 241 359 304 359 C 335 359 361 348 383 327 L 348 293 C 335 305 320 314 304 314 C 274 314 252 290 252 256 C 252 222 274 198 304 198 C 320 198 335 207 348 219 Z" fill="#101A16"/>
 </g>
 <g aria-label="converge wordmark">
 <path fill="#101A16" transform="translate(412.249 359.000) scale(0.1000977 -0.1000977)" d="M598 -24C897 -24 1109 160 1116 418H783C770 315 707 249 605 249C477 249 401 355 401 528C401 701 476 807 605 807C707 807 773 742 784 641H1116C1101 900 892 1080 598 1080C271 1080 52 856 52 528C52 199 271 -24 598 -24Z"/>
