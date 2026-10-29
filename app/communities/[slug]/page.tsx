@@ -40,6 +40,7 @@ export default function CommunityPage() {
   const [memberCount, setMemberCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [isMember, setIsMember] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
   const [memberRole, setMemberRole] = useState<CommunityRole | null>(null);
   const [deletingTopicId, setDeletingTopicId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,7 +63,7 @@ export default function CommunityPage() {
   const isOwner = Boolean(community && userId && community.created_by === userId);
   const currentIsMember = isOwner || isMember;
   const canCreateTopic = Boolean(isOwner || (isMember && community?.members_can_create_topics));
-  const privateLocked = Boolean(community?.visibility === "PRIVATE" && !currentIsMember);
+  const privateLocked = Boolean(isBanned || (community?.visibility === "PRIVATE" && !currentIsMember));
 
   async function loadCommunity() {
     setLoading(true);
@@ -71,6 +72,7 @@ export default function CommunityPage() {
     setTopics([]);
     setMemberCount(0);
     setIsMember(false);
+    setIsBanned(false);
     setMemberRole(null);
     setDeletingTopicId(null);
     setJoinRequest(null);
@@ -97,10 +99,11 @@ export default function CommunityPage() {
       return;
     }
 
-    const [{ data: membership, error: membershipError }, requestResponse] = await Promise.all([
+    const [{ data: membership, error: membershipError }, requestResponse, { data: banRow, error: banError }] = await Promise.all([
       supabase.from("community_members").select("user_id, role")
         .eq("community_id", communityData.id).eq("user_id", user.id).maybeSingle(),
       fetch("/api/communities/" + communityData.id + "/requests", { cache: "no-store" }),
+      supabase.from("community_bans").select("user_id").eq("community_id", communityData.id).eq("user_id", user.id).maybeSingle(),
     ]);
     if (membershipError) {
       setMessage("We could not verify your community membership. Refresh and try again.");
@@ -109,10 +112,18 @@ export default function CommunityPage() {
       return;
     }
 
+    if (banError) {
+      setMessage("We could not verify your community access. Refresh and try again.");
+      setMessageTone("error");
+      setLoading(false);
+      return;
+    }
     const owner = communityData.created_by === user.id;
-    const member = owner || Boolean(membership);
+    const banned = Boolean(banRow);
+    const member = !banned && (owner || Boolean(membership));
     const accessCommunity = communityData as Community;
     setCommunity(accessCommunity);
+    setIsBanned(banned);
     setIsMember(member);
     setMemberRole(owner ? "OWNER" : (membership?.role as CommunityRole | undefined) ?? null);
 
@@ -124,7 +135,7 @@ export default function CommunityPage() {
     }
 
     setTopics([]);
-    if (communityData.visibility === "PUBLIC" || member) {
+    if (!banned && (communityData.visibility === "PUBLIC" || member)) {
       const [{ data: topicData, error: topicError }, memberResult] = await Promise.all([
         supabase.from("topics").select("id, title, body, type, created_at, created_by")
           .eq("community_id", communityData.id).order("created_at", { ascending: false }),
@@ -179,7 +190,7 @@ export default function CommunityPage() {
   }
 
   async function handleJoinPublic() {
-    if (!community || !userId || joining || community.visibility !== "PUBLIC") return;
+    if (!community || !userId || joining || community.visibility !== "PUBLIC" || isBanned) return;
     setJoining(true);
     setMessage("");
     const { error } = await supabase.from("community_members").insert({
@@ -200,7 +211,7 @@ export default function CommunityPage() {
 
   async function handleRequestAccess(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!community || requesting) return;
+    if (!community || requesting || isBanned) return;
     setRequesting(true);
     setMessage("");
     try {
@@ -297,9 +308,10 @@ export default function CommunityPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
+              {(isOwner || memberRole === "OWNER" || memberRole === "MODERATOR") && <Link href={"/communities/" + community.slug + "/members"} className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-white/75 transition hover:border-emerald-200/30 hover:text-emerald-100">Manage members ↗</Link>}
               {isOwner && <Link href={"/communities/" + community.slug + "/settings"} className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-white/75 transition hover:border-emerald-200/30 hover:text-emerald-100">Community settings{pendingRequestCount > 0 ? " · " + pendingRequestCount + " pending" : ""}</Link>}
               {!currentIsMember && community.visibility === "PUBLIC" && <button type="button" disabled={joining} onClick={() => void handleJoinPublic()} className="inline-flex items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100 disabled:opacity-50">{joining ? "Joining…" : "Join community"}</button>}
-              {privateLocked && joinRequest?.status !== "PENDING" && <button type="button" onClick={() => setShowRequestForm((value) => !value)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100">{showRequestForm ? "Cancel request" : "Request access"}</button>}
+              {privateLocked && !isBanned && joinRequest?.status !== "PENDING" && <button type="button" onClick={() => setShowRequestForm((value) => !value)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100">{showRequestForm ? "Cancel request" : "Request access"}</button>}
               {canCreateTopic && <button type="button" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex items-center gap-2 rounded-lg border border-emerald-200/25 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-200/10"><span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Cancel topic" : "Create topic"}</button>}
             </div>
           </div>
@@ -307,19 +319,19 @@ export default function CommunityPage() {
 
         {message && <p role="status" className={"mt-4 rounded-lg border px-4 py-3 text-sm " + (messageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-100")}>{message}</p>}
 
-        {showRequestForm && privateLocked && <form onSubmit={handleRequestAccess} className="mt-6 max-w-2xl rounded-xl border border-emerald-200/20 bg-[#111a16] p-5 sm:p-6">
+        {showRequestForm && privateLocked && !isBanned && <form onSubmit={handleRequestAccess} className="mt-6 max-w-2xl rounded-xl border border-emerald-200/20 bg-[#111a16] p-5 sm:p-6">
           <h2 className="text-lg font-semibold">Request to join {community.name}</h2>
           <p className="mt-2 text-sm leading-6 text-white/45">The community owner will review your request. You will not see topics or discussions until access is approved.</p>
           <label className="mt-4 block"><span className="mb-2 block text-xs font-medium text-white/65">Note to the owner (optional)</span><textarea value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} rows={3} maxLength={1000} placeholder="Briefly tell the owner why you would like to join…" className="w-full resize-y rounded-lg border border-white/10 bg-[#0b1110] px-3.5 py-3 text-sm outline-none focus:border-emerald-200/50" /></label>
           <div className="mt-4 flex gap-3"><button disabled={requesting} className="rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] disabled:opacity-50">{requesting ? "Sending request…" : "Send access request"}</button><button type="button" onClick={() => setShowRequestForm(false)} className="px-3 py-2.5 text-sm text-white/50 hover:text-white">Cancel</button></div>
         </form>}
 
-        {privateLocked && <section className="mt-8 max-w-3xl rounded-2xl border border-amber-200/15 bg-amber-200/[0.035] p-6 sm:p-9">
-          <div className="grid size-12 place-items-center rounded-xl border border-amber-200/20 bg-amber-200/[0.06] text-xl text-amber-100/80">▣</div>
-          <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-100/65">Private community</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight">The research stays inside this community.</h2>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-white/50">You can see this community description, but its topics, discussions, replies, and saved research remain hidden until the owner approves your membership request.</p>
-          {joinRequest?.status === "PENDING" ? <p className="mt-5 inline-flex items-center rounded-lg border border-amber-200/15 px-3 py-2 text-sm text-amber-100/80">Request sent · awaiting owner review</p> : joinRequest?.status === "REJECTED" ? <p className="mt-5 text-sm text-white/50">Your previous request was declined. You may submit a new request.</p> : <p className="mt-5 text-xs text-white/35">Access is granted individually by the community owner.</p>}
+        {privateLocked && <section className={"mt-8 max-w-3xl rounded-2xl border p-6 sm:p-9 " + (isBanned ? "border-red-300/20 bg-red-300/[0.035]" : "border-amber-200/15 bg-amber-200/[0.035]")}>
+          <div className={"grid size-12 place-items-center rounded-xl border text-xl " + (isBanned ? "border-red-200/20 bg-red-200/[0.06] text-red-100" : "border-amber-200/20 bg-amber-200/[0.06] text-amber-100/80")}>▣</div>
+          <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-100/65">{isBanned ? "Community access restricted" : "Private community"}</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight">{isBanned ? "You can no longer access this community." : "The research stays inside this community."}</h2>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-white/50">{isBanned ? "A community owner or moderator has blocked your membership. You cannot join or request access unless the community owner lifts the block." : "You can see this community description, but its topics, discussions, replies, and saved research remain hidden until the owner approves your membership request."}</p>
+          {!isBanned && (joinRequest?.status === "PENDING" ? <p className="mt-5 inline-flex items-center rounded-lg border border-amber-200/15 px-3 py-2 text-sm text-amber-100/80">Request sent · awaiting owner review</p> : joinRequest?.status === "REJECTED" ? <p className="mt-5 text-sm text-white/50">Your previous request was declined. You may submit a new request.</p> : <p className="mt-5 text-xs text-white/35">Access is granted individually by the community owner.</p>)}
         </section>}
 
         {showForm && canCreateTopic && <form onSubmit={handleCreateTopic} className="mt-6 rounded-xl border border-emerald-200/20 bg-[#111a16] p-5 sm:p-7">
