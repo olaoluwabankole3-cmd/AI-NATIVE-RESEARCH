@@ -55,8 +55,8 @@ export default function Home() {
             <div className="collab-card collab-card--question">
               <div className="card-topline"><span className="tiny-status" /> THE QUESTION ROOM <span className="card-menu">•••</span></div>
               <div className="question-label">TODAY’S BIG QUESTION</div>
-              <h2>How might we make clean energy more accessible?</h2>
-              <div className="question-tags"><span>Energy</span><span>Ideas welcome</span></div>
+              <h2>How might people and AI shape the future together?</h2>
+              <div className="question-tags"><span>AI + Future</span><span>Ideas welcome</span></div>
               <div className="question-footer"><div className="mini-people"><span>J</span><span>✳</span><span>R</span><span>+4</span></div><span>6 minds in the room</span></div>
             </div>
 
