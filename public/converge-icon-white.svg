@@ -1,10 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="t">
-<title id="t">Converge light background icon: mint rays and deep green C</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+<title id="title">Converge light-background icon</title>
+<desc id="desc">A bold capital C with three lines converging behind its left edge.</desc>
 <rect x="12" y="12" width="488" height="488" rx="118" fill="#FFFFFF"/>
-<g aria-label="Converging rays and C icon" fill="none">
-<g stroke="#48B99A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
-<path d="M62 145 L180 205"/><path d="M48 198 L180 229"/><path d="M42 256 L180 256"/><path d="M48 314 L180 283"/><path d="M62 367 L180 307"/>
+<g transform="translate(0 0)" aria-label="C with three converging rays">
+<g fill="none" stroke="#137C79" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 65 164 L 240 256"/>
+<path d="M 52 256 L 240 256"/>
+<path d="M 65 348 L 240 256"/>
 </g>
-<path d="M387 175 C355 145 319 132 280 132 C213 132 169 184 169 256 C169 328 213 380 280 380 C319 380 355 367 387 337" stroke="#137C79" stroke-width="39" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 383 185 C 361 164 335 153 304 153 C 241 153 200 199 200 256 C 200 313 241 359 304 359 C 335 359 361 348 383 327 L 348 293 C 335 305 320 314 304 314 C 274 314 252 290 252 256 C 252 222 274 198 304 198 C 320 198 335 207 348 219 Z" fill="#101A16"/>
 </g>
 </svg>
