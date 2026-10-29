@@ -1399,3 +1399,338 @@ main:not(.converge-home):has(> header) button:focus-visible {
   }
   .converge-brand-image { height: 34px; }
 }
+
+
+/* --- Mobile-first product refinement: keep desktop composition unchanged. --- */
+
+/* Medium screens have room for the full header; the mobile dock should not duplicate it. */
+@media (min-width: 1024px) {
+  .converge-mobile-dock { display: none !important; }
+  main:not(.converge-home):has(> header):has(.converge-mobile-dock),
+  main.converge-home:has(.converge-mobile-dock) { padding-bottom: 0 !important; }
+}
+
+/* Phone and tablet navigation: brand left, account right, optional More sheet above the dock. */
+@media (max-width: 1023px) {
+  .converge-site-header__inner {
+    height: 64px !important;
+    min-height: 64px;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    column-gap: 12px;
+    padding-right: clamp(14px, 3vw, 24px) !important;
+    padding-left: clamp(14px, 3vw, 24px) !important;
+  }
+  .converge-site-header__inner > .converge-primary-nav { display: none !important; }
+  .converge-site-header__actions { grid-column: 2; justify-self: end; }
+  .converge-brand-link {
+    width: clamp(136px, 22vw, 180px) !important;
+    max-width: 100%;
+  }
+  .converge-brand-image {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 42px;
+  }
+  .converge-account-trigger { min-width: 42px; min-height: 42px; }
+  .converge-account-menu__panel {
+    position: fixed;
+    top: 72px;
+    right: 12px;
+    width: min(292px, calc(100vw - 24px));
+    max-height: calc(100dvh - 164px - env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+  header:has(+ .converge-mobile-dock) > div.border-t {
+    position: fixed !important;
+    z-index: 55;
+    top: auto !important;
+    right: 12px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    left: 12px;
+    max-height: min(68dvh, 560px);
+    overflow-y: auto;
+    border: 1px solid rgba(185, 220, 194, .16);
+    border-radius: 18px;
+    background: rgba(10, 18, 13, .985);
+    padding: 10px 12px 14px !important;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .55), inset 0 1px rgba(255, 255, 255, .035);
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
+  }
+  header:has(+ .converge-mobile-dock) nav[aria-label="Mobile navigation"] > a,
+  header:has(+ .converge-mobile-dock) nav[aria-label="Mobile navigation"] > button {
+    min-height: 44px;
+    border-radius: 10px;
+    padding: 11px 12px;
+    text-align: left;
+  }
+  .converge-mobile-dock {
+    left: 12px;
+    right: 12px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+  main:not(.converge-home):has(> header):has(.converge-mobile-dock),
+  main.converge-home:has(.converge-mobile-dock) {
+    padding-bottom: calc(94px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Phone-sized canvas: readable gutters, stable headings, no horizontal page drift. */
+@media (max-width: 680px) {
+  html { scroll-padding-top: 72px; }
+  body { overflow-x: clip; }
+  main:not(.converge-home):has(> header) {
+    overflow-x: clip;
+  }
+  main:not(.converge-home):has(> header) > div,
+  .converge-app-page > .mx-auto {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding-right: 16px !important;
+    padding-left: 16px !important;
+  }
+  main:not(.converge-home):has(> header) > div > section:first-child {
+    gap: 18px;
+    padding-top: 23px !important;
+    padding-bottom: 21px !important;
+  }
+  main:not(.converge-home):has(> header) > div > section:first-child h1,
+  .converge-page-intro h1 {
+    max-width: 19ch;
+    font-size: clamp(27px, 7.8vw, 34px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.06em !important;
+    text-wrap: balance;
+  }
+  main:not(.converge-home):has(> header) > div > section:first-child p[class*="text-sm"],
+  .converge-page-intro h1 + p {
+    font-size: 12px !important;
+    line-height: 1.75 !important;
+  }
+  main:not(.converge-home):has(> header) > div > section:first-child a[class*="rounded"],
+  main:not(.converge-home):has(> header) > div > section:first-child button[class*="rounded"] {
+    max-width: 100%;
+  }
+  .converge-page-intro {
+    padding-top: 22px !important;
+    padding-bottom: 20px !important;
+  }
+  .converge-page-intro p[class*="uppercase"][class*="tracking"] {
+    font-size: 9px !important;
+    letter-spacing: .12em !important;
+    line-height: 1.5 !important;
+  }
+  .converge-app-page section[class*="rounded-3xl"][class*="border"],
+  .converge-app-page article[class*="rounded-3xl"][class*="border"],
+  .converge-app-page form[class*="rounded-3xl"][class*="border"],
+  .converge-app-page section[class*="rounded-2xl"][class*="border"],
+  .converge-app-page article[class*="rounded-2xl"][class*="border"],
+  .converge-app-page form[class*="rounded-2xl"][class*="border"] {
+    border-radius: 14px !important;
+  }
+  .converge-app-page input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+  .converge-app-page select,
+  .converge-app-page textarea,
+  main:not(.converge-home):has(> header) input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+  main:not(.converge-home):has(> header) select,
+  main:not(.converge-home):has(> header) textarea {
+    font-size: 16px !important;
+    line-height: 1.5;
+  }
+  .converge-app-page input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+  .converge-app-page select,
+  main:not(.converge-home):has(> header) input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+  main:not(.converge-home):has(> header) select {
+    min-height: 46px;
+  }
+  .converge-app-page button,
+  .converge-app-page a[class*="bg-emerald"],
+  main:not(.converge-home):has(> header) button[class*="bg-emerald"],
+  main:not(.converge-home):has(> header) a[class*="bg-emerald"] {
+    min-height: 42px;
+  }
+  .converge-app-page pre,
+  .converge-app-page table,
+  main:not(.converge-home):has(> header) pre,
+  main:not(.converge-home):has(> header) table {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .converge-app-page img,
+  .converge-app-page video,
+  .converge-app-page canvas {
+    max-width: 100%;
+  }
+
+  /* Five equal, thumb-friendly destinations with room for the device safe area. */
+  .converge-mobile-dock {
+    left: 10px;
+    right: 10px;
+    gap: 2px;
+    padding: 5px;
+    border-radius: 17px;
+    background: rgba(10, 18, 13, .97);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .4), inset 0 1px rgba(255, 255, 255, .04);
+  }
+  .converge-mobile-dock__item {
+    min-height: 49px;
+    gap: 4px;
+    border-radius: 12px;
+    padding: 5px 1px;
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+  .converge-mobile-dock__item svg { width: 19px; height: 19px; }
+
+  /* Communities becomes a reading-first feed. The left rail turns into a compact,
+     swipeable space selector; the desktop-only explanatory rail is removed. */
+  .converge-app-page > div > .grid.gap-7.pt-6 {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 19px !important;
+    padding-top: 20px !important;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:first-child {
+    display: contents;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:first-child > section:first-child {
+    grid-column: 1 / -1;
+    min-width: 0;
+    border-radius: 13px !important;
+    padding: 13px !important;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:first-child > section:first-child > label {
+    margin-top: 11px !important;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:first-child > section:first-child > div.mt-3.space-y-1 {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 1px 5px;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:first-child > section:first-child > div.mt-3.space-y-1::-webkit-scrollbar {
+    display: none;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:first-child > section:first-child > div.mt-3.space-y-1 > a {
+    flex: 0 0 auto;
+    min-width: 154px;
+    max-width: 210px;
+    border: 1px solid rgba(185, 220, 194, .12);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .02);
+    padding: 10px;
+    font-size: 11px;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:first-child > section:nth-child(2),
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:last-child {
+    display: none !important;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > section {
+    min-width: 0;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > section > div.flex.items-center.gap-1.rounded-lg.border {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > section > div.flex.items-center.gap-1.rounded-lg.border::-webkit-scrollbar {
+    display: none;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > section > div.flex.items-center.gap-1.rounded-lg.border > button {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > section article {
+    padding-top: 17px !important;
+    padding-bottom: 17px !important;
+  }
+  .converge-app-page > div > .grid.gap-7.pt-6 > section article h3,
+  .converge-app-page > div > .grid.gap-7.pt-6 > section article a[class*="font-semibold"] {
+    overflow-wrap: anywhere;
+  }
+
+  /* Topic conversations prioritise the discussion and a comfortable reply composer. */
+  main.converge-app-page:has(.converge-topic-hero) .converge-topic-hero {
+    padding-top: 17px !important;
+    padding-bottom: 19px !important;
+  }
+  main.converge-app-page:has(.converge-topic-hero) .converge-topic-hero h1 {
+    font-size: clamp(27px, 7.7vw, 34px) !important;
+    line-height: 1.1 !important;
+  }
+  main.converge-app-page:has(.converge-topic-hero) div.mt-6.overflow-hidden.rounded-2xl.border > article {
+    padding: 15px 13px !important;
+  }
+  main.converge-app-page:has(.converge-topic-hero) div.mt-6.overflow-hidden.rounded-2xl.border > article p {
+    font-size: 13px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+  }
+  main.converge-app-page:has(.converge-topic-hero) form.mt-8.rounded-2xl {
+    padding: 15px !important;
+  }
+  main.converge-app-page:has(.converge-topic-hero) form.mt-8.rounded-2xl textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+  main.converge-app-page:has(.converge-topic-hero) form.mt-8.rounded-2xl button[type="submit"] {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Message lists and the active chat use the full phone width rather than desktop gutters. */
+  .converge-app-page > div.mx-auto.flex {
+    min-height: calc(100dvh - 64px) !important;
+    padding-top: 13px !important;
+    padding-right: 12px !important;
+    padding-bottom: 12px !important;
+    padding-left: 12px !important;
+  }
+  .converge-app-page > div.mx-auto.flex > section[class*="min-h-[65vh]"] {
+    min-height: calc(100dvh - 188px);
+    border-radius: 15px !important;
+  }
+  .converge-app-page > div.mx-auto.flex > section > div.flex-1.space-y-4.overflow-y-auto {
+    min-height: 220px;
+    padding: 15px 11px !important;
+    overscroll-behavior-y: contain;
+  }
+  .converge-app-page > div.mx-auto.flex > section form.border-t {
+    padding: 10px !important;
+  }
+
+  /* A little less panel padding makes the content feel designed for touch, not scaled down. */
+  .converge-app-page form[class*="rounded-xl"][class*="border"],
+  .converge-app-page form[class*="rounded-2xl"][class*="border"] {
+    padding: 15px !important;
+  }
+  .converge-app-page .flex.gap-3 > button,
+  .converge-app-page .flex.gap-4 > button {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .converge-brand-link { width: 132px !important; }
+  .converge-account-trigger { min-width: 39px; min-height: 39px; }
+  .converge-mobile-dock { left: 7px; right: 7px; gap: 1px; }
+  .converge-mobile-dock__item { font-size: 8.5px; }
+  .converge-mobile-dock__item svg { width: 18px; height: 18px; }
+  .converge-app-page > div > .grid.gap-7.pt-6 > aside:first-child > section:first-child > div.mt-3.space-y-1 > a {
+    min-width: 138px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .converge-mobile-dock__item,
+  header:has(+ .converge-mobile-dock) > div.border-t {
+    transition: none !important;
+  }
+}
