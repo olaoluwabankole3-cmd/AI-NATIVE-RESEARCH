@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 
@@ -33,6 +33,7 @@ function lineList(value: string) { return value.split(/[\n,]+/).map((item) => it
 
 export default function CommunitySettingsPage() {
   const params = useParams<{ slug: string }>();
+  const router = useRouter();
   const supabase = createClient();
   const [community, setCommunity] = useState<Community | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -49,6 +50,8 @@ export default function CommunitySettingsPage() {
   const [savingAgent, setSavingAgent] = useState(false);
   const [agentFormOpen, setAgentFormOpen] = useState(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deletingCommunity, setDeletingCommunity] = useState(false);
 
   async function loadSettings() {
     setLoading(true);
@@ -159,6 +162,30 @@ export default function CommunitySettingsPage() {
     setError(false);
   }
 
+  async function handleDeleteCommunity(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!community || !userId || deletingCommunity || deleteConfirmation.trim() !== community.name) return;
+
+    setDeletingCommunity(true);
+    setMessage("");
+    setError(false);
+    const { error: deleteError, count } = await supabase
+      .from("communities")
+      .delete({ count: "exact" })
+      .eq("id", community.id)
+      .eq("created_by", userId);
+
+    if (deleteError || !count) {
+      setMessage(deleteError?.message || "The community could not be deleted. Confirm that you are its owner and try again.");
+      setError(true);
+      setDeletingCommunity(false);
+      return;
+    }
+
+    router.replace("/communities");
+    router.refresh();
+  }
+
   const isOwner = Boolean(community && userId && community.created_by === userId);
 
   if (loading) return <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]"><SiteHeader /><div className="mx-auto max-w-5xl px-5 py-14 text-sm text-white/45">Loading community settings…</div></main>;
@@ -218,6 +245,16 @@ export default function CommunitySettingsPage() {
           </form>}
 
           {agents.length === 0 ? <div className="mt-5 rounded-lg border border-dashed border-white/10 px-4 py-7 text-sm text-white/35">No community-specific agents yet. Create one to give this community its own AI specialist.</div> : <div className="mt-5 divide-y divide-white/[0.08]">{agents.map((agent) => <article key={agent.id} className="flex flex-col justify-between gap-4 py-5 sm:flex-row sm:items-start"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold">{agent.name}</h3><span className="text-xs text-white/35">{agent.handle}</span><span className={"rounded-full px-2 py-1 text-[10px] " + (agent.is_active && agent.status === "AVAILABLE" ? "bg-emerald-200/10 text-emerald-100" : "bg-white/5 text-white/40")}>{agent.is_active && agent.status === "AVAILABLE" ? "Available" : "Paused"}</span></div><p className="mt-2 text-sm text-white/50">{agent.role}</p><p className="mt-1 text-xs leading-5 text-white/35">{agent.description}</p><p className="mt-2 text-xs text-white/35">{agent.specialties.join(" · ")}</p></div><div className="flex shrink-0 gap-2"><button type="button" onClick={() => startEditAgent(agent)} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/65 hover:text-white">Edit prompt / profile</button>{agent.is_active && <button type="button" onClick={() => void pauseAgent(agent)} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/45 hover:border-amber-200/20 hover:text-amber-100">Pause</button>}</div></article>)}</div>}
+        </section>
+
+        <section id="delete-community" className="mt-7 rounded-xl border border-red-300/20 bg-red-300/[0.025] p-5 sm:p-7">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-red-200/75">04 · Danger zone</p>
+          <h2 className="mt-2 text-xl font-semibold text-white/90">Delete this community</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">This permanently deletes the community, all its topics, replies, AI participation history, saved research artifacts, custom AI agents, memberships and join requests. Standalone activity posts associated with this space may remain but will be unlinked from it. This cannot be undone.</p>
+          <form onSubmit={handleDeleteCommunity} className="mt-5 max-w-xl border-t border-red-200/10 pt-5">
+            <label className="block"><span className="mb-2 block text-xs font-medium text-white/65">Type <strong className="text-white">{community.name}</strong> to confirm</span><input required value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} autoComplete="off" spellCheck={false} placeholder={community.name} className="w-full rounded-lg border border-red-200/15 bg-[#0b1110] px-3.5 py-3 text-sm text-white outline-none placeholder:text-white/20 focus:border-red-200/40" /></label>
+            <button type="submit" disabled={deletingCommunity || deleteConfirmation.trim() !== community.name} className="mt-4 rounded-lg bg-red-300 px-4 py-2.5 text-xs font-bold text-[#230f0d] transition hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-40">{deletingCommunity ? "Deleting community…" : "Permanently delete community"}</button>
+          </form>
         </section>
       </div>
     </main>
