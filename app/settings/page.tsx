@@ -133,7 +133,7 @@ export default function SettingsPage() {
               <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                 <div className="max-w-2xl">
                   <h2 className="text-lg font-semibold text-white/90">Delete your Converge account</h2>
-                  <p className="mt-2 text-xs leading-6 text-white/45">This permanently removes your sign-in and profile, your communities, topics you created, community AI agents you created, and associated discussion/research history. Your activity in other users' spaces may be affected.</p>
+                  <p className="mt-2 text-xs leading-6 text-white/45">This permanently removes your sign-in and profile, communities you own, topics you created (including in other communities), their replies and research artifacts, custom AI agents you created, direct conversations/messages, activity posts/comments/likes, notifications, follows, and connection requests. Other people's activity posts that referenced your deleted topics may remain without the topic link.</p>
                   <p className="mt-2 text-xs leading-6 text-white/45">Organisations you own will be transferred to another active owner/administrator when possible. An organisation without another active owner/administrator will be deleted. This action cannot be undone.</p>
                 </div>
                 {!deleteAccountOpen && <button type="button" onClick={() => { setDeleteAccountOpen(true); setDeleteError(""); }} className="shrink-0 rounded-lg border border-red-300/25 px-4 py-2.5 text-xs font-semibold text-red-100 transition hover:bg-red-300/[0.07]">Delete account</button>}
