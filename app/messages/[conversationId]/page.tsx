@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 
-type ConversationRow = { id: string; user_low_id: string; user_high_id: string };
+type ConversationRow = { id: string; user_low_id: string; user_high_id: string; created_by: string; request_status: "PENDING" | "ACCEPTED" | "IGNORED" };
 type MemberProfile = {
   id: string;
   username: string | null;
@@ -40,6 +40,10 @@ export default function DirectConversationPage() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [member, setMember] = useState<MemberProfile | null>(null);
+  const [requestStatus, setRequestStatus] = useState<ConversationRow["request_status"]>("ACCEPTED");
+  const [requestCreatorId, setRequestCreatorId] = useState<string | null>(null);
+  const [blockedByMe, setBlockedByMe] = useState(false);
+  const [moderatingRequest, setModeratingRequest] = useState(false);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
@@ -56,7 +60,7 @@ export default function DirectConversationPage() {
 
     const { data: conversationData, error: conversationError } = await supabase
       .from("direct_conversations")
-      .select("id, user_low_id, user_high_id")
+      .select("id, user_low_id, user_high_id, created_by, request_status")
       .eq("id", conversationId)
       .maybeSingle();
 
@@ -68,14 +72,18 @@ export default function DirectConversationPage() {
 
     const conversation = conversationData as ConversationRow;
     const otherId = conversation.user_low_id === currentUserId ? conversation.user_high_id : conversation.user_low_id;
-    const [{ data: profileData }, { data: messageData, error: messageError }] = await Promise.all([
+    const [{ data: profileData }, { data: messageData, error: messageError }, { data: blockData }] = await Promise.all([
       supabase.from("profiles").select("id, username, display_name, avatar_url, headline").eq("id", otherId).maybeSingle(),
       supabase.from("direct_messages")
         .select("id, conversation_id, sender_id, body, created_at")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true })
         .limit(300),
+      supabase.from("user_blocks").select("blocked_id").eq("blocker_id", currentUserId).eq("blocked_id", otherId).maybeSingle(),
     ]);
+    setRequestStatus(conversation.request_status);
+    setRequestCreatorId(conversation.created_by);
+    setBlockedByMe(Boolean(blockData));
 
     if (messageError) setPageError(messageError.message);
     else setPageError("");
@@ -141,6 +149,45 @@ export default function DirectConversationPage() {
     setSending(false);
   }
 
+  const isIncomingRequest = requestStatus === "PENDING" && requestCreatorId !== viewerId;
+  const isOutgoingRequest = requestStatus === "PENDING" && requestCreatorId === viewerId;
+  const canSend = !blockedByMe && requestStatus === "ACCEPTED" || (!blockedByMe && isOutgoingRequest && messages.length === 0);
+
+  async function respondToMessageRequest(action: "accept" | "ignore" | "block") {
+    if (!viewerId || !member || moderatingRequest) return;
+    setModeratingRequest(true);
+    setPageError("");
+    if (action === "block") {
+      const { error } = await supabase.rpc("block_user", { p_blocked_user_id: member.id });
+      if (error) setPageError(error.message);
+      else router.replace("/messages");
+    } else {
+      const { error } = await supabase.rpc("respond_direct_message_request", {
+        p_conversation_id: conversationId,
+        p_action: action,
+      });
+      if (error) setPageError(error.message);
+      else if (action === "ignore") router.replace("/messages");
+      else await loadThread(viewerId);
+    }
+    setModeratingRequest(false);
+  }
+
+  async function toggleBlock() {
+    if (!viewerId || !member || moderatingRequest) return;
+    setModeratingRequest(true);
+    setPageError("");
+    const { error } = blockedByMe
+      ? await supabase.rpc("unblock_user", { p_blocked_user_id: member.id })
+      : await supabase.rpc("block_user", { p_blocked_user_id: member.id });
+    if (error) setPageError(error.message);
+    else if (blockedByMe) {
+      setBlockedByMe(false);
+      await loadThread(viewerId);
+    } else router.replace("/messages");
+    setModeratingRequest(false);
+  }
+
   return (
     <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
@@ -153,6 +200,7 @@ export default function DirectConversationPage() {
             {member?.headline && <p className="truncate text-[11px] text-white/40">{member.headline}</p>}
           </div>
           {member && <Link href={`/u/${member.username || member.id}`} className="hidden rounded-full border border-white/12 px-3.5 py-2 text-[11px] font-semibold text-white/60 hover:border-emerald-200/25 hover:text-white sm:inline-flex">View profile ↗</Link>}
+          {member && <button type="button" onClick={() => void toggleBlock()} disabled={moderatingRequest} className="rounded-full border border-red-300/20 px-3 py-2 text-[10px] font-semibold text-red-100/80 transition hover:bg-red-300/[0.06] disabled:opacity-40">{moderatingRequest ? "…" : blockedByMe ? "Unblock" : "Block"}</button>}
         </div>
 
         <section className="flex min-h-[65vh] flex-1 flex-col overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/75">
@@ -169,8 +217,20 @@ export default function DirectConversationPage() {
             <>
               <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3 sm:px-6">
                 <div className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/10 bg-emerald-200/[0.08] text-xs font-bold text-emerald-100">{member?.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member?.display_name ?? "Converge")}</div>
-                <p className="text-xs text-white/50">Messages are private to the two members in this conversation.</p>
+                <p className="text-xs text-white/50">Private conversation · messages are visible only to these two members.</p>
               </div>
+              {isIncomingRequest && <div className="border-b border-amber-200/15 bg-amber-200/[0.04] px-4 py-4 sm:px-6">
+                <p className="text-sm font-semibold text-amber-100">Message request</p>
+                <p className="mt-1 text-xs leading-5 text-white/55">{member?.display_name ?? "This member"} wants to start a private conversation. Accept to allow replies, ignore to dismiss the request, or block them to stop future contact.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" disabled={moderatingRequest || blockedByMe} onClick={() => void respondToMessageRequest("accept")} className="rounded-full bg-emerald-200 px-4 py-2 text-xs font-bold text-[#0b1710] disabled:opacity-40">{moderatingRequest ? "Working…" : "Accept request"}</button>
+                  <button type="button" disabled={moderatingRequest} onClick={() => void respondToMessageRequest("ignore")} className="rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-white/70 disabled:opacity-40">Ignore</button>
+                  <button type="button" disabled={moderatingRequest} onClick={() => void respondToMessageRequest("block")} className="rounded-full border border-red-300/25 px-4 py-2 text-xs font-semibold text-red-100 disabled:opacity-40">Block person</button>
+                </div>
+              </div>}
+              {isOutgoingRequest && <div className="border-b border-amber-200/15 bg-amber-200/[0.035] px-4 py-3 text-xs leading-5 text-amber-100/75 sm:px-6">{messages.length ? "Your message request has been sent. You can send no further messages until it is accepted." : "This member is not connected with you yet. Send one introductory message; they can accept or ignore the request."}</div>}
+              {requestStatus === "IGNORED" && requestCreatorId === viewerId && <div className="border-b border-white/10 px-4 py-3 text-xs text-white/50 sm:px-6">This message request was ignored. You can no longer send messages in this conversation.</div>}
+              {blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">You have blocked this person. Unblock them above to allow contact again.</div>}
               <div className="flex-1 space-y-4 overflow-y-auto px-3 py-5 sm:px-6 sm:py-7">
                 {messages.length ? messages.map((message) => {
                   const own = message.sender_id === viewerId;
@@ -192,14 +252,14 @@ export default function DirectConversationPage() {
                 <div ref={bottomRef} />
               </div>
               {pageError && <p role="alert" className="mx-4 mb-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-3 py-2 text-xs leading-5 text-red-200 sm:mx-6">{pageError}</p>}
-              <form onSubmit={sendMessage} className="border-t border-white/[0.08] p-3 sm:p-5">
+              {canSend ? <form onSubmit={sendMessage} className="border-t border-white/[0.08] p-3 sm:p-5">
                 <label htmlFor="message-body" className="sr-only">Write a message</label>
                 <div className="flex items-end gap-2 rounded-2xl border border-white/[0.1] bg-[#0b1110] p-2 focus-within:border-emerald-200/25">
-                  <textarea id="message-body" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={5000} rows={2} placeholder="Write a message…" className="max-h-36 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-sm leading-6 text-white outline-none placeholder:text-white/25" />
+                  <textarea id="message-body" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={5000} rows={2} placeholder={isOutgoingRequest ? "Write your introductory message…" : "Write a message…"} className="max-h-36 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-sm leading-6 text-white outline-none placeholder:text-white/25" />
                   <button type="submit" disabled={!draft.trim() || sending || draft.trim().length > 5000} className="mb-0.5 inline-flex shrink-0 items-center gap-2 rounded-xl bg-emerald-200 px-4 py-3 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40">{sending ? "Sending…" : "Send ↗"}</button>
                 </div>
-                <p className="mt-2 px-1 text-[9px] text-white/30">Private conversation · 5,000 characters max</p>
-              </form>
+                <p className="mt-2 px-1 text-[9px] text-white/30">{isOutgoingRequest ? "One introductory message · replies unlock when the request is accepted" : "Private conversation · 5,000 characters max"}</p>
+              </form> : <div className="border-t border-white/[0.08] px-4 py-5 text-center text-xs leading-5 text-white/40">{blockedByMe ? "You have blocked this person." : isIncomingRequest ? "Accept the request to reply." : "Messaging is not available for this conversation."}</div>}
             </>
           )}
         </section>
