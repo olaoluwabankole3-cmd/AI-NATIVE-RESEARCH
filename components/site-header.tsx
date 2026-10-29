@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 
 type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "workspaces" | "more" | "profile" | "settings" | "signout" | "help";
@@ -151,6 +152,20 @@ export function SiteHeader() {
   }, [accountOpen]);
 
   useEffect(() => {
+    if (!mobileOpen || !authReady || !userEmail) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileOpen(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileOpen, authReady, userEmail]);
+
+  useEffect(() => {
     let active = true;
     supabase.auth.getUser().then(({ data }) => {
       if (!active) return;
@@ -241,6 +256,71 @@ export function SiteHeader() {
     router.push("/");
     router.refresh();
   }
+
+  const mobileMoreOverlay = mobileOpen && authReady && userEmail && typeof document !== "undefined"
+    ? createPortal(
+        <>
+          <button
+            type="button"
+            className="converge-mobile-more-backdrop"
+            aria-label="Close More menu"
+            onClick={() => setMobileOpen(false)}
+          />
+          <section
+            id="converge-mobile-more-panel"
+            className="converge-mobile-more-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="converge-mobile-more-title"
+          >
+            <div className="converge-mobile-more-panel__header">
+              <div>
+                <p>CONVERGE MENU</p>
+                <h2 id="converge-mobile-more-title">More</h2>
+              </div>
+              <button type="button" className="converge-mobile-more-panel__close" aria-label="Close More menu" onClick={() => setMobileOpen(false)}>×</button>
+            </div>
+            <p className="converge-mobile-more-panel__label">Explore</p>
+            <nav className="converge-mobile-more-grid" aria-label="More destinations">
+              {moreLinks.map((link) => {
+                const active = pathname === link.href || pathname.startsWith(link.href + "/");
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={["converge-mobile-more-link", active ? "is-active" : ""].join(" ")}
+                  >
+                    <TopNavGlyph name={link.icon} />
+                    <span>{link.label}</span>
+                    <span className="converge-mobile-more-link__arrow" aria-hidden="true">↗</span>
+                  </Link>
+                );
+              })}
+            </nav>
+            <p className="converge-mobile-more-panel__label">Your account</p>
+            <nav className="converge-mobile-more-account" aria-label="Account links">
+              <Link href="/profile" onClick={() => setMobileOpen(false)} className={pathname === "/profile" ? "is-active" : ""}>
+                <TopNavGlyph name="profile" /><span>My profile</span><span className="converge-mobile-more-link__arrow" aria-hidden="true">↗</span>
+              </Link>
+              <Link href="/settings" onClick={() => setMobileOpen(false)} className={pathname === "/settings" ? "is-active" : ""}>
+                <TopNavGlyph name="settings" /><span>Settings</span><span className="converge-mobile-more-link__arrow" aria-hidden="true">↗</span>
+              </Link>
+              <Link href="/notifications" onClick={() => setMobileOpen(false)} className={pathname === "/notifications" ? "is-active" : ""}>
+                <TopNavGlyph name="notifications" /><span>Notifications</span>{unreadNotifications > 0 && <span className="converge-mobile-more-count">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
+              </Link>
+            </nav>
+            <div className="converge-mobile-more-panel__footer">
+              <span title={userEmail}>{userEmail}</span>
+              <button type="button" onClick={() => { setMobileOpen(false); void handleSignOut(); }} disabled={signingOut}>
+                <TopNavGlyph name="signout" /><span>{signingOut ? "Signing out…" : "Sign out"}</span>
+              </button>
+            </div>
+          </section>
+        </>,
+        document.body,
+      )
+    : null;
 
   return (
     <>
@@ -362,7 +442,7 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {mobileOpen && (
+      {mobileOpen && !userEmail && (
         <div className="border-t border-white/[0.09] bg-[#0b1110] px-5 pb-24 pt-3 lg:hidden">
           <nav aria-label="Mobile navigation" className="grid gap-1">
             {links.map((link) => {
@@ -388,6 +468,7 @@ export function SiteHeader() {
       )}
 
     </header>
+      {mobileMoreOverlay}
       {authReady && userEmail && (
         <nav className="converge-mobile-dock" aria-label="Mobile primary navigation">
           {mobileLinksPrimary.map((item) => {
@@ -399,7 +480,7 @@ export function SiteHeader() {
               </Link>
             );
           })}
-          <button type="button" aria-expanded={mobileOpen} aria-label={mobileOpen ? "Close more navigation" : "Open more navigation"} onClick={() => setMobileOpen((open) => !open)} className={["converge-mobile-dock__item", mobileOpen || !mobileLinksPrimary.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) ? "is-active" : ""].join(" ")}>
+          <button type="button" aria-haspopup="dialog" aria-controls="converge-mobile-more-panel" aria-expanded={Boolean(mobileOpen && userEmail)} aria-label={mobileOpen && userEmail ? "Close More menu" : "Open More menu"} onClick={() => setMobileOpen((open) => !open)} className={["converge-mobile-dock__item", mobileOpen || !mobileLinksPrimary.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) ? "is-active" : ""].join(" ")}>
             <MobileGlyph name="more" />
             <span>More</span>
           </button>
