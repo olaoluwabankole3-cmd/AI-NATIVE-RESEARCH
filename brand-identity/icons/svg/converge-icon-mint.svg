@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-labelledby="title desc">
+<title id="title">Converge icon on pale mint</title>
+<desc id="desc">A bold capital C with three lines converging behind its left edge.</desc>
+<rect x="12" y="12" width="488" height="488" rx="118" fill="#E6F5EC"/>
+<g transform="translate(0 0)" aria-label="C with three converging rays">
+<g fill="none" stroke="#137C79" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 65 164 L 240 256"/>
+<path d="M 52 256 L 240 256"/>
+<path d="M 65 348 L 240 256"/>
+</g>
+<path d="M 383 185 C 361 164 335 153 304 153 C 241 153 200 199 200 256 C 200 313 241 359 304 359 C 335 359 361 348 383 327 L 348 293 C 335 305 320 314 304 314 C 274 314 252 290 252 256 C 252 222 274 198 304 198 C 320 198 335 207 348 219 Z" fill="#101A16"/>
+</g>
+</svg>
