@@ -601,7 +601,7 @@ export default function TopicPage() {
               <span className="text-xs text-white/35">
                 {formatDate(topic.created_at)}
               </span>
-              {(community.created_by === currentUserId || currentCommunityRole === "MODERATOR" || (isCommunityMember && topic.created_by === currentUserId)) && (
+              {(community.created_by === currentUserId || currentCommunityRole === "OWNER" || currentCommunityRole === "MODERATOR" || (isCommunityMember && topic.created_by === currentUserId)) && (
                 <button type="button" onClick={() => void handleDeleteTopic()} disabled={deletingTopic} className="ml-auto rounded-lg border border-red-300/20 px-3 py-2 text-xs font-semibold text-red-200/80 transition hover:bg-red-300/[0.06] hover:text-red-100 disabled:opacity-40">
                   {deletingTopic ? "Deleting…" : "Delete topic"}
                 </button>
