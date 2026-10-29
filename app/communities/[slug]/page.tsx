@@ -15,8 +15,9 @@ type Community = {
   created_by: string;
   members_can_create_topics: boolean;
 };
-type Topic = { id: string; title: string; body: string; type: "DISCUSSION" | "RESEARCH"; created_at: string };
+type Topic = { id: string; title: string; body: string; type: "DISCUSSION" | "RESEARCH"; created_at: string; created_by: string };
 type TopicFilter = "ALL" | "RESEARCH" | "DISCUSSION";
+type CommunityRole = "OWNER" | "MODERATOR" | "MEMBER";
 type JoinRequest = { id: string; status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"; message?: string | null };
 
 function relativeDate(value: string) {
@@ -39,6 +40,8 @@ export default function CommunityPage() {
   const [memberCount, setMemberCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [isMember, setIsMember] = useState(false);
+  const [memberRole, setMemberRole] = useState<CommunityRole | null>(null);
+  const [deletingTopicId, setDeletingTopicId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -68,6 +71,8 @@ export default function CommunityPage() {
     setTopics([]);
     setMemberCount(0);
     setIsMember(false);
+    setMemberRole(null);
+    setDeletingTopicId(null);
     setJoinRequest(null);
     setPendingRequestCount(0);
     const { data: { user } } = await supabase.auth.getUser();
@@ -93,7 +98,7 @@ export default function CommunityPage() {
     }
 
     const [{ data: membership, error: membershipError }, requestResponse] = await Promise.all([
-      supabase.from("community_members").select("user_id")
+      supabase.from("community_members").select("user_id, role")
         .eq("community_id", communityData.id).eq("user_id", user.id).maybeSingle(),
       fetch("/api/communities/" + communityData.id + "/requests", { cache: "no-store" }),
     ]);
@@ -109,6 +114,7 @@ export default function CommunityPage() {
     const accessCommunity = communityData as Community;
     setCommunity(accessCommunity);
     setIsMember(member);
+    setMemberRole(owner ? "OWNER" : (membership?.role as CommunityRole | undefined) ?? null);
 
     const requestPayload = await requestResponse.json().catch(() => null);
     if (requestResponse.ok) {
@@ -120,7 +126,7 @@ export default function CommunityPage() {
     setTopics([]);
     if (communityData.visibility === "PUBLIC" || member) {
       const [{ data: topicData, error: topicError }, memberResult] = await Promise.all([
-        supabase.from("topics").select("id, title, body, type, created_at")
+        supabase.from("topics").select("id, title, body, type, created_at, created_by")
           .eq("community_id", communityData.id).order("created_at", { ascending: false }),
         (communityData.visibility === "PUBLIC" || owner)
           ? supabase.from("community_members").select("user_id", { count: "exact", head: true }).eq("community_id", communityData.id)
@@ -147,6 +153,30 @@ export default function CommunityPage() {
       return matchesType && matchesSearch;
     });
   }, [topics, filter, search]);
+
+  async function handleDeleteTopic(topic: Topic) {
+    if (!community || !userId || deletingTopicId) return;
+    if (!window.confirm(`Delete “${topic.title}”? This permanently removes the topic, its replies, AI participation history, and saved research artifacts.`)) return;
+
+    setDeletingTopicId(topic.id);
+    setMessage("");
+    const { error: deleteError, count } = await supabase
+      .from("topics")
+      .delete({ count: "exact" })
+      .eq("id", topic.id);
+
+    if (deleteError || !count) {
+      setMessage(deleteError?.message || "You do not have permission to delete this topic, or it no longer exists.");
+      setMessageTone("error");
+      setDeletingTopicId(null);
+      return;
+    }
+
+    setTopics((current) => current.filter((item) => item.id !== topic.id));
+    setMessage("Topic deleted.");
+    setMessageTone("success");
+    setDeletingTopicId(null);
+  }
 
   async function handleJoinPublic() {
     if (!community || !userId || joining || community.visibility !== "PUBLIC") return;
@@ -315,7 +345,7 @@ export default function CommunityPage() {
             <label className="mt-4 block"><span className="sr-only">Search topics in this community</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search topics in this community…" className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3.5 py-3 text-sm outline-none placeholder:text-white/25 focus:border-emerald-200/40" /></label>
             {visibleTopics.length === 0 ? (
               <div className="my-5 rounded-xl border border-dashed border-white/15 px-5 py-12 text-center"><span className="text-2xl text-emerald-200">↗</span><h3 className="mt-3 text-base font-semibold">{search ? "No matching topics" : filter === "RESEARCH" ? "No research topics yet" : filter === "DISCUSSION" ? "No discussions yet" : "Start the first conversation"}</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/40">{search ? "Try another search or clear the current query." : canCreateTopic ? "A strong topic gives the community a specific question or problem to work through together." : "The community owner controls who can open new topics."}</p>{search ? <button type="button" onClick={() => setSearch("")} className="mt-4 text-xs font-semibold text-emerald-200">Clear search</button> : canCreateTopic ? <button type="button" onClick={() => setShowForm(true)} className="mt-4 text-xs font-semibold text-emerald-200">Create a topic →</button> : null}</div>
-            ) : <div className="divide-y divide-white/[0.085]">{visibleTopics.map((topic) => <article key={topic.id} className="group py-5 sm:py-6"><div className="flex items-start gap-3 sm:gap-4"><span className={"mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border text-xs font-bold " + (topic.type === "RESEARCH" ? "border-sky-300/20 bg-sky-300/[0.07] text-sky-200" : "border-emerald-200/20 bg-emerald-200/[0.06] text-emerald-200")}>{topic.type === "RESEARCH" ? "R" : "D"}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]"><span className={topic.type === "RESEARCH" ? "text-sky-200/80" : "text-emerald-200/80"}>{topic.type === "RESEARCH" ? "Research" : "Discussion"}</span><span className="text-white/20">·</span><span className="text-white/35">{relativeDate(topic.created_at)}</span></div><Link href={"/topics/" + topic.id} className="mt-2 block text-base font-semibold leading-6 tracking-[-0.015em] text-white/90 transition group-hover:text-emerald-100 sm:text-lg">{topic.title}</Link><p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-white/45">{topic.body}</p><Link href={"/topics/" + topic.id} className="mt-3 inline-flex text-xs font-medium text-white/35 transition hover:text-emerald-200">Open discussion <span className="ml-1">↗</span></Link></div></div></article>)}</div>}
+            ) : <div className="divide-y divide-white/[0.085]">{visibleTopics.map((topic) => <article key={topic.id} className="group py-5 sm:py-6"><div className="flex items-start gap-3 sm:gap-4"><span className={"mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border text-xs font-bold " + (topic.type === "RESEARCH" ? "border-sky-300/20 bg-sky-300/[0.07] text-sky-200" : "border-emerald-200/20 bg-emerald-200/[0.06] text-emerald-200")}>{topic.type === "RESEARCH" ? "R" : "D"}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]"><span className={topic.type === "RESEARCH" ? "text-sky-200/80" : "text-emerald-200/80"}>{topic.type === "RESEARCH" ? "Research" : "Discussion"}</span><span className="text-white/20">·</span><span className="text-white/35">{relativeDate(topic.created_at)}</span></div><Link href={"/topics/" + topic.id} className="mt-2 block text-base font-semibold leading-6 tracking-[-0.015em] text-white/90 transition group-hover:text-emerald-100 sm:text-lg">{topic.title}</Link><p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-white/45">{topic.body}</p><div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2"><Link href={"/topics/" + topic.id} className="inline-flex text-xs font-medium text-white/35 transition hover:text-emerald-200">Open discussion <span className="ml-1">↗</span></Link>{(isOwner || topic.created_by === userId || memberRole === "MODERATOR") && <button type="button" disabled={deletingTopicId === topic.id} onClick={() => void handleDeleteTopic(topic)} className="inline-flex text-xs font-medium text-red-300/70 transition hover:text-red-200 disabled:opacity-40">{deletingTopicId === topic.id ? "Deleting…" : "Delete topic"}</button>}</div></div></div></article>)}</div>}
           </section>
           <aside className="space-y-4">
             <section className="rounded-xl border border-white/[0.09] bg-white/[0.018] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">About this space</p><h2 className="mt-3 text-base font-semibold">{community.name}</h2><p className="mt-2 text-sm leading-6 text-white/45">{community.description || "A shared space for thoughtful discussion and research."}</p><div className="mt-4 border-t border-white/[0.08] pt-4"><div className="flex items-center justify-between py-1.5 text-xs"><span className="text-white/40">Access</span><span className="font-medium text-white/75">{community.visibility === "PUBLIC" ? "Open to join" : "Private"}</span></div>{(community.visibility === "PUBLIC" || isOwner) && <div className="flex items-center justify-between py-1.5 text-xs"><span className="text-white/40">Members</span><span className="font-medium text-white/75">{memberCount}</span></div>}<div className="flex items-center justify-between py-1.5 text-xs"><span className="text-white/40">Topics</span><span className="font-medium text-white/75">{topics.length}</span></div><div className="flex items-center justify-between py-1.5 text-xs"><span className="text-white/40">Topic creation</span><span className="font-medium text-white/75">{community.members_can_create_topics ? "Members allowed" : "Owner only"}</span></div></div></section>
