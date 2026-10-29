@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import type { Agent } from "@/lib/agents";
@@ -32,6 +32,8 @@ type Profile = {
   display_name: string | null;
   avatar_url: string | null;
 };
+
+type CommunityRole = "OWNER" | "MODERATOR" | "MEMBER";
 
 type TopicParticipant = {
   id: string;
@@ -74,6 +76,7 @@ function initials(profile?: Profile) {
 
 export default function TopicPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const supabase = createClient();
   const replyRequestRef = useRef<{ body: string; id: string } | null>(null);
 
@@ -81,6 +84,8 @@ export default function TopicPage() {
   const [community, setCommunity] = useState<Community | null>(null);
   const [isCommunityMember, setIsCommunityMember] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentCommunityRole, setCurrentCommunityRole] = useState<CommunityRole | null>(null);
+  const [deletingTopic, setDeletingTopic] = useState(false);
   const [posts, setPosts] = useState<PostView[]>([]);
   const [currentParticipantId, setCurrentParticipantId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
@@ -108,6 +113,7 @@ export default function TopicPage() {
       setCurrentParticipantId(null);
       setTopicParticipants([]);
       setIsCommunityMember(false);
+      setCurrentCommunityRole(null);
     }
 
     const {
@@ -177,7 +183,7 @@ export default function TopicPage() {
 
     const { data: membershipRow, error: membershipError } = await supabase
       .from("community_members")
-      .select("user_id")
+      .select("user_id, role")
       .eq("community_id", communityData.id)
       .eq("user_id", user.id)
       .maybeSingle();
@@ -192,6 +198,7 @@ export default function TopicPage() {
     setCommunity(communityData as Community);
     setIsCommunityMember(isMember);
     setCurrentUserId(user.id);
+    setCurrentCommunityRole(communityData.created_by === user.id ? "OWNER" : (membershipRow?.role as CommunityRole | undefined) ?? null);
 
     let participants = participantData ?? [];
     let ownParticipant = isMember ? participants.find(
@@ -315,6 +322,26 @@ export default function TopicPage() {
       void supabase.removeChannel(channel);
     };
   }, [params.id]);
+
+  async function handleDeleteTopic() {
+    if (!topic || !community || deletingTopic) return;
+    if (!window.confirm(`Delete “${topic.title}”? This permanently removes its replies, AI participation history, and saved research artifacts.`)) return;
+
+    setDeletingTopic(true);
+    const { error: deleteError, count } = await supabase
+      .from("topics")
+      .delete({ count: "exact" })
+      .eq("id", topic.id);
+
+    if (deleteError || !count) {
+      showMessage(deleteError?.message || "You do not have permission to delete this topic, or it no longer exists.", "error");
+      setDeletingTopic(false);
+      return;
+    }
+
+    router.replace("/communities/" + community.slug);
+    router.refresh();
+  }
 
   async function handleReply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -574,6 +601,11 @@ export default function TopicPage() {
               <span className="text-xs text-white/35">
                 {formatDate(topic.created_at)}
               </span>
+              {(community.created_by === currentUserId || currentCommunityRole === "MODERATOR" || (isCommunityMember && topic.created_by === currentUserId)) && (
+                <button type="button" onClick={() => void handleDeleteTopic()} disabled={deletingTopic} className="ml-auto rounded-lg border border-red-300/20 px-3 py-2 text-xs font-semibold text-red-200/80 transition hover:bg-red-300/[0.06] hover:text-red-100 disabled:opacity-40">
+                  {deletingTopic ? "Deleting…" : "Delete topic"}
+                </button>
+              )}
             </div>
 
             <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">
