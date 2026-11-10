@@ -179,7 +179,7 @@ export default function MessagesInboxPage() {
         {loadError && <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-4 py-3 text-sm leading-6 text-red-200">
            <p>{loadError}</p>
            {viewerId && <button type="button" onClick={() => void loadInbox(viewerId)} className="inline-flex min-h-11 items-center rounded-lg border border-red-200/20 px-4 text-xs font-semibold text-red-100 hover:bg-red-200/[0.06]">Retry inbox</button>}
-         </div>
+         </div>}
 
         {loading ? (
           <div role="status" aria-label="Loading conversations" className="mt-6 grid gap-3">{[0, 1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-white/[0.08] bg-white/[0.02]" />)}</div>
