@@ -39,7 +39,7 @@ Scope: email registration, Google OAuth, session refresh, password recovery, OAu
 - The deletion preparation RPC is restricted to service_role. The endpoint already confirms DELETE plus an exact account email and the authenticated user identity.
 
 ## Open, high-priority deletion consistency issue (not silently changed)
-`POST/DELETE /api/account/delete` performs a privileged `prepare_account_deletion` RPC and only then `auth.admin.deleteUser` via a separate API call. These are **two separate transactions**; if the Auth deletion fails, the user's owned communities/topics/agents may already have been removed. The server warns about partial cleanup but cannot roll back. Changing this safely requires a transaction/failure-recovery design and a disposable full-stack database test. Do **not** force automatic retries against real user content.
+`DELETE /api/account/delete` performs a privileged `prepare_account_deletion` RPC and only then `auth.admin.deleteUser` via a separate API call. These are **two separate transactions**; if the Auth deletion fails, the user's owned communities/topics/agents may already have been removed. The server warns about partial cleanup but cannot roll back. Changing this safely requires a transaction/failure-recovery design and a disposable full-stack database test. Do **not** force automatic retries against real user content.
 
 ## What can be verified without accounts
 - Auth destination and recent-login pure unit tests, including invalid and future timestamps
@@ -58,7 +58,7 @@ Scope: email registration, Google OAuth, session refresh, password recovery, OAu
 7. Fresh sign-in <15 minutes before deletion; old session 403; malicious origin 403; simulated Auth deletion failure with no data loss in an isolated backend.
 
 ## Release boundaries
-- This is a **stacked PR targeting Stage 2 PR #8's branch**, not production `main`.
-- It must not be merged before the Stage 2 base is reviewed and relevant live tests pass.
+- This cumulative **draft PR targets `main` for comprehensive CI**, but includes the unmerged Stage 2 application changes and must not be merged until final functional acceptance.
+- It must not be merged before the Stage 2 code is reviewed and the relevant live email/OAuth/account-management tests pass.
 - Existing production URL, user records, and content are unchanged by this branch.
 - Do not run `supabase db push` or replay historic migrations because the original migration baseline remains unreconciled.
