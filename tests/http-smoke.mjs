@@ -80,4 +80,13 @@ for (const testCase of securedRoutes) {
     testCase.method + " " + testCase.path + " must reject an unauthenticated request");
 }
 
-console.log("Converge HTTP smoke passed: six pages, three callback cases, and seven unauthenticated API denials.");
+// Origin-sensitive destructive actions must reject cross-site requests,
+ // independently of whether the browser has a valid session.
+const crossOriginDelete = await request("/api/account/delete", {
+  method: "DELETE",
+  headers: { "Origin": "https://untrusted.invalid", "Content-Type": "application/json" },
+  body: '{"confirmation":"DELETE","emailConfirmation":"attacker@invalid"}',
+});
+assert.equal(crossOriginDelete.status, 403, "Account deletion must block a cross-site origin");
+
+console.log("Converge HTTP smoke passed: six pages, three callback cases, seven unauthenticated API denials and one cross-site deletion denial.");
