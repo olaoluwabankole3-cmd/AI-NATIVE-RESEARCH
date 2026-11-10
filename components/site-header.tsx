@@ -104,6 +104,7 @@ export function SiteHeader() {
   const [accountOpen, setAccountOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [profileName, setProfileName] = useState("");
@@ -156,8 +157,29 @@ export function SiteHeader() {
     if (!mobileOpen || !authReady || !userEmail) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    const panel = document.getElementById("converge-mobile-more-panel");
+    const focusable = () => Array.from(
+      panel?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [],
+    ).filter((element) => element.getClientRects().length > 0);
+    focusable()[0]?.focus();
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setMobileOpen(false);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMobileOpen(false);
+        mobileMenuTriggerRef.current?.focus();
+      }
+      if (event.key !== "Tab") return;
+      const elements = focusable();
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !panel?.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !panel?.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => {
@@ -493,13 +515,14 @@ export function SiteHeader() {
           {mobileLinksPrimary.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
-              <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={["converge-mobile-dock__item", active ? "is-active" : ""].join(" ")}>
+              <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={() => setMobileOpen(false)} className={["converge-mobile-dock__item", active ? "is-active" : ""].join(" ")}>
                 <MobileGlyph name={item.kind} />
                 <span>{item.label}</span>
+                {item.href === "/notifications" && unreadNotifications > 0 && <span className="converge-mobile-dock__badge" aria-label={`${unreadNotifications} unread notifications`}>{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
               </Link>
             );
           })}
-          <button type="button" aria-haspopup="dialog" aria-controls="converge-mobile-more-panel" aria-expanded={Boolean(mobileOpen && userEmail)} aria-label={mobileOpen && userEmail ? "Close More menu" : "Open More menu"} onClick={() => setMobileOpen((open) => !open)} className={["converge-mobile-dock__item", mobileOpen || !mobileLinksPrimary.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) ? "is-active" : ""].join(" ")}>
+          <button ref={mobileMenuTriggerRef} type="button" aria-haspopup="dialog" aria-controls="converge-mobile-more-panel" aria-expanded={Boolean(mobileOpen && userEmail)} aria-label={mobileOpen && userEmail ? "Close More menu" : "Open More menu"} onClick={() => setMobileOpen((open) => !open)} className={["converge-mobile-dock__item", mobileOpen || !mobileLinksPrimary.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) ? "is-active" : ""].join(" ")}>
             <MobileGlyph name="more" />
             <span>More</span>
           </button>
