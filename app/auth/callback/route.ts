@@ -11,7 +11,9 @@ function signInRedirect(origin: string, destination: string, errorCode?: string)
   const target = new URL(recovery ? "/forgot-password" : "/sign-in", origin);
   if (!recovery) target.searchParams.set("redirect", destination);
   if (errorCode) target.searchParams.set("auth_error", errorCode);
-  return NextResponse.redirect(target);
+  const response = NextResponse.redirect(target);
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
 }
 
 export async function GET(request: NextRequest) {
@@ -19,8 +21,11 @@ export async function GET(request: NextRequest) {
   const destination = safeDestination(url);
   const code = url.searchParams.get("code");
 
+  if (url.searchParams.has("error")) {
+    return signInRedirect(url.origin, destination, "provider");
+  }
   if (!code) {
-    return signInRedirect(url.origin, destination, url.searchParams.has("error") ? "provider" : "callback");
+    return signInRedirect(url.origin, destination, "callback");
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,10 +51,14 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) {
+  // A transient provider failure must never strand the user on a 500 page.
+  try {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) return signInRedirect(url.origin, destination, "callback");
+  } catch {
     return signInRedirect(url.origin, destination, "callback");
   }
 
+  response.headers.set("Cache-Control", "private, no-store");
   return response;
 }
