@@ -141,18 +141,20 @@ export default function DirectConversationPage() {
 
     setSending(true);
     setPageError("");
-    const { error } = await supabase.from("direct_messages").insert({
-      conversation_id: conversationId,
-      sender_id: viewerId,
-      body,
-    });
-    if (error) {
-      setPageError(error.message);
-    } else {
+    try {
+      const { error } = await supabase.from("direct_messages").insert({
+        conversation_id: conversationId,
+        sender_id: viewerId,
+        body,
+      });
+      if (error) throw error;
       setDraft("");
       await loadThread(viewerId);
+    } catch (caught) {
+      setPageError(caught instanceof Error ? caught.message : "Could not send your message. Try again.");
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   }
 
   const isIncomingRequest = requestStatus === "PENDING" && requestCreatorId !== viewerId;
@@ -163,35 +165,46 @@ export default function DirectConversationPage() {
     if (!viewerId || !member || moderatingRequest) return;
     setModeratingRequest(true);
     setPageError("");
-    if (action === "block") {
-      const { error } = await supabase.rpc("block_user", { p_blocked_user_id: member.id });
-      if (error) setPageError(error.message);
-      else router.replace("/messages");
-    } else {
-      const { error } = await supabase.rpc("respond_direct_message_request", {
-        p_conversation_id: conversationId,
-        p_action: action,
-      });
-      if (error) setPageError(error.message);
-      else if (action === "ignore") router.replace("/messages");
-      else await loadThread(viewerId);
+    try {
+      if (action === "block") {
+        const { error } = await supabase.rpc("block_user", { p_blocked_user_id: member.id });
+        if (error) throw error;
+        router.replace("/messages");
+      } else {
+        const { error } = await supabase.rpc("respond_direct_message_request", {
+          p_conversation_id: conversationId,
+          p_action: action,
+        });
+        if (error) throw error;
+        if (action === "ignore") router.replace("/messages");
+        else await loadThread(viewerId);
+      }
+    } catch (caught) {
+      setPageError(caught instanceof Error ? caught.message : "Could not respond to the message request. Try again.");
+    } finally {
+      setModeratingRequest(false);
     }
-    setModeratingRequest(false);
   }
 
   async function toggleBlock() {
     if (!viewerId || !member || moderatingRequest) return;
     setModeratingRequest(true);
     setPageError("");
-    const { error } = blockedByMe
-      ? await supabase.rpc("unblock_user", { p_blocked_user_id: member.id })
-      : await supabase.rpc("block_user", { p_blocked_user_id: member.id });
-    if (error) setPageError(error.message);
-    else if (blockedByMe) {
-      setBlockedByMe(false);
-      await loadThread(viewerId);
-    } else router.replace("/messages");
-    setModeratingRequest(false);
+    try {
+      const { error } = blockedByMe
+        ? await supabase.rpc("unblock_user", { p_blocked_user_id: member.id })
+        : await supabase.rpc("block_user", { p_blocked_user_id: member.id });
+      if (error) throw error;
+      if (blockedByMe) {
+        await loadThread(viewerId);
+      } else {
+        router.replace("/messages");
+      }
+    } catch (caught) {
+      setPageError(caught instanceof Error ? caught.message : "Could not change this block. Try again.");
+    } finally {
+      setModeratingRequest(false);
+    }
   }
 
   return (
