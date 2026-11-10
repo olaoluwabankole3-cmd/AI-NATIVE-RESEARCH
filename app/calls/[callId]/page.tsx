@@ -89,7 +89,7 @@ export default function VoiceCallPage() {
       if (loadError) throw loadError;
       if (!data) throw new Error("This call does not exist or is private.");
       setCall(data as Call);
-      setError("");
+      // Don't erase microphone or WebRTC errors on the next status poll.
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load this call.");
     } finally {
