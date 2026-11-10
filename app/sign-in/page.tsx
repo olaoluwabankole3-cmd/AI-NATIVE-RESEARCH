@@ -4,18 +4,11 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { authDestinationFromSearch } from "@/lib/auth/destination";
 import { WordParticles } from "@/components/word-particles";
 
 function safePostSignInDestination(): string {
-  const requested = new URLSearchParams(window.location.search).get("redirect");
-  if (!requested || !requested.startsWith("/") || requested.startsWith("//")) return "/communities";
-  try {
-    const destination = new URL(requested, window.location.origin);
-    if (destination.origin !== window.location.origin) return "/communities";
-    return `${destination.pathname}${destination.search}${destination.hash}`;
-  } catch {
-    return "/communities";
-  }
+  return authDestinationFromSearch(window.location.search, window.location.origin);
 }
 
 export default function SignInPage() {
@@ -39,16 +32,23 @@ export default function SignInPage() {
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setMessage(error.message);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+      if (!data.session || !data.user) {
+        setMessage("Sign-in did not complete. Please try again.");
+        return;
+      }
+      router.replace(safePostSignInDestination());
+      router.refresh();
+    } catch {
+      setMessage("We could not contact authentication. Check your connection and try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push(safePostSignInDestination());
-    router.refresh();
   }
 
   async function continueWithGoogle() {
@@ -57,16 +57,18 @@ export default function SignInPage() {
     const destination = safePostSignInDestination();
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`;
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo,
-        queryParams: { prompt: "select_account" },
-      },
-    });
-
-    if (error) {
-      setMessage(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: { prompt: "select_account" },
+        },
+      });
+      if (error) setMessage(error.message);
+    } catch {
+      setMessage("Google sign-in could not start. Check your connection and try again.");
+    } finally {
       setLoading(false);
     }
   }
@@ -160,6 +162,8 @@ export default function SignInPage() {
                   </span>
                 </label>
 
+                <div className="text-right"><Link href="/forgot-password" className="text-[12px] font-semibold text-[#a4edc1] transition hover:text-white">Forgot password?</Link></div>
+
                 {message && <p role="alert" className="rounded-[12px] border border-red-300/20 bg-red-300/[0.06] px-4 py-3 text-[12px] leading-5 text-red-200">{message}</p>}
 
                 <button type="submit" disabled={loading} className="group flex h-[53px] w-full items-center justify-center gap-3 rounded-full bg-[#a4edc1] px-5 text-[13px] font-extrabold text-[#102219] shadow-[0_10px_30px_rgba(119,222,158,0.12)] transition hover:-translate-y-0.5 hover:bg-[#c1f7d3] hover:shadow-[0_14px_36px_rgba(119,222,158,0.2)] disabled:cursor-not-allowed disabled:opacity-60">
@@ -190,10 +194,10 @@ export default function SignInPage() {
                 <Link
                   href="/sign-up"
                   onClick={(event) => {
-                    const redirect = new URLSearchParams(window.location.search).get("redirect");
-                    if (redirect) {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.has("redirect") || params.has("next")) {
                       event.preventDefault();
-                      router.push(`/sign-up?redirect=${encodeURIComponent(redirect)}`);
+                      router.push(`/sign-up?redirect=${encodeURIComponent(safePostSignInDestination())}`);
                     }
                   }}
                   className="font-bold text-[#a4edc1] transition hover:text-[#c1f7d3]"

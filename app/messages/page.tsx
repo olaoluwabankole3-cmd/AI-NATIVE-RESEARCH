@@ -120,21 +120,32 @@ export default function MessagesInboxPage() {
     const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
     setBusyRequestId(conversation.id);
     setLoadError("");
-    const response = action === "block"
-      ? await supabase.rpc("block_user", { p_blocked_user_id: otherId })
-      : await supabase.rpc("respond_direct_message_request", { p_conversation_id: conversation.id, p_action: action });
-    if (response.error) setLoadError(response.error.message);
-    else await loadInbox(viewerId);
-    setBusyRequestId(null);
+    try {
+      const response = action === "block"
+        ? await supabase.rpc("block_user", { p_blocked_user_id: otherId })
+        : await supabase.rpc("respond_direct_message_request", { p_conversation_id: conversation.id, p_action: action });
+      if (response.error) throw response.error;
+      await loadInbox(viewerId);
+    } catch (caught) {
+      setLoadError(caught instanceof Error ? caught.message : "The message request could not be updated. Try again.");
+    } finally {
+      setBusyRequestId(null);
+    }
   }
 
   async function unblockPerson(userId: string) {
     if (!viewerId || busyRequestId) return;
     setBusyRequestId(userId);
-    const { error } = await supabase.rpc("unblock_user", { p_blocked_user_id: userId });
-    if (error) setLoadError(error.message);
-    else await loadInbox(viewerId);
-    setBusyRequestId(null);
+    setLoadError("");
+    try {
+      const { error } = await supabase.rpc("unblock_user", { p_blocked_user_id: userId });
+      if (error) throw error;
+      await loadInbox(viewerId);
+    } catch (caught) {
+      setLoadError(caught instanceof Error ? caught.message : "Could not unblock this member. Try again.");
+    } finally {
+      setBusyRequestId(null);
+    }
   }
 
   useEffect(() => {
@@ -165,10 +176,13 @@ export default function MessagesInboxPage() {
           <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
         </section>
 
-        {loadError && <p role="alert" className="mt-5 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-4 py-3 text-sm leading-6 text-red-200">{loadError}</p>}
+        {loadError && <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-4 py-3 text-sm leading-6 text-red-200">
+           <p>{loadError}</p>
+           {viewerId && <button type="button" onClick={() => void loadInbox(viewerId)} className="inline-flex min-h-11 items-center rounded-lg border border-red-200/20 px-4 text-xs font-semibold text-red-100 hover:bg-red-200/[0.06]">Retry inbox</button>}
+         </div>}
 
         {loading ? (
-          <div className="mt-6 grid gap-3">{[0, 1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-white/[0.08] bg-white/[0.02]" />)}</div>
+          <div role="status" aria-label="Loading conversations" className="mt-6 grid gap-3">{[0, 1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-white/[0.08] bg-white/[0.02]" />)}</div>
         ) : (
           <>
             {incomingRequests.length > 0 && <section className="mt-6 rounded-3xl border border-amber-200/20 bg-amber-200/[0.025] p-4 sm:p-6">
@@ -184,7 +198,7 @@ export default function MessagesInboxPage() {
                       <div className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-[14px] border border-amber-200/20 bg-amber-200/[0.08] text-sm font-bold text-amber-100">{member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}</div>
                       <div className="min-w-0"><p className="truncate text-sm font-semibold text-white/90">{member.display_name}</p>{member.headline && <p className="mt-1 truncate text-[11px] text-white/35">{member.headline}</p>}<p className="mt-2 line-clamp-2 text-xs leading-5 text-white/55">{preview?.body ?? "This member wants to start a private conversation."}</p></div>
                     </Link>
-                    <div className="flex shrink-0 flex-wrap gap-2">
+                    <div className="converge-message-request-actions flex shrink-0 flex-wrap gap-2">
                       <button type="button" disabled={busy} onClick={() => void handleRequestAction(conversation, "accept")} className="rounded-full bg-emerald-200 px-3.5 py-2 text-[10px] font-bold text-[#0b1710] disabled:opacity-40">{busy ? "…" : "Accept"}</button>
                       <button type="button" disabled={busy} onClick={() => void handleRequestAction(conversation, "ignore")} className="rounded-full border border-white/15 px-3.5 py-2 text-[10px] font-semibold text-white/70 disabled:opacity-40">Ignore</button>
                       <button type="button" disabled={busy} onClick={() => void handleRequestAction(conversation, "block")} className="rounded-full border border-red-300/20 px-3.5 py-2 text-[10px] font-semibold text-red-100/80 disabled:opacity-40">Block</button>
@@ -213,7 +227,7 @@ export default function MessagesInboxPage() {
                 </div>;
               })}
             </section> : null}
-            {!incomingRequests.length && !regularConversations.length && <section className="mt-6 rounded-3xl border border-dashed border-white/[0.12] px-6 py-16 text-center sm:px-12">
+            {!loadError && !incomingRequests.length && !regularConversations.length && <section className="mt-6 rounded-3xl border border-dashed border-white/[0.12] px-6 py-16 text-center sm:px-12">
               <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.05] text-2xl text-emerald-100">↗</div>
               <h2 className="mt-5 text-2xl font-semibold tracking-[-0.045em]">Your inbox is clear.</h2>
               <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-white/45">Find a member and send a message request. They can accept, ignore, or block the request before a conversation begins.</p>

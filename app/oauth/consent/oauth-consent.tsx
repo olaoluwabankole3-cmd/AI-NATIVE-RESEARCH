@@ -22,6 +22,7 @@ export default function OAuthConsent({ authorizationId }: { authorizationId: str
     let cancelled = false;
 
     async function loadAuthorization() {
+      try {
       if (!authorizationId) {
         setError("This sign-in request is missing its authorization reference. Please return to the app and try again.");
         setLoading(false);
@@ -58,6 +59,12 @@ export default function OAuthConsent({ authorizationId }: { authorizationId: str
 
       setDetails(payload);
       setLoading(false);
+      } catch {
+        if (!cancelled) {
+          setError("We could not contact the identity service. Please try again.");
+          setLoading(false);
+        }
+      }
     }
 
     void loadAuthorization();
@@ -69,17 +76,22 @@ export default function OAuthConsent({ authorizationId }: { authorizationId: str
     setBusy(true);
     setError("");
 
-    const result = approved
-      ? await supabase.auth.oauth.approveAuthorization(authorizationId)
-      : await supabase.auth.oauth.denyAuthorization(authorizationId);
+    try {
+      const result = approved
+        ? await supabase.auth.oauth.approveAuthorization(authorizationId)
+        : await supabase.auth.oauth.denyAuthorization(authorizationId);
 
-    if (result.error || !result.data?.redirect_url) {
-      setError(result.error?.message ?? "We could not complete this authorization. Please try again.");
+      if (result.error || !result.data?.redirect_url) {
+        setError(result.error?.message ?? "We could not complete this authorization. Please try again.");
+        return;
+      }
+
+      window.location.assign(result.data.redirect_url);
+    } catch {
+      setError("We could not complete the authorization request. Please try again.");
+    } finally {
       setBusy(false);
-      return;
     }
-
-    window.location.assign(result.data.redirect_url);
   }
 
   const scopes = (details?.scope ?? "").split(" ").filter(Boolean);

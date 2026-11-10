@@ -32,9 +32,9 @@ export default function CommunityMembersPage() {
 
   const isOwner = Boolean(community && viewerId && community.created_by === viewerId);
 
-  async function loadMembers() {
+  async function loadMembers({ clearNotice = true }: { clearNotice?: boolean } = {}) {
     setLoading(true);
-    setNotice("");
+    if (clearNotice) setNotice("");
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setViewerId(null);
@@ -105,20 +105,23 @@ export default function CommunityMembersPage() {
     setBusyKey(targetId + action);
     setNotice("");
     setNoticeError(false);
-    const { error } = await supabase.rpc("moderate_community_member", {
-      p_community_id: community.id,
-      p_user_id: targetId,
-      p_action: action,
-      p_reason: action === "BLOCK" ? "Blocked by community moderation" : null,
-    });
-    if (error) {
-      setNotice(error.message);
-      setNoticeError(true);
-    } else {
+    try {
+      const { error } = await supabase.rpc("moderate_community_member", {
+        p_community_id: community.id,
+        p_user_id: targetId,
+        p_action: action,
+        p_reason: action === "BLOCK" ? "Blocked by community moderation" : null,
+      });
+      if (error) throw error;
       setNotice(action === "REMOVE" ? "Member removed." : action === "BLOCK" ? "Member blocked from this community." : "Community block lifted.");
-      await loadMembers();
+      // Refresh the membership list without erasing the action confirmation.
+      await loadMembers({ clearNotice: false });
+    } catch (caught) {
+      setNotice(caught instanceof Error ? caught.message : "Could not update community membership. Try again.");
+      setNoticeError(true);
+    } finally {
+      setBusyKey(null);
     }
-    setBusyKey(null);
   }
 
   if (!viewerId && !loading) {

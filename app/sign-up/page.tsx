@@ -4,18 +4,11 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { authDestinationFromSearch } from "@/lib/auth/destination";
 import { WordParticles } from "@/components/word-particles";
 
 function safePostSignInDestination(): string {
-  const requested = new URLSearchParams(window.location.search).get("redirect");
-  if (!requested || !requested.startsWith("/") || requested.startsWith("//")) return "/communities";
-  try {
-    const destination = new URL(requested, window.location.origin);
-    if (destination.origin !== window.location.origin) return "/communities";
-    return `${destination.pathname}${destination.search}${destination.hash}`;
-  } catch {
-    return "/communities";
-  }
+  return authDestinationFromSearch(window.location.search, window.location.origin);
 }
 
 export default function SignUpPage() {
@@ -35,6 +28,11 @@ export default function SignUpPage() {
     setMessage("");
     setSuccess(false);
 
+    if (password.length < 8) {
+      setMessage("Please choose a password of at least 8 characters.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setMessage("Your passwords do not match. Please check them and try again.");
       return;
@@ -43,27 +41,29 @@ export default function SignUpPage() {
     setLoading(true);
     const destination = safePostSignInDestination();
     const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`;
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo },
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { emailRedirectTo },
+      });
 
-    if (error) {
-      setMessage(error.message);
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+      if (data.session && data.user) {
+        router.replace(destination);
+        router.refresh();
+        return;
+      }
+      setSuccess(true);
+      setMessage("If this email address is eligible, check your inbox for the confirmation link. You can then sign in.");
+    } catch {
+      setMessage("We could not complete registration. Check your connection and try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (data.session) {
-      router.push(destination);
-      router.refresh();
-      return;
-    }
-
-    setSuccess(true);
-    setMessage("Your account has been created. Check your email to confirm your address, then sign in.");
-    setLoading(false);
   }
 
   async function continueWithGoogle() {
@@ -73,16 +73,18 @@ export default function SignUpPage() {
     const destination = safePostSignInDestination();
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`;
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo,
-        queryParams: { prompt: "select_account" },
-      },
-    });
-
-    if (error) {
-      setMessage(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: { prompt: "select_account" },
+        },
+      });
+      if (error) setMessage(error.message);
+    } catch {
+      setMessage("Google sign-in could not start. Check your connection and try again.");
+    } finally {
       setLoading(false);
     }
   }
@@ -166,9 +168,9 @@ export default function SignUpPage() {
                       onChange={(event) => setPassword(event.target.value)}
                       type={showPassword ? "text" : "password"}
                       required
-                      minLength={6}
+                      minLength={8}
                       autoComplete="new-password"
-                      placeholder="Create a password (6+ characters)"
+                      placeholder="Create a password (8+ characters)"
                       className="h-[52px] w-full rounded-[13px] border border-white/[0.11] bg-[#0b1110]/80 px-4 pr-16 text-[13px] text-white outline-none transition placeholder:text-white/25 hover:border-white/20 focus:border-[#a4edc1]/65 focus:ring-4 focus:ring-emerald-200/[0.06]"
                     />
                     <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute inset-y-0 right-3 my-auto h-8 rounded-lg px-2 text-[11px] font-semibold text-white/45 transition hover:bg-white/[0.05] hover:text-white/85">
@@ -185,7 +187,7 @@ export default function SignUpPage() {
                       onChange={(event) => setConfirmPassword(event.target.value)}
                       type={showConfirmPassword ? "text" : "password"}
                       required
-                      minLength={6}
+                      minLength={8}
                       autoComplete="new-password"
                       placeholder="Enter your password again"
                       className="h-[52px] w-full rounded-[13px] border border-white/[0.11] bg-[#0b1110]/80 px-4 pr-16 text-[13px] text-white outline-none transition placeholder:text-white/25 hover:border-white/20 focus:border-[#a4edc1]/65 focus:ring-4 focus:ring-emerald-200/[0.06]"
@@ -226,10 +228,10 @@ export default function SignUpPage() {
                 <Link
                   href="/sign-in"
                   onClick={(event) => {
-                    const redirect = new URLSearchParams(window.location.search).get("redirect");
-                    if (redirect) {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.has("redirect") || params.has("next")) {
                       event.preventDefault();
-                      router.push(`/sign-in?redirect=${encodeURIComponent(redirect)}`);
+                      router.push(`/sign-in?redirect=${encodeURIComponent(safePostSignInDestination())}`);
                     }
                   }}
                   className="font-bold text-[#a4edc1] transition hover:text-[#c1f7d3]"

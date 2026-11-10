@@ -55,6 +55,7 @@ export default function ProfilePage() {
   useEffect(() => {
     let active = true;
     async function loadProfile() {
+      try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (!active) return;
       if (userError || !user) {
@@ -89,6 +90,13 @@ export default function ProfilePage() {
         setForm({ ...emptyProfile, display_name: metadataName });
       }
       setLoading(false);
+      } catch {
+        if (active) {
+          setMessage("We couldn't load your profile. Check your connection and reload this page.");
+          setMessageTone("error");
+          setLoading(false);
+        }
+      }
     }
     void loadProfile();
     return () => { active = false; };
@@ -124,6 +132,7 @@ export default function ProfilePage() {
 
     setUploading(true);
     setMessage("");
+    try {
     const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const objectPath = `${userId}/${crypto.randomUUID()}.${extension}`;
     const { error: uploadError } = await supabase.storage.from("avatars").upload(objectPath, file, {
@@ -156,7 +165,12 @@ export default function ProfilePage() {
     setForm((current) => ({ ...current, avatar_url: publicData.publicUrl }));
     setMessage("Profile picture updated.");
     setMessageTone("success");
-    setUploading(false);
+    } catch {
+      setMessage("We couldn't upload your picture. Check your connection and try again.");
+      setMessageTone("error");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
@@ -190,6 +204,7 @@ export default function ProfilePage() {
     }
 
     setSaving(true);
+    try {
     const { error } = await supabase.from("profiles").upsert({
       id: userId,
       username: username || null,
@@ -217,8 +232,13 @@ export default function ProfilePage() {
     setForm((current) => ({ ...current, username, website_url: websiteUrl ?? "" }));
     setMessage("Your profile has been saved.");
     setMessageTone("success");
-    setSaving(false);
     router.refresh();
+    } catch {
+      setMessage("We couldn't save your profile. Check your connection and try again.");
+      setMessageTone("error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading) {

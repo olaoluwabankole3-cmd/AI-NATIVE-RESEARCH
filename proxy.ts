@@ -27,13 +27,21 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  await supabase.auth.getClaims();
+  // Refresh auth cookies when possible. A temporary Auth outage should not
+  // turn public routes into 500s; protected handlers still verify getUser()
+  // independently and will reject missing/expired sessions.
+  try {
+    await supabase.auth.getClaims();
+  } catch {
+    // Fail open only for public page rendering, never for protected operations.
+  }
 
   return response;
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Health endpoints must remain lightweight even during an Auth outage.
+    "/((?!api/(?:health|ready)(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

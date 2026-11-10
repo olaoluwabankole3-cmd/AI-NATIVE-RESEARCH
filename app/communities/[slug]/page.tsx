@@ -171,42 +171,43 @@ export default function CommunityPage() {
 
     setDeletingTopicId(topic.id);
     setMessage("");
-    const { error: deleteError, count } = await supabase
-      .from("topics")
-      .delete({ count: "exact" })
-      .eq("id", topic.id);
-
-    if (deleteError || !count) {
-      setMessage(deleteError?.message || "You do not have permission to delete this topic, or it no longer exists.");
+    try {
+      const { error: deleteError, count } = await supabase
+        .from("topics")
+        .delete({ count: "exact" })
+        .eq("id", topic.id);
+      if (deleteError) throw deleteError;
+      if (count !== 1) throw new Error("You do not have permission to delete this topic, or it no longer exists.");
+      setTopics((current) => current.filter((item) => item.id !== topic.id));
+      setMessage("Topic deleted.");
+      setMessageTone("success");
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : "Could not delete this topic. Try again.");
       setMessageTone("error");
+    } finally {
       setDeletingTopicId(null);
-      return;
     }
-
-    setTopics((current) => current.filter((item) => item.id !== topic.id));
-    setMessage("Topic deleted.");
-    setMessageTone("success");
-    setDeletingTopicId(null);
   }
 
   async function handleJoinPublic() {
     if (!community || !userId || joining || community.visibility !== "PUBLIC" || isBanned) return;
     setJoining(true);
     setMessage("");
-    const { error } = await supabase.from("community_members").insert({
-      community_id: community.id, user_id: userId, role: "MEMBER",
-    });
-    if (error && error.code !== "23505") {
-      setMessage("Could not join this community. Please try again.");
+    try {
+      const { error } = await supabase.from("community_members").insert({
+        community_id: community.id, user_id: userId, role: "MEMBER",
+      });
+      if (error && error.code !== "23505") throw error;
+      setIsMember(true);
+      await loadCommunity();
+      setMessage("You have joined the community. You can now participate in its research.");
+      setMessageTone("success");
+    } catch {
+      setMessage("Could not join this community. Verify you have access and try again.");
       setMessageTone("error");
+    } finally {
       setJoining(false);
-      return;
     }
-    setIsMember(true);
-    setMessage("You have joined the community. You can now participate in its research.");
-    setMessageTone("success");
-    await loadCommunity();
-    setJoining(false);
   }
 
   async function handleRequestAccess(event: FormEvent<HTMLFormElement>) {

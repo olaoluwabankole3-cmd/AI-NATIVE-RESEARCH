@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getAgent } from "@/lib/agent-runtime";
+import { deriveCommunityPermissions } from "@/lib/community-permissions";
 import type { Agent } from "@/lib/agents";
 
 export type CommunityAccess = {
@@ -40,12 +41,21 @@ export async function getCommunityAccess(
     .maybeSingle();
   if (membershipError) return { community, isOwner: false, isMember: false, canRead: false, canParticipate: false, canCreateTopic: false, error: membershipError };
 
-  const isOwner = community.created_by === userId;
-  const isMember = isOwner || Boolean(membership);
-  const canRead = community.visibility === "PUBLIC" || isMember;
-  const canParticipate = isMember;
-  const canCreateTopic = isOwner || (isMember && community.members_can_create_topics);
-  return { community: community as CommunityAccess, isOwner, isMember, canRead, canParticipate, canCreateTopic, error: null };
+  // Admin clients bypass RLS; explicitly check bans before authorizing
+  // topic replies, agent runs, research synthesis and other server-side actions.
+  const { data: ban, error: banError } = await admin
+    .from("community_bans")
+    .select("user_id")
+    .eq("community_id", communityId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (banError) return { community, isOwner: false, isMember: false, canRead: false, canParticipate: false, canCreateTopic: false, error: banError };
+
+  return {
+    community: community as CommunityAccess,
+    ...deriveCommunityPermissions(community, userId, Boolean(membership), Boolean(ban)),
+    error: null,
+  };
 }
 
 export async function getTopicCommunityAccess(

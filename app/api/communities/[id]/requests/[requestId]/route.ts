@@ -29,11 +29,13 @@ export async function PATCH(request: Request, { params }: Params) {
   if (error) {
     const message = /Only the community owner/i.test(error.message)
       ? "Only the community owner can review access requests."
-      : /already been reviewed/i.test(error.message)
-        ? "This request has already been reviewed."
-        : /not found/i.test(error.message)
-          ? "Join request not found."
-          : "Could not update this access request.";
+      : /blocked community member/i.test(error.message)
+        ? "This applicant is blocked. Lift the community block before approving their request."
+        : /already been reviewed/i.test(error.message)
+          ? "This request has already been reviewed."
+          : /not found/i.test(error.message)
+            ? "Join request not found."
+            : "Could not update this access request.";
     const status = /Only the community owner/i.test(error.message) ? 403 : /not found/i.test(error.message) ? 404 : 409;
     return NextResponse.json({ error: message }, { status });
   }
