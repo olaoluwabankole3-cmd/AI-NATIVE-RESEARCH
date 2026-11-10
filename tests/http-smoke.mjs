@@ -1,0 +1,83 @@
+import assert from "node:assert/strict";
+
+const origin = process.env.SMOKE_BASE_URL || "http://localhost:3000";
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function request(path, opts = {}) {
+  return fetch(new URL(path, origin), {
+    redirect: "manual",
+    signal: AbortSignal.timeout(7000),
+    ...opts,
+  });
+}
+
+let online = false;
+for (let attempt = 0; attempt < 48; attempt += 1) {
+  try {
+    const r = await request("/");
+    if (r.status === 200) { online = true; break; }
+  } catch { /* Next server has not started yet */ }
+  await sleep(250);
+}
+assert.equal(online, true, "Next production server did not become ready");
+
+for (const [route, expected] of [
+  ["/", "Converge"],
+  ["/sign-in", "Sign in to Converge"],
+  ["/sign-up", "Create your Converge account"],
+  ["/forgot-password", "Reset your password"],
+  ["/reset-password", "Choose a new password"],
+  ["/communities", "Communities"],
+]) {
+  const response = await request(route);
+  assert.equal(response.status, 200, route + " should render successfully");
+  const html = await response.text();
+  assert.ok(html.toLowerCase().includes(expected.toLowerCase()), route + " should include its page marker");
+}
+
+const warningPage = await request("/");
+assert.equal(warningPage.status, 200);
+assert.ok((await warningPage.text()).includes("UI-only preview"), "Test preview must clearly identify its offline mode");
+
+const callback = await request("/auth/callback?next=%2Fmessages%2Fabc&error=access_denied");
+assert.ok(callback.status >= 300 && callback.status < 400, "callback should redirect on provider error");
+const callbackLocation = new URL(callback.headers.get("location") || "", origin);
+assert.equal(callbackLocation.pathname, "/sign-in");
+assert.equal(callbackLocation.searchParams.get("redirect"), "/messages/abc");
+assert.equal(callbackLocation.searchParams.get("auth_error"), "provider");
+
+const attacker = await request("/auth/callback?next=https%3A%2F%2Fmalicious.invalid%2F&error=access_denied");
+assert.ok(attacker.status >= 300 && attacker.status < 400);
+const attackerLocation = new URL(attacker.headers.get("location") || "", origin);
+assert.equal(attackerLocation.origin, origin);
+assert.equal(attackerLocation.pathname, "/sign-in");
+assert.equal(attackerLocation.searchParams.get("redirect"), "/communities");
+
+const recovery = await request("/auth/callback?next=%2Freset-password&error=access_denied");
+assert.ok(recovery.status >= 300 && recovery.status < 400);
+const recoveryLocation = new URL(recovery.headers.get("location") || "", origin);
+assert.equal(recoveryLocation.pathname, "/forgot-password");
+
+// Negative-permission HTTP checks never use an account or a real database.
+// Each request must stop at the authentication boundary before any mutation.
+const zeroId = "00000000-0000-0000-0000-000000000000";
+const securedRoutes = [
+  { method: "GET", path: `/api/communities/${zeroId}/requests` },
+  { method: "POST", path: `/api/communities/${zeroId}/requests`, body: "{}" },
+  { method: "PATCH", path: `/api/communities/${zeroId}/requests/${zeroId}`, body: '{"decision":"APPROVED"}' },
+  { method: "POST", path: `/api/topics/${zeroId}/replies`, body: '{"body":"Unauthorized test contribution"}' },
+  { method: "POST", path: `/api/topics/${zeroId}/agents/${zeroId}/run`, body: "{}" },
+  { method: "POST", path: `/api/topics/${zeroId}/agents/${zeroId}/artifacts/synthesis`, body: "{}" },
+  { method: "DELETE", path: "/api/account/delete", body: "{}" },
+];
+for (const testCase of securedRoutes) {
+  const response = await request(testCase.path, {
+    method: testCase.method,
+    headers: testCase.body === undefined ? {} : { "Content-Type": "application/json" },
+    ...(testCase.body === undefined ? {} : { body: testCase.body }),
+  });
+  assert.equal(response.status, 401,
+    testCase.method + " " + testCase.path + " must reject an unauthenticated request");
+}
+
+console.log("Converge HTTP smoke passed: six pages, three callback cases, and seven unauthenticated API denials.");

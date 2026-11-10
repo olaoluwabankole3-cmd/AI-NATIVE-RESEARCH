@@ -19,10 +19,13 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install dependencies
         run: npm install
+
+      - name: Auth redirect regression tests
+        run: node --experimental-strip-types --test tests/*.test.mjs
 
       - name: Build
         run: npm run build
@@ -30,3 +33,15 @@ jobs:
           # CI-only placeholders let Next.js prerender auth screens without live credentials.
           NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-public-key
+          NEXT_PUBLIC_CONVERGE_PREVIEW_MODE: ui-only
+
+      - name: HTTP smoke test built application
+        run: |
+          npm run start &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" >/dev/null 2>&1 || true' EXIT
+          node tests/http-smoke.mjs
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-public-key
+          NEXT_PUBLIC_CONVERGE_PREVIEW_MODE: ui-only

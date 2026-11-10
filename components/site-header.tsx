@@ -111,6 +111,7 @@ export function SiteHeader() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [authReady, setAuthReady] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
   const muted = "text-white/55 hover:text-white";
 
   useEffect(() => {
@@ -248,13 +249,25 @@ export function SiteHeader() {
   }, [supabase, userId]);
 
   async function handleSignOut() {
+    if (signingOut) return;
     setSigningOut(true);
-    await supabase.auth.signOut();
-    setUserEmail(null);
-    setSigningOut(false);
-    setMobileOpen(false);
-    router.push("/");
-    router.refresh();
+    setSignOutError("");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        setSignOutError("We could not sign you out. Please try again.");
+        return;
+      }
+      setUserEmail(null);
+      setMobileOpen(false);
+      setAccountOpen(false);
+      router.replace("/");
+      router.refresh();
+    } catch {
+      setSignOutError("We could not sign you out. Please try again.");
+    } finally {
+      setSigningOut(false);
+    }
   }
 
   const mobileMoreOverlay = mobileOpen && authReady && userEmail && typeof document !== "undefined"
@@ -468,6 +481,12 @@ export function SiteHeader() {
       )}
 
     </header>
+      {signOutError && (
+        <div role="alert" className="fixed inset-x-4 top-[90px] z-[95] mx-auto flex max-w-md items-center justify-between gap-4 rounded-xl border border-red-300/30 bg-[#181411] px-4 py-3 text-xs text-red-100 shadow-xl">
+          <span>{signOutError}</span>
+          <button type="button" onClick={() => setSignOutError("")} className="shrink-0 font-semibold text-red-200 underline underline-offset-4">Dismiss</button>
+        </div>
+      )}
       {mobileMoreOverlay}
       {authReady && userEmail && (
         <nav className="converge-mobile-dock" aria-label="Mobile primary navigation">

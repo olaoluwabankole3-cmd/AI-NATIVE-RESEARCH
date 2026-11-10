@@ -1,22 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+import { safeAuthDestination } from "@/lib/auth/destination";
 
 function safeDestination(url: URL): string {
-  const requested = url.searchParams.get("next") ?? "/communities";
-  if (!requested.startsWith("/") || requested.startsWith("//")) return "/communities";
-
-  try {
-    const destination = new URL(requested, url.origin);
-    if (destination.origin !== url.origin) return "/communities";
-    return `${destination.pathname}${destination.search}${destination.hash}`;
-  } catch {
-    return "/communities";
-  }
+  return safeAuthDestination(url.searchParams.get("next"), url.origin);
 }
 
 function signInRedirect(origin: string, destination: string, errorCode?: string) {
-  const target = new URL("/sign-in", origin);
-  target.searchParams.set("redirect", destination);
+  const recovery = destination === "/reset-password";
+  const target = new URL(recovery ? "/forgot-password" : "/sign-in", origin);
+  if (!recovery) target.searchParams.set("redirect", destination);
   if (errorCode) target.searchParams.set("auth_error", errorCode);
   return NextResponse.redirect(target);
 }
