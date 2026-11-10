@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-const origin = process.env.SMOKE_BASE_URL || "http://127.0.0.1:3000";
+const origin = process.env.SMOKE_BASE_URL || "http://localhost:3000";
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function request(path, opts = {}) {
