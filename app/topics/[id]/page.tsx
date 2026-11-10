@@ -549,9 +549,14 @@ export default function TopicPage() {
 
   if (loading) {
     return (
-      <main className="converge-app-page min-h-screen bg-[#07110f] px-6 py-10 text-white">
-        <div className="mx-auto max-w-5xl">
-          <p className="text-white/50">Loading topic…</p>
+      <main className="converge-app-page min-h-screen bg-[#07110f] text-white">
+        <SiteHeader />
+        <div role="status" aria-label="Loading topic" className="mx-auto max-w-5xl space-y-5 px-5 py-10 sm:px-6">
+          <div className="h-3 w-48 animate-pulse rounded bg-emerald-200/10" />
+          <div className="h-10 w-3/4 animate-pulse rounded-lg bg-white/[0.07]" />
+          <div className="h-4 w-full animate-pulse rounded bg-white/[0.04]" />
+          <div className="h-4 w-5/6 animate-pulse rounded bg-white/[0.04]" />
+          <span className="sr-only">Loading research topic…</span>
         </div>
       </main>
     );
@@ -559,12 +564,13 @@ export default function TopicPage() {
 
   if (!topic || !community) {
     return (
-      <main className="converge-app-page min-h-screen bg-[#07110f] px-6 py-10 text-white">
-        <div className="mx-auto max-w-5xl">
+      <main className="converge-app-page min-h-screen bg-[#07110f] text-white">
+        <SiteHeader />
+        <div className="mx-auto max-w-5xl px-5 py-10 sm:px-6">
           <Link href="/communities" className="text-sm text-emerald-300 hover:text-emerald-200">
             ← Back to communities
           </Link>
-          <div className="mt-10 rounded-2xl border border-red-300/15 bg-red-300/[0.04] p-8">
+          <div role="alert" className="mt-10 rounded-2xl border border-red-300/15 bg-red-300/[0.04] p-5 sm:p-8">
             <h1 className="text-2xl font-semibold">Topic unavailable</h1>
             <p className="mt-2 text-white/50">{message || "We could not load this topic."}</p>
           </div>
@@ -579,7 +585,7 @@ export default function TopicPage() {
       <div className="mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
 
         <div className="py-7">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm text-white/40">
+          <nav aria-label="Breadcrumb" className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-white/50 sm:text-sm">
             <Link href="/communities" className="transition hover:text-emerald-200">Communities</Link>
             <span aria-hidden="true">/</span>
             <Link
@@ -608,11 +614,11 @@ export default function TopicPage() {
               )}
             </div>
 
-            <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h1 className="mt-5 break-words text-3xl font-semibold tracking-tight sm:text-4xl">
               {topic.title}
             </h1>
 
-            <div className="mt-6 whitespace-pre-wrap text-base leading-8 text-white/70">
+            <div className="mt-6 whitespace-pre-wrap break-words text-base leading-8 text-white/70">
               {topic.body}
             </div>
 
@@ -631,7 +637,7 @@ export default function TopicPage() {
             <ResearchRoom topicId={topic.id} participantId={currentParticipantId} />
           )}
 
-          <section className="mt-12">
+          <section id="topic-discussion" className="mt-12 scroll-mt-24">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
@@ -687,7 +693,7 @@ export default function TopicPage() {
             </div>
 
             {showAgentPicker && (
-              <div className="mt-4 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-4 sm:p-5">
+              <div id="converge-agent-picker" className="mt-4 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-4 sm:p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h3 className="font-semibold">Add a specialist</h3>
@@ -805,7 +811,7 @@ export default function TopicPage() {
                           )}
                         </div>
 
-                        <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-white/65">
+                        <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-white/65">
                           {post.body}
                         </p>
                       </div>
@@ -837,10 +843,11 @@ export default function TopicPage() {
               />
 
               {message && (
-                <p className={`mt-3 text-sm ${messageTone === "error" ? "text-red-200" : messageTone === "success" ? "text-emerald-200" : "text-white/60"}`}>{message}</p>
+                <p role={messageTone === "error" ? "alert" : "status"} className={`mt-3 text-sm ${messageTone === "error" ? "text-red-200" : messageTone === "success" ? "text-emerald-200" : "text-white/60"}`}>{message}</p>
               )}
 
-              <div className="mt-4 flex justify-end">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                 <span className="text-xs text-white/40">Your reply stays in this topic.</span>
                 <button
                   type="submit"
                   disabled={posting || !reply.trim()}
