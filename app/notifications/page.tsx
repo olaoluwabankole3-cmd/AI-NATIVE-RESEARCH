@@ -5,12 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { safeAuthDestination } from "@/lib/auth/destination";
 
 type NotificationRow = {
   id: string;
   recipient_id: string;
   actor_id: string | null;
-  notification_type: "new_message" | "post_comment" | "post_like" | "connection_request" | "connection_accepted" | "topic_reply";
+  notification_type: "new_message" | "post_comment" | "post_like" | "connection_request" | "connection_accepted" | "topic_reply" | "community_join_request" | "community_join_approved" | "community_join_rejected" | "message_request_accepted";
   title: string;
   body: string;
   href: string;
@@ -39,7 +40,8 @@ function initials(value: string) {
   return value.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "C";
 }
 function iconFor(type: NotificationRow["notification_type"]) {
-  if (type === "new_message") return "↗";
+  if (type === "new_message" || type === "message_request_accepted") return "↗";
+  if (type === "community_join_request" || type === "community_join_approved" || type === "community_join_rejected") return "⌂";
   if (type === "post_comment" || type === "topic_reply") return "↳";
   if (type === "post_like") return "♥";
   if (type === "connection_request" || type === "connection_accepted") return "◎";
@@ -125,34 +127,57 @@ export default function NotificationsPage() {
   }, [loadNotifications, supabase, viewerId]);
 
   async function markAllRead() {
-    if (!viewerId || busyId === "all") return;
+    if (!viewerId || busyId) return;
     setBusyId("all");
-    const { error } = await supabase.from("notifications")
-      .update({ is_read: true })
-      .eq("recipient_id", viewerId)
-      .eq("is_read", false);
-    if (error) setNotice(error.message);
-    else setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
-    setBusyId(null);
+    setNotice("");
+    try {
+      const { error } = await supabase.from("notifications")
+        .update({ is_read: true })
+        .eq("recipient_id", viewerId)
+        .eq("is_read", false);
+      if (error) throw error;
+      setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+    } catch (caught) {
+      setNotice(caught instanceof Error ? caught.message : "Could not update notifications. Try again.");
+    } finally {
+      setBusyId(null);
+    }
   }
 
   async function openNotification(item: NotificationRow) {
-    if (!item.is_read) {
-      setBusyId(item.id);
-      const { error } = await supabase.from("notifications")
-        .update({ is_read: true })
-        .eq("id", item.id)
-        .eq("recipient_id", viewerId);
-      if (error) {
-        setNotice(error.message);
-        setBusyId(null);
-        return;
+    if (busyId) return;
+    setBusyId(item.id);
+    try {
+      if (!item.is_read) {
+        const { error } = await supabase.from("notifications")
+          .update({ is_read: true })
+          .eq("id", item.id)
+          .eq("recipient_id", viewerId);
+        if (error) throw error;
+        setNotifications((current) => current.map((row) => row.id === item.id ? { ...row, is_read: true } : row));
       }
-      setNotifications((current) => current.map((row) => row.id === item.id ? { ...row, is_read: true } : row));
+      const safeHref = safeAuthDestination(item.href, window.location.origin, "/notifications");
+      router.push(safeHref);
+    } catch (caught) {
+      setNotice(caught instanceof Error ? caught.message : "Could not open this notification. Try again.");
+    } finally {
       setBusyId(null);
     }
-    const safeHref = item.href.startsWith("/") && !item.href.startsWith("//") ? item.href : "/notifications";
-    router.push(safeHref);
+  }
+
+  async function dismissNotification(id: string) {
+    if (!viewerId || busyId) return;
+    setBusyId(id);
+    setNotice("");
+    try {
+      const { error } = await supabase.from("notifications").delete().eq("id", id).eq("recipient_id", viewerId);
+      if (error) throw error;
+      setNotifications((current) => current.filter((row) => row.id !== id));
+    } catch (caught) {
+      setNotice(caught instanceof Error ? caught.message : "Could not dismiss this notification. Try again.");
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -188,18 +213,14 @@ export default function NotificationsPage() {
                     </div>
                     <p className="mt-2 text-xs leading-5 text-white/50">{actor?.display_name ? <strong className="font-semibold text-white/75">{actor.display_name} </strong> : null}{item.body}</p>
                   </button>
-                  <button type="button" aria-label="Dismiss notification" onClick={async () => {
-                    const { error } = await supabase.from("notifications").delete().eq("id", item.id).eq("recipient_id", viewerId);
-                    if (error) setNotice(error.message);
-                    else setNotifications((current) => current.filter((row) => row.id !== item.id));
-                  }} className="shrink-0 rounded-full px-2 py-1 text-sm text-white/25 transition hover:bg-white/[0.05] hover:text-white/75">×</button>
+                  <button type="button" aria-label="Dismiss notification" disabled={Boolean(busyId)} onClick={() => void dismissNotification(item.id)} className="shrink-0 rounded-full px-2 py-1 text-sm text-white/25 transition hover:bg-white/[0.05] hover:text-white/75 disabled:opacity-40">×</button>
                 </div>
               );
             })
             : <div className="px-6 py-16 text-center">
               <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.05] text-2xl text-emerald-100">♧</div>
               <h2 className="mt-5 text-xl font-semibold">You’re all caught up.</h2>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/45">When someone messages you, comments on your post, likes your work, or responds to your topic, you’ll see it here.</p>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/45">When someone messages you, requests community access, approves a request, or responds to your work, you’ll see it here.</p>
               <Link href="/feed" className="mt-6 inline-flex rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Explore activity ↗</Link>
             </div>}
         </section>
