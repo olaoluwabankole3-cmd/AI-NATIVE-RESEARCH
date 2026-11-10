@@ -37,6 +37,22 @@ for (const [route, expected] of [
   assert.ok(html.toLowerCase().includes(expected.toLowerCase()), route + " should include its page marker");
 }
 
+// Liveness must be cheap, read-only, and never reveal configuration.
+const livenessResponse = await request("/api/health");
+assert.equal(livenessResponse.status, 200, "App liveness endpoint should return HTTP 200");
+assert.match(livenessResponse.headers.get("cache-control") || "", /no-store/);
+const liveness = await livenessResponse.json();
+assert.deepEqual(liveness, { status: "ok" });
+
+// The isolated preview intentionally uses fake Supabase credentials.
+// It must not claim that the real database/authentication service is ready.
+const readinessResponse = await request("/api/ready");
+assert.equal(readinessResponse.status, 503, "UI-only Preview should report degraded dependencies");
+assert.match(readinessResponse.headers.get("cache-control") || "", /no-store/);
+const readiness = await readinessResponse.json();
+assert.deepEqual(readiness, { status: "degraded" });
+assert.equal("error" in readiness, false, "Health endpoints should not expose upstream error details");
+
 const signupPage = await request("/sign-up");
 assert.equal(signupPage.status, 200);
 assert.ok((await signupPage.text()).includes("8+ characters"), "Registration and reset must require at least eight password characters");
@@ -102,4 +118,4 @@ const crossOriginDelete = await request("/api/account/delete", {
 });
 assert.equal(crossOriginDelete.status, 403, "Account deletion must block a cross-site origin");
 
-console.log("Converge HTTP smoke passed: eight pages, three callback cases, seven unauthenticated API denials and one cross-site deletion denial.");
+console.log("Converge HTTP smoke passed: eight pages, liveness, safely degraded isolated readiness, three callback cases, seven unauthenticated API denials and one cross-site deletion denial.");
