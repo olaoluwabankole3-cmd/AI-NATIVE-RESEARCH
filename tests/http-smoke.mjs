@@ -28,6 +28,8 @@ for (const [route, expected] of [
   ["/forgot-password", "Reset your password"],
   ["/reset-password", "Choose a new password"],
   ["/communities", "Communities"],
+  ["/messages", "Conversations that keep ideas moving."],
+  ["/notifications", "Stay in the loop."],
 ]) {
   const response = await request(route);
   assert.equal(response.status, 200, route + " should render successfully");
@@ -100,4 +102,4 @@ const crossOriginDelete = await request("/api/account/delete", {
 });
 assert.equal(crossOriginDelete.status, 403, "Account deletion must block a cross-site origin");
 
-console.log("Converge HTTP smoke passed: six pages, three callback cases, seven unauthenticated API denials and one cross-site deletion denial.");
+console.log("Converge HTTP smoke passed: eight pages, three callback cases, seven unauthenticated API denials and one cross-site deletion denial.");
