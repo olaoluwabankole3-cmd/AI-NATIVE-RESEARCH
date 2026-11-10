@@ -45,6 +45,13 @@ const callbackLocation = new URL(callback.headers.get("location") || "", origin)
 assert.equal(callbackLocation.pathname, "/sign-in");
 assert.equal(callbackLocation.searchParams.get("redirect"), "/messages/abc");
 assert.equal(callbackLocation.searchParams.get("auth_error"), "provider");
+assert.match(callback.headers.get("cache-control") || "", /no-store/, "OAuth callbacks must not be cached");
+
+const deniedWithCode = await request("/auth/callback?code=unused-test-code&error=access_denied");
+assert.ok(deniedWithCode.status >= 300 && deniedWithCode.status < 400);
+const deniedLocation = new URL(deniedWithCode.headers.get("location") || "", origin);
+assert.equal(deniedLocation.searchParams.get("auth_error"), "provider", "provider denial should take precedence over a code");
+
 
 const attacker = await request("/auth/callback?next=https%3A%2F%2Fmalicious.invalid%2F&error=access_denied");
 assert.ok(attacker.status >= 300 && attacker.status < 400);
