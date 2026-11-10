@@ -215,6 +215,7 @@ export function ResearchRoom({
             <label>
               <span className="mb-2 block text-sm text-white/65">Title</span>
               <input
+                id="research-artifact-title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="e.g. Primary finding from the Afridata literature review"
