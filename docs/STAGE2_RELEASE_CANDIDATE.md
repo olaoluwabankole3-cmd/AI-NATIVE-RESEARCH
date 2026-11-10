@@ -37,3 +37,18 @@ Those migrations are **already applied** and stored in the Supabase ledger. They
 - Confirm production is reachable without unintended deployment protection and preserve the submitted project URL.
 
 No production data was modified by this release-candidate GitHub branch. A passing CI smoke test cannot substitute for live multi-account functional testing.
+
+## Verified live database assertions (read-only, 10 November 2026)
+
+13 non-destructive checks returned the expected results:
+- One active, full-metadata user-profile creation trigger; the legacy duplicate is absent.
+- All 4 existing auth users retain profiles (4/4); no account data was changed by this check.
+- Community join-request RLS is enabled and its INSERT policy checks community bans.
+- Direct-message INSERT policy checks blocked relationships.
+- Authenticated members may execute the `users_blocked` RPC, but anonymous users may not.
+- The `users_blocked` function checks that `auth.uid()` is part of the pair; an unauthenticated synthetic-ID call returns false.
+- All four relevant already-applied Supabase migrations remain recorded in the ledger.
+
+Current security advisor findings remain the same as in Stage 1: 2 anonymous-executable helper notices (documented exceptions), 20 authenticated-executable definer notices, 2 informational RLS/no-policy notices for service-only tables, and the Auth leaked-password-protection warning. No new advisory findings were introduced by the recent changes.
+
+The separate UI-only integration PR #7 previously passed the same 11 unit cases and built-server HTTP smoke tests. This clean candidate reruns those same checks on its own commit.
