@@ -29,6 +29,7 @@ for (const [route, expected] of [
   ["/reset-password", "Choose a new password"],
   ["/communities", "Communities"],
   ["/messages", "Conversations that keep ideas moving."],
+  ["/calls", "Voice calls"],
   ["/notifications", "Stay in the loop."],
 ]) {
   const response = await request(route);
@@ -91,6 +92,7 @@ assert.equal(recoveryLocation.pathname, "/forgot-password");
 // Each request must stop at the authentication boundary before any mutation.
 const zeroId = "00000000-0000-0000-0000-000000000000";
 const securedRoutes = [
+  { method: "GET", path: `/api/calls/ice?callId=${zeroId}` },
   { method: "GET", path: `/api/communities/${zeroId}/requests` },
   { method: "POST", path: `/api/communities/${zeroId}/requests`, body: "{}" },
   { method: "PATCH", path: `/api/communities/${zeroId}/requests/${zeroId}`, body: '{"decision":"APPROVED"}' },
@@ -118,4 +120,4 @@ const crossOriginDelete = await request("/api/account/delete", {
 });
 assert.equal(crossOriginDelete.status, 403, "Account deletion must block a cross-site origin");
 
-console.log("Converge HTTP smoke passed: eight pages, liveness, safely degraded isolated readiness, three callback cases, seven unauthenticated API denials and one cross-site deletion denial.");
+console.log("Converge HTTP smoke passed: nine pages, liveness, safely degraded isolated readiness, three callback cases, eight unauthenticated API denials and one cross-site deletion denial.");
