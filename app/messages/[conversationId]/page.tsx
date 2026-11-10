@@ -49,6 +49,7 @@ export default function DirectConversationPage() {
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [calling, setCalling] = useState(false);
   const [pageError, setPageError] = useState("");
 
   const loadThread = useCallback(async (knownUserId?: string) => {
@@ -186,6 +187,26 @@ export default function DirectConversationPage() {
     }
   }
 
+  async function startVoiceCall() {
+    if (!viewerId || calling || blockedBetween || requestStatus !== "ACCEPTED") return;
+    setCalling(true);
+    setPageError("");
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Voice calling needs a compatible browser and a secure HTTPS connection.");
+      }
+      const { data: callId, error: callError } = await supabase.rpc("start_voice_call", {
+        p_conversation_id: conversationId,
+      });
+      if (callError) throw callError;
+      if (typeof callId !== "string") throw new Error("The call could not be started.");
+      router.push("/calls/" + callId);
+    } catch (caught) {
+      setPageError(caught instanceof Error ? caught.message : "Could not start the call.");
+      setCalling(false);
+    }
+  }
+
   async function toggleBlock() {
     if (!viewerId || !member || moderatingRequest) return;
     setModeratingRequest(true);
@@ -218,6 +239,13 @@ export default function DirectConversationPage() {
             <h1 className="mt-1 truncate text-lg font-semibold tracking-[-0.04em]">{member?.display_name ?? "Conversation"}</h1>
             {member?.headline && <p className="truncate text-[11px] text-white/40">{member.headline}</p>}
           </div>
+          {member && viewerId && requestStatus === "ACCEPTED" && !blockedBetween && (
+            <button type="button" onClick={() => void startVoiceCall()} disabled={calling || moderatingRequest}
+              aria-label={`Voice call ${member.display_name}`}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-emerald-200/30 bg-emerald-200/[.08] px-3 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-200/[.15] disabled:opacity-40 sm:px-4">
+              <span aria-hidden="true">☎</span> <span className="hidden sm:inline">{calling ? "Calling…" : "Voice call"}</span>
+            </button>
+          )}
           {member && <Link href={`/u/${member.username || member.id}`} className="hidden rounded-full border border-white/12 px-3.5 py-2 text-[11px] font-semibold text-white/60 hover:border-emerald-200/25 hover:text-white sm:inline-flex">View profile ↗</Link>}
           {member && <button type="button" onClick={() => void toggleBlock()} disabled={moderatingRequest} className="rounded-full border border-red-300/20 px-3 py-2 text-[10px] font-semibold text-red-100/80 transition hover:bg-red-300/[0.06] disabled:opacity-40">{moderatingRequest ? "…" : blockedByMe ? "Unblock" : "Block"}</button>}
         </div>
