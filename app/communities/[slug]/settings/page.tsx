@@ -120,6 +120,31 @@ export default function CommunitySettingsPage() {
     } finally { setReviewingId(null); }
   }
 
+  async function blockPendingApplicant(request: JoinRequest) {
+    if (!community || reviewingId) return;
+    const name = request.profile?.display_name || request.profile?.username || "this applicant";
+    if (!window.confirm(`Block ${name} from ${community.name}? The pending request will be declined and they cannot request access again until you lift the block.`)) return;
+    setReviewingId(request.id);
+    setMessage("");
+    setError(false);
+    try {
+      const { error: blockError } = await supabase.rpc("moderate_community_member", {
+        p_community_id: community.id,
+        p_user_id: request.user_id,
+        p_action: "BLOCK",
+        p_reason: "Blocked during private community access review",
+      });
+      if (blockError) throw blockError;
+      setRequests((current) => current.filter((item) => item.id !== request.id));
+      setMessage("Applicant blocked. Their pending request has been declined.");
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : "Could not block this applicant.");
+      setError(true);
+    } finally {
+      setReviewingId(null);
+    }
+  }
+
   function startCreateAgent() { setEditingId(null); setDraft(emptyAgent); setAgentFormOpen(true); }
   function startEditAgent(agent: CommunityAgent) { setEditingId(agent.id); setDraft(toDraft(agent)); setAgentFormOpen(true); }
 
@@ -222,7 +247,7 @@ export default function CommunitySettingsPage() {
 
         <section className="mt-6 rounded-xl border border-white/[0.09] bg-white/[0.015] p-5 sm:p-7">
           <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">02 · Membership requests</p><h2 className="mt-2 text-xl font-semibold">Review who wants to join.</h2><p className="mt-2 text-sm text-white/40">{requests.length} pending {requests.length === 1 ? "request" : "requests"}</p></div><button type="button" onClick={() => void loadSettings()} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/65 hover:text-white">Refresh requests</button></div>
-          {requests.length === 0 ? <div className="mt-5 rounded-lg border border-dashed border-white/10 px-4 py-7 text-sm text-white/35">No pending requests. New requests to this community will appear here.</div> : <div className="mt-5 divide-y divide-white/[0.08]">{requests.map((request) => <article key={request.id} className="flex flex-col justify-between gap-4 py-5 sm:flex-row sm:items-start"><div className="min-w-0"><p className="text-sm font-semibold">{request.profile?.display_name || request.profile?.username || "Converge member"}</p><p className="mt-1 text-xs text-white/35">{request.profile?.username ? "@" + request.profile.username + " · " : ""}{new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(request.created_at))}</p><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/55">{request.message || "No note was added to this request."}</p></div><div className="flex shrink-0 gap-2"><button type="button" disabled={reviewingId === request.id} onClick={() => void reviewRequest(request.id, "REJECTED")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/60 hover:border-red-300/20 hover:text-red-100 disabled:opacity-50">Decline</button><button type="button" disabled={reviewingId === request.id} onClick={() => void reviewRequest(request.id, "APPROVED")} className="rounded-lg bg-emerald-200 px-3 py-2 text-xs font-semibold text-[#0b1710] disabled:opacity-50">{reviewingId === request.id ? "Reviewing…" : "Approve access"}</button></div></article>)}</div>}
+          {requests.length === 0 ? <div className="mt-5 rounded-lg border border-dashed border-white/10 px-4 py-7 text-sm text-white/35">No pending requests. New requests to this community will appear here.</div> : <div className="mt-5 divide-y divide-white/[0.08]">{requests.map((request) => <article key={request.id} className="flex flex-col justify-between gap-4 py-5 sm:flex-row sm:items-start"><div className="min-w-0"><p className="text-sm font-semibold">{request.profile?.display_name || request.profile?.username || "Converge member"}</p><p className="mt-1 text-xs text-white/35">{request.profile?.username ? "@" + request.profile.username + " · " : ""}{new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(request.created_at))}</p><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/55">{request.message || "No note was added to this request."}</p></div><div className="flex shrink-0 gap-2"><button type="button" disabled={Boolean(reviewingId)} onClick={() => void reviewRequest(request.id, "REJECTED")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/60 hover:border-red-300/20 hover:text-red-100 disabled:opacity-50">Decline</button><button type="button" disabled={Boolean(reviewingId)} onClick={() => void blockPendingApplicant(request)} className="rounded-lg border border-red-300/25 px-3 py-2 text-xs font-semibold text-red-100/80 hover:bg-red-300/[0.05] disabled:opacity-50">Block</button><button type="button" disabled={Boolean(reviewingId)} onClick={() => void reviewRequest(request.id, "APPROVED")} className="rounded-lg bg-emerald-200 px-3 py-2 text-xs font-semibold text-[#0b1710] disabled:opacity-50">{reviewingId === request.id ? "Reviewing…" : "Approve access"}</button></div></article>)}</div>}
         </section>
 
         <section className="mt-6 rounded-xl border border-white/[0.09] bg-white/[0.015] p-5 sm:p-7">
