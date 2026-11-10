@@ -1,0 +1,30 @@
+name: Production uptime and dependency health
+
+on:
+  schedule:
+    # Four checks per day: low GitHub Actions usage and no paid monitor.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: converge-production-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout read-only monitor
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Set up pinned Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '24'
+      - name: Check production liveness and Supabase Auth readiness
+        run: node scripts/monitor-production.mjs
