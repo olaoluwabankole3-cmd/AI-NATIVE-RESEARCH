@@ -173,7 +173,10 @@ export default function MessagesInboxPage() {
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Conversations that keep ideas moving.</h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">A private space to follow up, exchange ideas, and work with people in your network.</p>
           </div>
-          <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/calls" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-emerald-200/30 bg-emerald-200/[.06] px-4 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-200/[.12]"><span aria-hidden="true">☎</span> Voice calls</Link>
+            <Link href="/people" className="inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-200 px-4 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
+          </div>
         </section>
 
         {loadError && <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-4 py-3 text-sm leading-6 text-red-200">
