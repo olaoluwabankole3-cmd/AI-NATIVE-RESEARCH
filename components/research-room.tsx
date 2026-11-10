@@ -155,7 +155,7 @@ export function ResearchRoom({
   }
 
   return (
-    <section aria-labelledby="research-room-heading" className="converge-research-room mt-12 min-w-0 rounded-3xl border border-emerald-300/15 bg-emerald-300/[0.02] p-4 sm:p-7">
+    <section id="research-record" aria-labelledby="research-room-heading" className="converge-research-room mt-12 min-w-0 rounded-3xl border border-emerald-300/15 bg-emerald-300/[0.02] p-4 sm:p-7">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Research room</p>
@@ -187,7 +187,7 @@ export function ResearchRoom({
       </div>
 
       {showForm && (
-        <form id="converge-artifact-form" onSubmit={handleCreate} className="mt-5 grid gap-4 rounded-2xl border border-white/10 bg-black/10 p-4 sm:p-5">
+        <form id="converge-artifact-form" onSubmit={handleCreate} className="mt-5 grid min-w-0 gap-4 rounded-2xl border border-white/10 bg-black/10 p-4 sm:p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label>
               <span className="mb-2 block text-sm text-white/65">Artifact type</span>
