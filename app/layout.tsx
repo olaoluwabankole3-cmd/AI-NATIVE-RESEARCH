@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./marketing.css";
+import { IncomingVoiceCall } from "@/components/incoming-voice-call";
 
 export const metadata: Metadata = {
   title: "Converge — People, Knowledge & Specialist AI",
@@ -18,7 +19,9 @@ export default function RootLayout({
             UI-only preview. No live database is connected; sign-in, messaging, research and AI actions are disabled here.
           </div>
         )}
-        {children}</body>
+        {children}
+        <IncomingVoiceCall />
+      </body>
     </html>
   );
 }
