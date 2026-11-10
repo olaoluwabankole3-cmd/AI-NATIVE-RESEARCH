@@ -26,6 +26,6 @@
     "@tailwindcss/postcss": "4.1.16"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": "24.x"
   }
 }
