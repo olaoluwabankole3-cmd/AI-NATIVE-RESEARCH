@@ -61,3 +61,16 @@ Migration already applied:
 - Deletion audit checked RLS and UI confirmations. A determined owner can still call permitted Data API DELETE operations without the interface's confirmation dialog. A stronger server-side confirmation or recent-sign-in design for community/topic deletion would require a separately verified release. The existing account deletion is also not transactional across content cleanup and Auth user removal (documented in Stage 3).
 - Live update and schema changes are recorded in the original Supabase migration ledger. All SQL in this PR is copied verbatim from the ledger. **Do not replay migrations using `supabase db push`** while the historical migration baseline is unreconciled.
 - This is a **stacked draft PR**, not a production deployment. CI and UI-only preview are necessary but insufficient for multi-user functional sign-off.
+
+## Post-migration read-only verification (10 November 2026)
+- All **four** Stage 4 migrations are present in the original Supabase ledger.
+- Public `communities`: 1; `community_members`: 1; `community_join_requests`: 0; `community_bans`: 0.
+- `direct_conversations`: 1; `direct_messages`: 3; `notifications`: 7. No existing data was changed or deleted.
+- Exactly one active community request notification trigger and one active DM-acceptance notification trigger.
+- `authenticated` can SELECT notifications, DELETE own notifications under RLS and UPDATE the `is_read` column only.
+- `authenticated` cannot INSERT/forge notifications or UPDATE their `title` / `recipient_id`.
+- `anon` cannot execute request approvals, moderation, or DM request response functions.
+- Owner-only community DELETE and recipient-only notification DELETE policies remain intact.
+- Supabase advisor findings remain: 2 informational no-policy notices, 2 anonymous SECURITY DEFINER exceptions, 20 authenticated SECURITY DEFINER function notices, 1 Auth leaked-password-protection notice. These are existing findings, not new migration regressions.
+
+All of these are schema/policy checks, **not a substitute for two-account end-to-end testing**.
