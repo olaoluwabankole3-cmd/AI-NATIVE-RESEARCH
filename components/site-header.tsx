@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 
-type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "workspaces" | "more" | "profile" | "settings" | "signout" | "help";
+type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "calls" | "agents" | "notifications" | "workspaces" | "more" | "profile" | "settings" | "signout" | "help";
 
 const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/communities", label: "Research spaces", icon: "communities" },
@@ -15,6 +15,7 @@ const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/organizations", label: "Organisations", icon: "organizations" },
   { href: "/network", label: "Network", icon: "network" },
   { href: "/messages", label: "Messages", icon: "messages" },
+  { href: "/calls", label: "Voice calls", icon: "calls" },
   { href: "/agents", label: "AI registry", icon: "agents" },
   { href: "/workspaces", label: "Workspaces", icon: "workspaces" },
 ];
@@ -26,7 +27,7 @@ const desktopLinks: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/notifications", label: "Notifications", icon: "notifications" },
 ];
 
-const moreLinks = links.filter((link) => ["/people", "/organizations", "/network", "/workspaces"].includes(link.href));
+const moreLinks = links.filter((link) => ["/people", "/organizations", "/network", "/workspaces", "/calls"].includes(link.href));
 
 function TopNavGlyph({ name }: { name: TopNavIconName }) {
   const common = {
@@ -54,6 +55,8 @@ function TopNavGlyph({ name }: { name: TopNavIconName }) {
       return <svg {...common}><circle cx="12" cy="5" r="2.3" /><circle cx="5" cy="18" r="2.3" /><circle cx="19" cy="18" r="2.3" /><path d="m10.9 7-4.7 8.9M13.1 7l4.7 8.9M7.5 18h9" /></svg>;
     case "messages":
       return <svg {...common}><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l-1-4.2A7.5 7.5 0 1 1 20 11.5Z" /><path d="M8 11h8M8 14.5h5" /></svg>;
+    case "calls":
+      return <svg {...common}><path d="M6.6 3.9c1.1-.8 2.3-.3 3.1.9l1.5 2.4c.5.9.4 1.7-.3 2.4l-1.1 1.1a15 15 0 0 0 3.5 3.5l1.1-1.1c.7-.7 1.5-.8 2.4-.3l2.4 1.5c1.2.8 1.7 2 .9 3.1l-1.1 1.5c-.7 1-2.1 1.4-3.3 1C9 18.2 5.8 15 3.1 8.2c-.4-1.2 0-2.6 1-3.3z" /></svg>;
     case "agents":
       return <svg {...common}><path d="m12 2.8 2.4 6.1 6.2 2.4-6.2 2.4-2.4 6.2-2.4-6.2-6.1-2.4 6.1-2.4L12 2.8Z" /><path d="m19.5 15.5 1.1 2.8 2.6 1.1-2.6 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.8Z" /></svg>;
     case "notifications":
