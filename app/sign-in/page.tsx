@@ -32,16 +32,23 @@ export default function SignInPage() {
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setMessage(error.message);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+      if (!data.session || !data.user) {
+        setMessage("Sign-in did not complete. Please try again.");
+        return;
+      }
+      router.replace(safePostSignInDestination());
+      router.refresh();
+    } catch {
+      setMessage("We could not contact authentication. Check your connection and try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push(safePostSignInDestination());
-    router.refresh();
   }
 
   async function continueWithGoogle() {
@@ -50,16 +57,18 @@ export default function SignInPage() {
     const destination = safePostSignInDestination();
     const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`;
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo,
-        queryParams: { prompt: "select_account" },
-      },
-    });
-
-    if (error) {
-      setMessage(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: { prompt: "select_account" },
+        },
+      });
+      if (error) setMessage(error.message);
+    } catch {
+      setMessage("Google sign-in could not start. Check your connection and try again.");
+    } finally {
       setLoading(false);
     }
   }
@@ -185,10 +194,10 @@ export default function SignInPage() {
                 <Link
                   href="/sign-up"
                   onClick={(event) => {
-                    const redirect = new URLSearchParams(window.location.search).get("redirect");
-                    if (redirect) {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.has("redirect") || params.has("next")) {
                       event.preventDefault();
-                      router.push(`/sign-up?redirect=${encodeURIComponent(redirect)}`);
+                      router.push(`/sign-up?redirect=${encodeURIComponent(safePostSignInDestination())}`);
                     }
                   }}
                   className="font-bold text-[#a4edc1] transition hover:text-[#c1f7d3]"
