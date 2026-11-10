@@ -30,8 +30,8 @@ export async function GET(request: Request) {
     .eq("id", callId).maybeSingle();
 
   if (error || !call || (call.caller_id !== user.id && call.callee_id !== user.id) ||
-    !["ringing", "active"].includes(call.status) ||
-    (call.status === "ringing" && Date.parse(call.ring_expires_at) < Date.now())) {
+    call.status !== "active") {
+    // Only answered calls receive relay credentials, limiting TURN abuse.
     return NextResponse.json({ error: "Call not available." }, { status: 404, headers });
   }
 
