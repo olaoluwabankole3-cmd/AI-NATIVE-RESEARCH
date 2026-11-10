@@ -35,6 +35,10 @@ for (const [route, expected] of [
   assert.ok(html.toLowerCase().includes(expected.toLowerCase()), route + " should include its page marker");
 }
 
+const signupPage = await request("/sign-up");
+assert.equal(signupPage.status, 200);
+assert.ok((await signupPage.text()).includes("8+ characters"), "Registration and reset must require at least eight password characters");
+
 const warningPage = await request("/");
 assert.equal(warningPage.status, 200);
 assert.ok((await warningPage.text()).includes("UI-only preview"), "Test preview must clearly identify its offline mode");
