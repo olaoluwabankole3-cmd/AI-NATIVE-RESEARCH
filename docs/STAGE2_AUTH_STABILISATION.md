@@ -15,4 +15,6 @@ This is a reviewable code change on a non-production branch of the existing Conv
 2. Verify the email provider can deliver reset emails. Do not reuse a real user's password; use disposable test accounts.
 3. Test Google sign-in, email sign-in, password reset, expired links, and post-login returns in the browser.
 4. Existing Preview environment has no Supabase public variables and preview builds fail. Do not copy production service-role or AI-provider secrets into Preview.
-5. No account data or database migrations were changed. This PR should stay unmerged until end-to-end smoke checks are possible.
+5. **Backend change already applied:** `20261110151451_deduplicate_auth_user_profile_trigger.sql` removes the duplicate earlier `auth.users` trigger. The `on_auth_user_profile_created` trigger remains active to populate names and avatars for future sign-ups; no existing profile data was changed. The old function remains for rollback.
+6. The production migration was already recorded in Supabase. Do not reapply it manually; this PR contains the exact ledger-stored SQL for reproducibility.
+7. The new signup path requires end-to-end verification using a disposable account. Do not merge until smoke checks are possible.
