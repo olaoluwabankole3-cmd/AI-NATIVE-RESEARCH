@@ -1,15 +1,31 @@
 import { NextResponse } from "next/server";
 import { createCommunityAdminClient } from "@/lib/community-access";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { isRecentSignIn } from "@/lib/auth/recent-sign-in";
 
 export const runtime = "nodejs";
 
 export async function DELETE(request: Request) {
+  // This endpoint uses browser session cookies. Reject cross-site mutations.
+  const suppliedOrigin = request.headers.get("origin");
+  if (suppliedOrigin && suppliedOrigin !== new URL(request.url).origin) {
+    return NextResponse.json({ error: "Cross-site account deletion is not allowed." }, { status: 403 });
+  }
+
   const auth = await createServerClient();
   const { data: { user }, error: authError } = await auth.auth.getUser();
 
   if (authError || !user) {
     return NextResponse.json({ error: "Sign in again before deleting your account." }, { status: 401 });
+  }
+
+  // A refresh-token rotation is not a substitute for a new login.
+  // Old sessions must reauthenticate before destructive account operations.
+  if (!isRecentSignIn(user.last_sign_in_at)) {
+    return NextResponse.json({
+      error: "For your security, sign out and sign in again, then retry account deletion within 15 minutes.",
+      reauthenticationRequired: true,
+    }, { status: 403 });
   }
 
   const payload = await request.json().catch(() => null) as {
