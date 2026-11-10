@@ -58,4 +58,26 @@ assert.ok(recovery.status >= 300 && recovery.status < 400);
 const recoveryLocation = new URL(recovery.headers.get("location") || "", origin);
 assert.equal(recoveryLocation.pathname, "/forgot-password");
 
-console.log("Converge HTTP smoke passed: six pages and three auth callback cases.");
+// Negative-permission HTTP checks never use an account or a real database.
+// Each request must stop at the authentication boundary before any mutation.
+const zeroId = "00000000-0000-0000-0000-000000000000";
+const securedRoutes = [
+  { method: "GET", path: `/api/communities/${zeroId}/requests` },
+  { method: "POST", path: `/api/communities/${zeroId}/requests`, body: "{}" },
+  { method: "PATCH", path: `/api/communities/${zeroId}/requests/${zeroId}`, body: '{"decision":"APPROVED"}' },
+  { method: "POST", path: `/api/topics/${zeroId}/replies`, body: '{"body":"Unauthorized test contribution"}' },
+  { method: "POST", path: `/api/topics/${zeroId}/agents/${zeroId}/run`, body: "{}" },
+  { method: "POST", path: `/api/topics/${zeroId}/agents/${zeroId}/artifacts/synthesis`, body: "{}" },
+  { method: "DELETE", path: "/api/account/delete", body: "{}" },
+];
+for (const testCase of securedRoutes) {
+  const response = await request(testCase.path, {
+    method: testCase.method,
+    headers: testCase.body === undefined ? {} : { "Content-Type": "application/json" },
+    ...(testCase.body === undefined ? {} : { body: testCase.body }),
+  });
+  assert.equal(response.status, 401,
+    testCase.method + " " + testCase.path + " must reject an unauthenticated request");
+}
+
+console.log("Converge HTTP smoke passed: six pages, three callback cases, and seven unauthenticated API denials.");
