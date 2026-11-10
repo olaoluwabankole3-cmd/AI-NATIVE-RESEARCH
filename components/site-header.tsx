@@ -313,7 +313,7 @@ export function SiteHeader() {
                 <p>CONVERGE MENU</p>
                 <h2 id="converge-mobile-more-title">More</h2>
               </div>
-              <button type="button" className="converge-mobile-more-panel__close" aria-label="Close More menu" onClick={() => setMobileOpen(false)}>×</button>
+              <button type="button" className="converge-mobile-more-panel__close" aria-label="Close More menu" onClick={() => { setMobileOpen(false); mobileMenuTriggerRef.current?.focus(); }}>×</button>
             </div>
             <p className="converge-mobile-more-panel__label">Explore</p>
             <nav className="converge-mobile-more-grid" aria-label="More destinations">
