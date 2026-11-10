@@ -120,21 +120,32 @@ export default function MessagesInboxPage() {
     const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
     setBusyRequestId(conversation.id);
     setLoadError("");
-    const response = action === "block"
-      ? await supabase.rpc("block_user", { p_blocked_user_id: otherId })
-      : await supabase.rpc("respond_direct_message_request", { p_conversation_id: conversation.id, p_action: action });
-    if (response.error) setLoadError(response.error.message);
-    else await loadInbox(viewerId);
-    setBusyRequestId(null);
+    try {
+      const response = action === "block"
+        ? await supabase.rpc("block_user", { p_blocked_user_id: otherId })
+        : await supabase.rpc("respond_direct_message_request", { p_conversation_id: conversation.id, p_action: action });
+      if (response.error) throw response.error;
+      await loadInbox(viewerId);
+    } catch (caught) {
+      setLoadError(caught instanceof Error ? caught.message : "The message request could not be updated. Try again.");
+    } finally {
+      setBusyRequestId(null);
+    }
   }
 
   async function unblockPerson(userId: string) {
     if (!viewerId || busyRequestId) return;
     setBusyRequestId(userId);
-    const { error } = await supabase.rpc("unblock_user", { p_blocked_user_id: userId });
-    if (error) setLoadError(error.message);
-    else await loadInbox(viewerId);
-    setBusyRequestId(null);
+    setLoadError("");
+    try {
+      const { error } = await supabase.rpc("unblock_user", { p_blocked_user_id: userId });
+      if (error) throw error;
+      await loadInbox(viewerId);
+    } catch (caught) {
+      setLoadError(caught instanceof Error ? caught.message : "Could not unblock this member. Try again.");
+    } finally {
+      setBusyRequestId(null);
+    }
   }
 
   useEffect(() => {
