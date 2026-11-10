@@ -75,6 +75,16 @@ begin
   where status='ringing' and ring_expires_at < now()
     and (v_actor in (caller_id,callee_id) or v_other in (caller_id,callee_id));
 
+  -- Close orphaned calls when either participant stopped heartbeating.
+  -- Without this cleanup a crashed browser could block new calls forever.
+  update public.voice_calls
+  set status='failed',ended_at=now(),offer_sdp=null,answer_sdp=null
+  where status='active' and
+    (caller_seen_at < now() - interval '75 seconds'
+      or callee_seen_at is null
+      or callee_seen_at < now() - interval '75 seconds')
+    and (v_actor in (caller_id,callee_id) or v_other in (caller_id,callee_id));
+
   if exists (select 1 from public.voice_calls
     where status in ('ringing','active')
       and (v_actor in (caller_id,callee_id) or v_other in (caller_id,callee_id))) then
