@@ -85,6 +85,11 @@ export function ResearchRoom({
     void loadArtifacts();
   }, [topicId]);
 
+  // Bring mobile and keyboard users directly into the artifact editor.
+  useEffect(() => {
+    if (showForm) document.getElementById("research-artifact-title")?.focus();
+  }, [showForm]);
+
   async function handleGenerateSynthesis() {
     setGenerating(true);
     setMessage("");
