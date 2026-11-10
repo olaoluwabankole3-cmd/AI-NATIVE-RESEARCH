@@ -194,21 +194,25 @@ export default function CommunitySettingsPage() {
     setDeletingCommunity(true);
     setMessage("");
     setError(false);
-    const { error: deleteError, count } = await supabase
-      .from("communities")
-      .delete({ count: "exact" })
-      .eq("id", community.id)
-      .eq("created_by", userId);
+    try {
+      // The owner-only database DELETE policy is authoritative; the
+      // community-name confirmation prevents accidental UI submissions.
+      const { error: deleteError, count } = await supabase
+        .from("communities")
+        .delete({ count: "exact" })
+        .eq("id", community.id)
+        .eq("created_by", userId);
+      if (deleteError) throw deleteError;
+      if (count !== 1) throw new Error("The community could not be deleted. Confirm that you are its owner and try again.");
 
-    if (deleteError || !count) {
-      setMessage(deleteError?.message || "The community could not be deleted. Confirm that you are its owner and try again.");
+      router.replace("/communities");
+      router.refresh();
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : "Could not delete the community. Please try again.");
       setError(true);
+    } finally {
       setDeletingCommunity(false);
-      return;
     }
-
-    router.replace("/communities");
-    router.refresh();
   }
 
   const isOwner = Boolean(community && userId && community.created_by === userId);
