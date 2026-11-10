@@ -13,7 +13,12 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>{process.env.NEXT_PUBLIC_CONVERGE_PREVIEW_MODE === "ui-only" && (
+          <div role="status" className="relative z-[200] bg-amber-200 px-5 py-2.5 text-center text-xs font-semibold text-amber-950">
+            UI-only preview. No live database is connected; sign-in, messaging, research and AI actions are disabled here.
+          </div>
+        )}
+        {children}</body>
     </html>
   );
 }

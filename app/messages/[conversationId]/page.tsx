@@ -73,7 +73,7 @@ export default function DirectConversationPage() {
 
     const conversation = conversationData as ConversationRow;
     const otherId = conversation.user_low_id === currentUserId ? conversation.user_high_id : conversation.user_low_id;
-    const [{ data: profileData }, { data: messageData, error: messageError }, { data: blockData }, { data: blockedPair }] = await Promise.all([
+    const [{ data: profileData }, { data: messageData, error: messageError }, { data: blockData }, { data: blockedPair, error: blockedPairError }] = await Promise.all([
       supabase.from("profiles").select("id, username, display_name, avatar_url, headline").eq("id", otherId).maybeSingle(),
       supabase.from("direct_messages")
         .select("id, conversation_id, sender_id, body, created_at")
@@ -86,9 +86,12 @@ export default function DirectConversationPage() {
     setRequestStatus(conversation.request_status);
     setRequestCreatorId(conversation.created_by);
     setBlockedByMe(Boolean(blockData));
-    setBlockedBetween(Boolean(blockedPair));
+    // Fail closed: if the block lookup fails, do not offer the send form.
+    // Row-level security independently enforces messaging permissions.
+    setBlockedBetween(Boolean(blockedPair) || Boolean(blockedPairError));
 
     if (messageError) setPageError(messageError.message);
+    else if (blockedPairError) setPageError("We could not verify messaging permissions. Refresh to try again.");
     else setPageError("");
     setMember((profileData as MemberProfile | null) ?? {
       id: otherId, username: null, display_name: `Converge member · ${otherId.slice(0, 6)}`, avatar_url: null, headline: null,
