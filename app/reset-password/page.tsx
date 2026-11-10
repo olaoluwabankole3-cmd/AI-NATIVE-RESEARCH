@@ -14,6 +14,7 @@ export default function ResetPasswordPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [signOutIssue, setSignOutIssue] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -50,9 +51,15 @@ export default function ResetPasswordPage() {
       setConfirmation("");
       setSuccess(true);
       // A new login with the updated password is required after recovery.
-      await supabase.auth.signOut();
+      // Supabase signOut may return an error without throwing.
+      try {
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) setSignOutIssue(true);
+      } catch {
+        setSignOutIssue(true);
+      }
     } catch {
-      setError("The password was changed, but sign-out could not complete. Please sign out and sign in again.");
+      setError("We could not update your password. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -79,6 +86,7 @@ export default function ResetPasswordPage() {
                 <p role="status" className="rounded-xl border border-emerald-200/20 bg-emerald-200/[0.06] p-4 text-[13px] leading-6 text-[#b9f2cd]">
                   Your password was updated. Sign in again with your new password.
                 </p>
+                {signOutIssue && <p role="alert" className="rounded-xl border border-amber-200/20 bg-amber-200/[0.06] p-4 text-[12px] leading-6 text-amber-100">Your password changed, but we could not end this session automatically. Please use the account menu to sign out before signing in again.</p>}
                 <Link href="/sign-in" className="flex h-[52px] items-center justify-center rounded-full bg-[#a4edc1] text-[13px] font-extrabold text-[#102219]">Return to sign in ↗</Link>
               </div>
             ) : !sessionReady ? (
