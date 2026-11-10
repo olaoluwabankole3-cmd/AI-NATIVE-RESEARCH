@@ -35,6 +35,10 @@ for (const [route, expected] of [
   assert.ok(html.toLowerCase().includes(expected.toLowerCase()), route + " should include its page marker");
 }
 
+const warningPage = await request("/");
+assert.equal(warningPage.status, 200);
+assert.ok((await warningPage.text()).includes("UI-only preview"), "Test preview must clearly identify its offline mode");
+
 const callback = await request("/auth/callback?next=%2Fmessages%2Fabc&error=access_denied");
 assert.ok(callback.status >= 300 && callback.status < 400, "callback should redirect on provider error");
 const callbackLocation = new URL(callback.headers.get("location") || "", origin);
