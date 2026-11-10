@@ -1942,3 +1942,76 @@ main:not(.converge-home):has(> header) button:focus-visible {
   .converge-mobile-more-backdrop,
   .converge-mobile-more-panel { display: none !important; }
 }
+
+/* Stage 6: mobile usability refinements. Keep Converge's established palette. */
+.converge-app-page :is(a, button, input, select, textarea):focus-visible,
+.converge-mobile-dock :is(a, button):focus-visible,
+.converge-mobile-more-panel :is(a, button):focus-visible {
+  outline: 2px solid #a4edc1;
+  outline-offset: 3px;
+}
+.converge-mobile-dock__item { position: relative; }
+.converge-mobile-dock__badge {
+  position: absolute;
+  top: 1px;
+  right: max(4px, 12%);
+  min-width: 16px;
+  height: 16px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #0b1110;
+  border-radius: 999px;
+  padding: 0 3px;
+  background: #a4edc1;
+  color: #102219;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+}
+.converge-mobile-more-panel__close { min-width: 44px; min-height: 44px; }
+.converge-mobile-more-panel__footer button { min-height: 44px; }
+.converge-mobile-more-account a { min-height: 44px; }
+.converge-research-room { scroll-margin-top: 96px; }
+.converge-research-room :is(input, select, textarea) { min-width: 0; max-width: 100%; }
+.converge-research-room :is(h2, h3, p) { overflow-wrap: anywhere; }
+.converge-chat-thread { min-width: 0; }
+.converge-chat-messages { overscroll-behavior-y: contain; scrollbar-color: rgba(164,237,193,.22) transparent; }
+.converge-chat-messages p { overflow-wrap: anywhere; }
+@media (max-width: 680px) {
+  .converge-app-page button:not([aria-label="Dismiss notification"]) { touch-action: manipulation; }
+  .converge-chat-thread {
+    height: clamp(320px, calc(100dvh - 250px), 740px);
+    min-height: 320px !important;
+  }
+  .converge-chat-composer {
+    flex: 0 0 auto;
+    background: #101815;
+  }
+  .converge-chat-composer textarea {
+    font-size: 16px !important;
+    line-height: 1.5;
+  }
+  .converge-research-room { margin-top: 30px; }
+  .converge-research-room > div:first-child > div:last-child {
+    width: 100%;
+  }
+  .converge-research-room > div:first-child > div:last-child > button {
+    min-height: 44px;
+    flex: 1 1 155px;
+  }
+  .converge-app-page [role="group"][aria-label="Filter topics"] {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .converge-app-page [role="group"][aria-label="Filter topics"] button {
+    flex: 0 0 auto;
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .converge-research-room .animate-pulse,
+  .converge-chat-thread .animate-pulse {
+    animation: none !important;
+  }
+}
