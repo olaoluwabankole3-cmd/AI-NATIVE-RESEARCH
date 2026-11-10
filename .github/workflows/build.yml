@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Auth redirect regression tests
+        run: node --experimental-strip-types --test tests/auth-destination.test.mjs
+
       - name: Build
         run: npm run build
         env:

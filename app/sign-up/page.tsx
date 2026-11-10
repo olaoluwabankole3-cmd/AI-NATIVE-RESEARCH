@@ -4,18 +4,11 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { authDestinationFromSearch } from "@/lib/auth/destination";
 import { WordParticles } from "@/components/word-particles";
 
 function safePostSignInDestination(): string {
-  const requested = new URLSearchParams(window.location.search).get("redirect");
-  if (!requested || !requested.startsWith("/") || requested.startsWith("//")) return "/communities";
-  try {
-    const destination = new URL(requested, window.location.origin);
-    if (destination.origin !== window.location.origin) return "/communities";
-    return `${destination.pathname}${destination.search}${destination.hash}`;
-  } catch {
-    return "/communities";
-  }
+  return authDestinationFromSearch(window.location.search, window.location.origin);
 }
 
 export default function SignUpPage() {
