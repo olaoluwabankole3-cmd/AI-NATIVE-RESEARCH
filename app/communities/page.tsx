@@ -53,26 +53,24 @@ export default function CommunitiesPage() {
 
   async function loadWorkspace() {
     setLoading(true);
-    const [{ data: communityData, error: communityError }, { data: topicData, error: topicError }] = await Promise.all([
-      supabase.from("communities").select("id, name, slug, description, visibility, created_by").order("created_at", { ascending: false }),
-      supabase.from("topics").select("id, title, body, type, created_at, community_id").order("created_at", { ascending: false }).limit(40),
-    ]);
-    if (communityError) {
-      setMessage(communityError.message);
-      setMessageTone("error");
-    } else {
+    try {
+      const [{ data: communityData, error: communityError }, { data: topicData, error: topicError }] = await Promise.all([
+        supabase.from("communities").select("id, name, slug, description, visibility, created_by").order("created_at", { ascending: false }),
+        supabase.from("topics").select("id, title, body, type, created_at, community_id").order("created_at", { ascending: false }).limit(40),
+      ]);
+      if (communityError) throw communityError;
+      if (topicError) throw topicError;
       const communityList = communityData ?? [];
+      const communityMap = new Map(communityList.map((community) => [community.id, community]));
       setCommunities(communityList);
-      if (topicError) {
-        setMessage(topicError.message);
-        setMessageTone("error");
-        setTopics([]);
-      } else {
-        const communityMap = new Map(communityList.map((community) => [community.id, community]));
-        setTopics((topicData ?? []).map((topic) => ({ ...topic, type: topic.type as Topic["type"], community: communityMap.get(topic.community_id) })));
-      }
+      setTopics((topicData ?? []).map((topic) => ({ ...topic, type: topic.type as Topic["type"], community: communityMap.get(topic.community_id) })));
+      setMessage("");
+    } catch {
+      setMessage("Could not load research spaces. Check your connection and try again.");
+      setMessageTone("error");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   useEffect(() => { void loadWorkspace(); }, []);
@@ -104,19 +102,23 @@ export default function CommunitiesPage() {
     if (!slug) {
       setMessage("Choose a community name containing letters or numbers."); setMessageTone("error"); setCreating(false); return;
     }
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      setMessage("Your session has expired. Please sign in again."); setMessageTone("error"); setCreating(false); return;
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("Your session has expired. Please sign in again.");
+      const { data: community, error: communityError } = await supabase.from("communities")
+        .insert({ name: trimmedName, slug, description: trimmedDescription || null, visibility, members_can_create_topics: true, created_by: user.id })
+        .select("id, name, slug, description, visibility, created_by").single();
+      if (communityError) throw communityError;
+      if (!community) throw new Error("The community could not be confirmed. Refresh before trying again.");
+      setCommunities((current) => [community, ...current]);
+      setName(""); setDescription(""); setVisibility("PUBLIC"); setShowForm(false);
+      setMessage("Community created. Start a topic to open the conversation."); setMessageTone("success");
+    } catch (caught) {
+      setMessage(caught instanceof Error ? caught.message : "Could not create the community. Your draft is saved here.");
+      setMessageTone("error");
+    } finally {
+      setCreating(false);
     }
-    const { data: community, error: communityError } = await supabase.from("communities")
-      .insert({ name: trimmedName, slug, description: trimmedDescription || null, visibility, members_can_create_topics: true, created_by: user.id })
-      .select("id, name, slug, description, visibility, created_by").single();
-    if (communityError) {
-      setMessage(communityError.message); setMessageTone("error"); setCreating(false); return;
-    }
-    setCommunities((current) => [community, ...current]);
-    setName(""); setDescription(""); setVisibility("PUBLIC"); setShowForm(false);
-    setMessage("Community created. Start a topic to open the conversation."); setMessageTone("success"); setCreating(false);
   }
 
   const filters: { id: FeedFilter; label: string }[] = [
@@ -134,13 +136,13 @@ export default function CommunitiesPage() {
               <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">The conversation space</h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">Questions, research, and ideas in progress — shaped by people and specialist AI perspectives.</p>
             </div>
-            <button type="button" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100">
+            <button type="button" aria-expanded={showForm} aria-controls="create-community-form" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100">
               <span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Close form" : "New community"}
             </button>
           </div>
         </div>
 
-        {showForm && <form onSubmit={handleCreate} className="mt-6 rounded-xl border border-emerald-200/20 bg-[#111a16] p-5 sm:p-7">
+        {showForm && <form id="create-community-form" onSubmit={handleCreate} className="mt-6 rounded-xl border border-emerald-200/20 bg-[#111a16] p-5 sm:p-7">
           <h2 className="text-lg font-semibold">Create a community</h2>
           <p className="mt-1 text-sm text-white/45">Define a shared area of interest, inquiry, or work.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -151,13 +153,17 @@ export default function CommunitiesPage() {
           <div className="mt-4 flex flex-wrap gap-3"><button disabled={creating} className="rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] disabled:opacity-50">{creating ? "Creating…" : "Create community"}</button><button type="button" onClick={() => setShowForm(false)} className="px-3 py-2.5 text-sm text-white/50 hover:text-white">Cancel</button></div>
         </form>}
 
-        {message && <p role="status" className={`mt-4 rounded-lg border px-4 py-3 text-sm ${messageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-100"}`}>{message}</p>}
+        {message && <p role={messageTone === "error" ? "alert" : "status"} className={`mt-4 rounded-lg border px-4 py-3 text-sm ${messageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-100"}`}>{message}</p>}
 
+        <div className="mt-5 flex flex-wrap items-center gap-2 lg:hidden" aria-label="Quick navigation">
+          <a href="#converge-topic-list" className="inline-flex min-h-11 items-center rounded-lg border border-emerald-200/20 bg-emerald-200/[0.06] px-4 text-xs font-semibold text-emerald-100">Browse topics ↓</a>
+          <a href="#communities-directory" className="inline-flex min-h-11 items-center rounded-lg border border-white/10 px-4 text-xs font-semibold text-white/70">Community directory ↓</a>
+        </div>
         <div className="grid gap-7 pt-6 lg:grid-cols-[220px_minmax(0,1fr)_270px] lg:gap-8">
           <aside className="space-y-6">
             <section className="rounded-xl border border-white/[0.09] bg-white/[0.018] p-4">
               <div className="flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[0.13em] text-white/65">Your spaces</h2><span className="text-xs tabular-nums text-white/35">{communities.length}</span></div>
-              <label className="mt-4 block"><span className="sr-only">Search communities and topics</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search everything…" className="w-full rounded-lg border border-white/10 bg-black/15 px-3 py-2.5 text-xs outline-none placeholder:text-white/25 focus:border-emerald-200/40" /></label>
+              <label className="mt-4 block"><span className="mb-2 block text-xs font-medium text-white/55">Search research spaces</span><input type="search" aria-label="Search communities and topics" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search everything…" className="w-full rounded-lg border border-white/10 bg-black/15 px-3 py-2.5 text-xs outline-none placeholder:text-white/25 focus:border-emerald-200/40" /></label>
               <div className="mt-3 space-y-1">
                 {loading ? <p className="px-2 py-3 text-xs text-white/35">Loading spaces…</p> : filteredCommunities.slice(0, 8).map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-white/65 transition hover:bg-white/[0.045] hover:text-emerald-100"><span className="grid size-6 shrink-0 place-items-center rounded-md bg-emerald-200/10 text-[10px] font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><span className="min-w-0 flex-1 truncate">{community.name}</span><span title={community.visibility === "PRIVATE" ? "Private community" : "Public community"} className="text-[10px] text-white/30">{community.visibility === "PRIVATE" ? "▣" : "◉"}</span></Link>)}
                 {!loading && filteredCommunities.length === 0 && <p className="px-2 py-3 text-xs text-white/35">{search ? "No spaces match this search." : "No communities yet."}</p>}
@@ -171,10 +177,10 @@ export default function CommunitiesPage() {
             </section>
           </aside>
 
-          <section className="min-w-0">
+          <section id="converge-topic-list" className="min-w-0 scroll-mt-24">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.09] pb-4">
               <div><h2 className="text-lg font-semibold tracking-tight">Topics</h2><p className="mt-1 text-xs text-white/35">{loading ? "Loading topics…" : `${filteredTopics.length} topics shown`}</p></div>
-              <div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.02] p-1">{filters.map((item) => <button key={item.id} type="button" onClick={() => setFilter(item.id)} className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${filter === item.id ? "bg-emerald-200 text-[#0b1710]" : "text-white/50 hover:text-white"}`}>{item.label}</button>)}</div>
+              <div role="group" aria-label="Filter topics" className="flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border border-white/[0.08] bg-white/[0.02] p-1">{filters.map((item) => <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)} className={`min-h-10 shrink-0 rounded-md px-3 py-2 text-xs font-medium transition ${filter === item.id ? "bg-emerald-200 text-[#0b1710]" : "text-white/50 hover:text-white"}`}>{item.label}</button>)}</div>
             </div>
 
             {loading ? <div className="divide-y divide-white/[0.07]">{[0,1,2,3].map((item) => <div key={item} className="animate-pulse py-6"><div className="h-4 w-2/3 rounded bg-white/[0.06]" /><div className="mt-3 h-3 w-full rounded bg-white/[0.035]" /><div className="mt-2 h-3 w-1/3 rounded bg-white/[0.035]" /></div>)}</div>
@@ -207,7 +213,7 @@ export default function CommunitiesPage() {
           </aside>
         </div>
 
-        <section id="communities-directory" className="mt-12 border-t border-white/[0.09] pt-7">
+        <section id="communities-directory" className="mt-12 scroll-mt-24 border-t border-white/[0.09] pt-7">
           <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/70">Explore</p><h2 className="mt-2 text-xl font-semibold">Community directory</h2></div><span className="text-xs text-white/35">{filteredCommunities.length} spaces</span></div>
           {filteredCommunities.length > 0 ? <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{filteredCommunities.map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="rounded-lg border border-white/[0.09] bg-white/[0.015] p-4 transition hover:border-emerald-200/25 hover:bg-white/[0.03]"><div className="flex items-center gap-2"><span className="grid size-8 place-items-center rounded-lg bg-emerald-200/10 text-xs font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><h3 className="text-sm font-semibold">{community.name}</h3></div><p className="mt-3 line-clamp-2 text-xs leading-5 text-white/40">{community.description || "A shared space for discussion and research."}</p><p className="mt-3 text-[10px] font-semibold text-emerald-200/70">Open community →</p></Link>)}</div> : <p className="mt-4 text-sm text-white/40">No communities found.</p>}
         </section>
