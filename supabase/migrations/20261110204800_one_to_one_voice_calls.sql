@@ -85,6 +85,17 @@ begin
       or callee_seen_at < now() - interval '75 seconds')
     and (v_actor in (caller_id,callee_id) or v_other in (caller_id,callee_id));
 
+  -- Limit unwanted repeated ringing even when calls end immediately.
+  if (select count(*) from public.voice_calls
+      where caller_id=v_actor and created_at > now() - interval '10 minutes') >= 5 then
+    raise exception 'Call limit reached. Try again later.';
+  end if;
+  if exists (select 1 from public.voice_calls
+      where caller_id=v_actor and callee_id=v_other
+        and created_at > now() - interval '30 seconds') then
+    raise exception 'Please wait before calling this member again.';
+  end if;
+
   if exists (select 1 from public.voice_calls
     where status in ('ringing','active')
       and (v_actor in (caller_id,callee_id) or v_other in (caller_id,callee_id))) then
