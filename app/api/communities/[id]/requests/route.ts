@@ -56,12 +56,28 @@ export async function POST(request: Request, { params }: Params) {
     .eq("community_id", id).eq("user_id", user.id).maybeSingle();
   if (membership) return NextResponse.json({ error: "You are already a member." }, { status: 409 });
 
-  const { data, error } = await admin.from("community_join_requests").insert({
+  // Check moderation explicitly so a banned member receives a useful response,
+  // even if they call this endpoint directly rather than using the UI.
+  const { data: ban, error: banError } = await admin.from("community_bans")
+    .select("user_id").eq("community_id", id).eq("user_id", user.id).maybeSingle();
+  if (banError) return NextResponse.json({ error: "Could not verify community access." }, { status: 500 });
+  if (ban) return NextResponse.json({ error: "You cannot request access to this community." }, { status: 403 });
+
+  // IMPORTANT: use the authenticated request client for writes, never service_role.
+  // The database RLS policy independently checks membership, visibility and bans.
+  // This closes the bypass when a moderation decision races with an API request.
+  const { data, error } = await auth.from("community_join_requests").insert({
     community_id: id, user_id: user.id, status: "PENDING", message: message || null,
   }).select("id, status, message, created_at").single();
 
-  if (error) return NextResponse.json({
-    error: error.code === "23505" ? "You already have a pending request for this community." : "Could not submit your access request.",
-  }, { status: error.code === "23505" ? 409 : 500 });
+  if (error) {
+    if (error.code === "23505") {
+      return NextResponse.json({ error: "You already have a pending request for this community." }, { status: 409 });
+    }
+    if (error.code === "42501") {
+      return NextResponse.json({ error: "You cannot request access to this community." }, { status: 403 });
+    }
+    return NextResponse.json({ error: "Could not submit your access request." }, { status: 500 });
+  }
   return NextResponse.json({ request: data }, { status: 201 });
 }
