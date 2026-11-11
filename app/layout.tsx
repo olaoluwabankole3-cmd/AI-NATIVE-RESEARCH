@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./marketing.css";
 import "./application-redesign.css";
+import "./application-refinement.css";
 
 export const metadata: Metadata = {
   title: "Converge — People, Knowledge & Specialist AI",
