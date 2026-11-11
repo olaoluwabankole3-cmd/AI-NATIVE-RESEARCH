@@ -21,12 +21,13 @@ const links: { href: string; label: string; icon: TopNavIconName }[] = [
 
 const desktopLinks: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/communities", label: "Research", icon: "communities" },
-  { href: "/agents", label: "AI registry", icon: "agents" },
-  { href: "/messages", label: "Messaging", icon: "messages" },
-  { href: "/notifications", label: "Notifications", icon: "notifications" },
+  { href: "/people", label: "Discover", icon: "people" },
+  { href: "/messages", label: "Messages", icon: "messages" },
+  { href: "/agents", label: "AI", icon: "agents" },
+  { href: "/notifications", label: "Alerts", icon: "notifications" },
 ];
 
-const moreLinks = links.filter((link) => ["/people", "/organizations", "/network", "/workspaces"].includes(link.href));
+const moreLinks = links.filter((link) => ["/organizations", "/network", "/workspaces"].includes(link.href));
 
 function TopNavGlyph({ name }: { name: TopNavIconName }) {
   const common = {
@@ -75,20 +76,27 @@ function TopNavGlyph({ name }: { name: TopNavIconName }) {
 
 const mobileLinksPrimary = [
   { href: "/communities", label: "Research", kind: "spaces" },
-  { href: "/agents", label: "AI", kind: "agents" },
+  { href: "/people", label: "Discover", kind: "discover" },
   { href: "/messages", label: "Inbox", kind: "inbox" },
-  { href: "/notifications", label: "Alerts", kind: "notifications" },
+  { href: "/agents", label: "AI", kind: "agents" },
 ] as const;
 
 function MobileGlyph({ name }: { name: (typeof mobileLinksPrimary)[number]["kind"] | "more" }) {
   const common = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
   switch (name) {
     case "spaces": return <svg {...common}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>;
+    case "discover": return <svg {...common}><circle cx="9" cy="8" r="3" /><path d="M3 20v-1.5a6 6 0 0 1 12 0V20M17 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5" /></svg>;
     case "agents": return <svg {...common}><path d="m12 2.8 2.4 6.1 6.2 2.4-6.2 2.4-2.4 6.2-2.4-6.2-6.1-2.4 6.1-2.4L12 2.8Z" /><path d="m19.5 15.5 1.1 2.8 2.6 1.1-2.6 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.8Z" /></svg>;
     case "notifications": return <svg {...common}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" /></svg>;
     case "inbox": return <svg {...common}><path d="M4 4.5h16v15H4z" /><path d="m4 8 8 5.2L20 8M9 15h6" /></svg>;
     default: return <svg {...common}><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" /></svg>;
   }
+}
+
+function isActiveDestination(pathname: string, href: string) {
+  if (href === "/communities") return pathname.startsWith("/communities") || pathname.startsWith("/topics/");
+  if (href === "/people") return pathname.startsWith("/people") || pathname.startsWith("/u/") || pathname.startsWith("/organizations") || pathname.startsWith("/network");
+  return pathname === href || pathname.startsWith(href + "/");
 }
 
 function getInitials(value: string) {
@@ -359,7 +367,7 @@ export function SiteHeader() {
 
   return (
     <>
-    <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
+    <header className="converge-app-header sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
       <div className="converge-site-header__inner mx-auto grid h-[72px] max-w-[1480px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-5 sm:px-8 lg:px-14">
         <Link href={userEmail ? "/communities" : "/"} className="converge-brand-link justify-self-start" aria-label="Converge home" onClick={() => setMobileOpen(false)}>
           <Image
@@ -370,11 +378,19 @@ export function SiteHeader() {
             priority
             className="converge-brand-image"
           />
+          <Image
+            src="/converge-symbol-mint.svg"
+            alt=""
+            width={46}
+            height={46}
+            aria-hidden="true"
+            className="converge-brand-symbol"
+          />
         </Link>
 
         <nav aria-label="Main navigation" className="converge-primary-nav hidden items-center gap-0.5 justify-self-center lg:flex">
           {desktopLinks.map((link) => {
-            const active = pathname === link.href || pathname.startsWith(link.href + "/");
+            const active = isActiveDestination(pathname, link.href);
             return (
               <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined} className={["converge-primary-nav__link", active ? "is-active" : "", active ? "text-white" : muted].join(" ")}>
                 <span className="converge-nav-icon-wrap">
@@ -513,18 +529,19 @@ export function SiteHeader() {
       {authReady && userEmail && (
         <nav className="converge-mobile-dock" aria-label="Mobile primary navigation">
           {mobileLinksPrimary.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            const active = isActiveDestination(pathname, item.href);
             return (
               <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={() => setMobileOpen(false)} className={["converge-mobile-dock__item", active ? "is-active" : ""].join(" ")}>
                 <MobileGlyph name={item.kind} />
                 <span>{item.label}</span>
-                {item.href === "/notifications" && unreadNotifications > 0 && <span className="converge-mobile-dock__badge" aria-label={`${unreadNotifications} unread notifications`}>{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
+                {item.href === "/messages" && unreadNotifications > 0 && <span className="sr-only">Notifications available in More</span>}
               </Link>
             );
           })}
-          <button ref={mobileMenuTriggerRef} type="button" aria-haspopup="dialog" aria-controls="converge-mobile-more-panel" aria-expanded={Boolean(mobileOpen && userEmail)} aria-label={mobileOpen && userEmail ? "Close More menu" : "Open More menu"} onClick={() => setMobileOpen((open) => !open)} className={["converge-mobile-dock__item", mobileOpen || !mobileLinksPrimary.some((item) => pathname === item.href || pathname.startsWith(item.href + "/")) ? "is-active" : ""].join(" ")}>
+          <button ref={mobileMenuTriggerRef} type="button" aria-haspopup="dialog" aria-controls="converge-mobile-more-panel" aria-expanded={Boolean(mobileOpen && userEmail)} aria-label={mobileOpen && userEmail ? "Close More menu" : "Open More menu"} onClick={() => setMobileOpen((open) => !open)} className={["converge-mobile-dock__item", mobileOpen || !mobileLinksPrimary.some((item) => isActiveDestination(pathname, item.href)) ? "is-active" : ""].join(" ")}>
             <MobileGlyph name="more" />
             <span>More</span>
+            {unreadNotifications > 0 && <span className="converge-mobile-dock__badge" aria-label={`${unreadNotifications} unread notifications`}>{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
           </button>
         </nav>
       )}
