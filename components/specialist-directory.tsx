@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Specialist = {
   id: string;
@@ -22,6 +22,13 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
   const [filter, setFilter] = useState<"all" | "available" | "planned">("all");
   const [selectedId, setSelectedId] = useState<string | null>(agents[0]?.id ?? null);
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
+
+  useEffect(() => {
+    if (mobileView !== "detail" || !window.matchMedia("(max-width: 767px)").matches) return;
+    const profile = document.getElementById("converge-specialist-detail");
+    profile?.scrollIntoView({ behavior: "auto", block: "start" });
+    profile?.focus({ preventScroll: true });
+  }, [mobileView, selectedId]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
@@ -57,7 +64,7 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
             </div>}
         <Link href="/admin/agents" className="converge-app-action converge-specialist-directory__manage">Manage registry ↗</Link>
       </aside>
-      <div id="converge-specialist-detail" className="converge-specialist-directory__detail">
+      <div id="converge-specialist-detail" tabIndex={-1} className="converge-specialist-directory__detail">
         <button type="button" className="converge-specialist-mobile-back" onClick={() => setMobileView("list")} aria-label="Back to AI specialist list">← All specialists</button>
         {selected ? <>
           <p className="converge-app-eyebrow">SPECIALIST PROFILE</p>
