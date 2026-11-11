@@ -241,8 +241,8 @@ export default function PeopleDirectoryPage() {
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / People</p>
           <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Find people, not just communities.</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50 sm:text-base">Discover researchers, practitioners, and curious minds across Converge. Follow someone to keep up with their work, or connect to build a mutual relationship.</p>
+              <h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Connect with people, not noise.</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50 sm:text-base">Find someone worth learning with, then choose how to connect. Follow useful research or build a mutual connection.</p>
             </div>
             <Link href="/network" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65 transition hover:border-emerald-200/25 hover:text-white">Manage my network ↗</Link>
           </div>
@@ -263,7 +263,7 @@ export default function PeopleDirectoryPage() {
 
         <section className="pt-7">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">Member directory</p><h2 className="mt-2 text-xl font-semibold tracking-[-0.04em]">Discover people across Converge</h2></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">Member directory</p><h2 className="mt-2 text-xl font-semibold tracking-[-0.04em]">People worth learning with</h2></div>
             <div className="flex w-full flex-col gap-2 sm:flex-row lg:max-w-2xl">
               <label className="relative min-w-0 flex-1">
                 <span className="sr-only">Search people</span>
@@ -286,7 +286,7 @@ export default function PeopleDirectoryPage() {
                 const profileHref = `/u/${person.username || person.id}`;
                 const actionBusy = busyAction?.endsWith(person.id) ?? false;
                 return (
-                  <article key={person.id} className="overflow-hidden rounded-2xl border border-white/[0.09] bg-[#101815]/80 transition hover:border-emerald-200/20">
+                  <article key={person.id} className="converge-app-list-row overflow-hidden rounded-2xl border border-white/[0.09] bg-[#101815]/80 transition hover:border-emerald-200/20">
                     <div className="h-1 bg-gradient-to-r from-emerald-200/60 via-emerald-200/15 to-transparent" />
                     <div className="p-5">
                       <Link href={profileHref} className="group flex items-start gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
