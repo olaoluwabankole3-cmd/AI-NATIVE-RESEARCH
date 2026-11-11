@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
 type ConversationRow = {
   id: string;
@@ -188,7 +189,10 @@ export default function MessagesInboxPage() {
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Messages</h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Your conversations and requests in one place.</p>
           </div>
-          <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
+          <div className="flex flex-wrap items-center gap-3">
+            {voiceCallsEnabled && <Link href="/calls" className="inline-flex min-h-11 items-center rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.08]">☎ Calls</Link>}
+            <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
+          </div>
         </section>
 
         <section className="converge-inbox-controls" aria-label="Find conversations">

@@ -6,8 +6,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
+import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
-type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "agents" | "notifications" | "workspaces" | "more" | "profile" | "settings" | "signout" | "help";
+type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "calls" | "agents" | "notifications" | "workspaces" | "more" | "profile" | "settings" | "signout" | "help";
 
 const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/communities", label: "Research spaces", icon: "communities" },
@@ -15,6 +16,7 @@ const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/organizations", label: "Organisations", icon: "organizations" },
   { href: "/network", label: "Network", icon: "network" },
   { href: "/messages", label: "Messages", icon: "messages" },
+  ...(voiceCallsEnabled ? [{ href: "/calls", label: "Voice calls", icon: "calls" as const }] : []),
   { href: "/agents", label: "AI registry", icon: "agents" },
   { href: "/workspaces", label: "Workspaces", icon: "workspaces" },
 ];
@@ -27,7 +29,7 @@ const desktopLinks: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/notifications", label: "Alerts", icon: "notifications" },
 ];
 
-const moreLinks = links.filter((link) => ["/organizations", "/network", "/workspaces"].includes(link.href));
+const moreLinks = links.filter((link) => ["/organizations", "/network", "/workspaces", "/calls"].includes(link.href));
 
 function TopNavGlyph({ name }: { name: TopNavIconName }) {
   const common = {
@@ -55,6 +57,8 @@ function TopNavGlyph({ name }: { name: TopNavIconName }) {
       return <svg {...common}><circle cx="12" cy="5" r="2.3" /><circle cx="5" cy="18" r="2.3" /><circle cx="19" cy="18" r="2.3" /><path d="m10.9 7-4.7 8.9M13.1 7l4.7 8.9M7.5 18h9" /></svg>;
     case "messages":
       return <svg {...common}><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l-1-4.2A7.5 7.5 0 1 1 20 11.5Z" /><path d="M8 11h8M8 14.5h5" /></svg>;
+    case "calls":
+      return <svg {...common}><path d="M7.8 3.8a1.5 1.5 0 0 1 1.8-.4l2.7 1.5a1.6 1.6 0 0 1 .6 2l-1.2 2.1a13 13 0 0 0 3.3 3.3l2.1-1.2a1.6 1.6 0 0 1 2 .6l1.5 2.7a1.5 1.5 0 0 1-.4 1.8c-1.5 1.3-3.1 1.6-5 .9-5.1-1.8-9.1-5.8-10.9-10.9-.7-1.9-.4-3.5.9-5Z" /></svg>;
     case "agents":
       return <svg {...common}><path d="m12 2.8 2.4 6.1 6.2 2.4-6.2 2.4-2.4 6.2-2.4-6.2-6.1-2.4 6.1-2.4L12 2.8Z" /><path d="m19.5 15.5 1.1 2.8 2.6 1.1-2.6 1.1-1.1 2.7-1.1-2.7-2.7-1.1 2.7-1.1 1.1-2.8Z" /></svg>;
     case "notifications":
@@ -107,7 +111,7 @@ export function SiteHeader() {
   const pathname = usePathname();
   // Detail screens own their mobile back button and composer. A permanent global dock
   // makes those screens cramped and can cover the chat input when the keyboard opens.
-  const isFocusedMobileRoute = /^\/(?:messages|topics)\/[^/]+\/?$/.test(pathname);
+  const isFocusedMobileRoute = /^\/(?:messages|topics|calls)\/[^/]+\/?$/.test(pathname);
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [mobileOpen, setMobileOpen] = useState(false);

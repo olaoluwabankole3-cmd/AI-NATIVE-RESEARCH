@@ -3,6 +3,8 @@ import "./globals.css";
 import "./marketing.css";
 import "./application-redesign.css";
 import "./application-refinement.css";
+import { IncomingVoiceCall } from "@/components/incoming-voice-call";
+import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
 export const metadata: Metadata = {
   title: "Converge — People, Knowledge & Specialist AI",
@@ -20,7 +22,8 @@ export default function RootLayout({
             UI-only preview. No live database is connected; sign-in, messaging, research and AI actions are disabled here.
           </div>
         )}
-        {children}</body>
+        {children}
+        {voiceCallsEnabled && <IncomingVoiceCall />}</body>
     </html>
   );
 }
