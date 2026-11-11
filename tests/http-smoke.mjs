@@ -29,6 +29,7 @@ for (const [route, expected] of [
   ["/reset-password", "Choose a new password"],
   ["/communities", "Communities"],
   ["/messages", "Your conversations and requests in one place."],
+  ["/calls", "Voice calls"],
   ["/notifications", "Your updates."],
 ]) {
   const response = await request(route);
@@ -36,6 +37,11 @@ for (const [route, expected] of [
   const html = await response.text();
   assert.ok(html.toLowerCase().includes(expected.toLowerCase()), route + " should include its page marker");
 }
+
+// Calls stay unavailable until the migration and relay have been verified.
+const gatedVoice = await request("/api/calls/ice?callId=00000000-0000-0000-0000-000000000000");
+assert.equal(gatedVoice.status, 503, "Voice ICE endpoint must stay disabled by default");
+assert.match(gatedVoice.headers.get("cache-control") || "", /no-store/);
 
 // Liveness must be cheap, read-only, and never reveal configuration.
 const livenessResponse = await request("/api/health");
