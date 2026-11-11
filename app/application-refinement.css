@@ -588,3 +588,15 @@
   }
   .converge-app-page #create-topic-form > div:first-child > p:last-child { display: none; }
 }
+
+/* Community details use the main topic list on mobile; information from the
+   sidebar remains available in the community header and settings links. */
+@media (max-width: 1023px) {
+  .converge-app-page .converge-community-info-aside { display: none !important; }
+}
+@media (min-width: 1024px) {
+  .converge-app-page .converge-community-info-aside > section:first-child {
+    background: transparent !important;
+    border-color: var(--converge-rule) !important;
+  }
+}
