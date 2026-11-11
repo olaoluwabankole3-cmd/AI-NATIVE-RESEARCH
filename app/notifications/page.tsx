@@ -187,15 +187,15 @@ export default function NotificationsPage() {
         <section className="converge-page-intro flex flex-col justify-between gap-5 border-b border-white/[0.09] py-9 sm:flex-row sm:items-end sm:py-12">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Notifications</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Stay in the loop.</h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Messages, community activity, and replies that bring your work forward.</p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Your updates.</h1>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Research replies, member requests, connections, and AI activity—organised in one calm inbox.</p>
           </div>
           <button type="button" onClick={() => void markAllRead()} disabled={!notifications.some((item) => !item.is_read) || busyId === "all"} className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65 transition hover:border-emerald-200/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-35">{busyId === "all" ? "Updating…" : "Mark all as read ✓"}</button>
         </section>
 
         {notice && <p role="alert" className="mt-5 rounded-xl border border-amber-200/20 bg-amber-200/[0.05] px-4 py-3 text-sm leading-6 text-amber-100">{notice}</p>}
 
-        <section className="mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
+        <section className="converge-notifications-list mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
           {loading ? <div className="grid gap-0">{[0,1,2,3].map((item) => <div key={item} className="h-24 animate-pulse border-b border-white/[0.06] bg-white/[0.02]" />)}</div>
             : notifications.length ? notifications.map((item) => {
               const actor = item.actor_id ? actors[item.actor_id] : undefined;
