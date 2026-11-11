@@ -32,7 +32,8 @@ test("research discovery keeps working filters, search, topics and community cre
   assert.match(page, /converge-research-discovery/);
   assert.match(page, /Search communities and topics/);
   assert.match(page, /aria-pressed=\{filter === item\.id\}/);
-  assert.match(page, /converge-topic-card__action/);
+  assert.match(page, /converge-topic-card/);
+  assert.match(page, /href=\{\`\/topics\/\$\{topic.id\}\`\}/);
   assert.match(page, /handleCreate/);
   assert.match(page, /aria-label="Quick navigation"/);
 });
