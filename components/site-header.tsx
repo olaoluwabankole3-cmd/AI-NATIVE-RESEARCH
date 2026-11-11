@@ -81,7 +81,7 @@ const mobileLinksPrimary = [
   { href: "/agents", label: "AI", kind: "agents" },
 ] as const;
 
-function MobileGlyph({ name }: { name: (typeof mobileLinksPrimary)[number]["kind"] | "more" }) {
+function MobileGlyph({ name }: { name: (typeof mobileLinksPrimary)[number]["kind"] | "more" | "notifications" }) {
   const common = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true as const };
   switch (name) {
     case "spaces": return <svg {...common}><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>;
