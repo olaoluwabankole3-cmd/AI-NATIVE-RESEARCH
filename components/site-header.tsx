@@ -534,7 +534,6 @@ export function SiteHeader() {
               <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={() => setMobileOpen(false)} className={["converge-mobile-dock__item", active ? "is-active" : ""].join(" ")}>
                 <MobileGlyph name={item.kind} />
                 <span>{item.label}</span>
-                {item.href === "/messages" && unreadNotifications > 0 && <span className="sr-only">Notifications available in More</span>}
               </Link>
             );
           })}
