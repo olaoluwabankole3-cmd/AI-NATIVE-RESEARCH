@@ -387,16 +387,16 @@
   main.converge-app-page:has(> .converge-app-header--focused):has(.converge-chat-grid) {
     display: flex !important;
     flex-direction: column;
-    height: 100dvh !important;
+    height: var(--converge-chat-visible-height,100dvh) !important;
     min-height: 0 !important;
     overflow: hidden !important;
     padding: 0 !important;
   }
   main.converge-app-page .converge-chat-workspace {
     width: 100% !important;
-    height: 100dvh !important;
+    height: var(--converge-chat-visible-height,100dvh) !important;
     min-height: 0 !important;
-    max-height: 100dvh !important;
+    max-height: var(--converge-chat-visible-height,100dvh) !important;
     overflow: hidden !important;
     padding: 0 !important;
   }
