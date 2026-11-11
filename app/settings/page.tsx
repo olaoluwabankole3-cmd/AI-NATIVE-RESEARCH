@@ -74,12 +74,12 @@ export default function SettingsPage() {
   return (
     <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
-      <div className="mx-auto max-w-4xl px-5 pb-24 pt-9 sm:px-8 sm:pt-12">
+      <div className="converge-settings mx-auto max-w-4xl px-5 pb-24 pt-9 sm:px-8 sm:pt-12">
         <div className="border-b border-white/[0.09] pb-8 sm:pb-10">
           <p className="mb-3 text-[9px] font-extrabold uppercase tracking-[0.2em] text-emerald-200/70">Your account</p>
           <h1 className="text-3xl font-semibold tracking-[-0.055em] sm:text-[40px]">Settings</h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-white/55">
-            Manage your Converge account and preferences. Only controls that are available today are linked below; the remaining settings will be added in stages.
+            Manage your profile, notifications and account safely. Controls that are not yet available are clearly labelled.
           </p>
         </div>
 
