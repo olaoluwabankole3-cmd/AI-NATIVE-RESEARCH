@@ -241,21 +241,16 @@ export default function PeopleDirectoryPage() {
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / People</p>
           <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Connect with people, not noise.</h1>
+              <h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Discover people</h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50 sm:text-base">Find someone worth learning with, then choose how to connect. Follow useful research or build a mutual connection.</p>
             </div>
             <Link href="/network" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65 transition hover:border-emerald-200/25 hover:text-white">Manage my network ↗</Link>
           </div>
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            {[
-              { label: "People to discover", value: people.length, note: "Visible member profiles" },
-              { label: "Research interests", value: interests.length, note: "Areas people care about" },
-              { label: "Your profile", value: "↗", note: "Keep your identity current", href: "/profile" },
-            ].map((stat) => <div key={stat.label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-              <p className="text-2xl font-semibold tracking-[-0.05em] text-emerald-100">{loading ? "—" : stat.value}</p>
-              <p className="mt-1 text-xs font-semibold text-white/75">{stat.label}</p>
-              {stat.href ? <Link href={stat.href} className="mt-1 inline-flex text-[10px] text-emerald-200 hover:text-emerald-100">{stat.note}</Link> : <p className="mt-1 text-[10px] text-white/35">{stat.note}</p>}
-            </div>)}
+          <div className="converge-directory-summary">
+            <span>{loading ? "Loading members…" : `${people.length} members`}</span>
+            <span aria-hidden="true">·</span>
+            <span>{interests.length} interests</span>
+            <Link href="/profile">Edit my profile ↗</Link>
           </div>
         </section>
 
@@ -263,7 +258,7 @@ export default function PeopleDirectoryPage() {
 
         <section className="pt-7">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">Member directory</p><h2 className="mt-2 text-xl font-semibold tracking-[-0.04em]">People worth learning with</h2></div>
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">Member directory</p><h2 className="mt-2 text-xl font-semibold tracking-[-0.04em]">Members</h2></div>
             <div className="flex w-full flex-col gap-2 sm:flex-row lg:max-w-2xl">
               <label className="relative min-w-0 flex-1">
                 <span className="sr-only">Search people</span>
