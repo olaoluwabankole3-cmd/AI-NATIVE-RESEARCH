@@ -169,17 +169,15 @@ export default function OrganizationsPage() {
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div className="max-w-3xl">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Organisations</p>
-              <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.06em] sm:text-5xl">Built around shared purpose.</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50 sm:text-base">Explore organisations, discover collaborators, and build communities around research that matters.</p>
+              <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.06em] sm:text-5xl">Organisations</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50 sm:text-base">Find organisations, manage memberships, or create a page for your team.</p>
             </div>
             <button type="button" onClick={() => { if (!userId) { router.push("/sign-in?next=/organizations"); return; } setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-5 py-3 text-sm font-bold text-[#0b1710] transition hover:bg-emerald-100"><span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Close form" : "Create organisation"}</button>
           </div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {[
-              { number: String(organizations.length).padStart(2, "0"), label: "Organisations on Converge", note: "Teams and institutions" },
-              { number: String(organizations.filter((item) => ["research_lab", "research_group", "university"].includes(item.organization_type)).length).padStart(2, "0"), label: "Research-led spaces", note: "Places for discovery" },
-              { number: String(memberships.filter((item) => item.user_id === userId && item.status === "ACTIVE").length).padStart(2, "0"), label: "Your memberships", note: "Teams you belong to" },
-            ].map((stat) => <div key={stat.label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4"><p className="text-2xl font-semibold tracking-[-0.05em] text-emerald-100">{loading ? "—" : stat.number}</p><p className="mt-1 text-xs font-semibold text-white/75">{stat.label}</p><p className="mt-1 text-[10px] text-white/35">{stat.note}</p></div>)}
+          <div className="converge-directory-summary">
+            <span>{loading ? "Loading organisations…" : `${organizations.length} organisations`}</span>
+            <span aria-hidden="true">·</span>
+            <span>{memberships.filter((item) => item.user_id === userId && item.status === "ACTIVE").length} memberships</span>
           </div>
         </section>
 
