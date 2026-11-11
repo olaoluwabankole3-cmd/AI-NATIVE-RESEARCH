@@ -39,6 +39,7 @@ export default function DirectConversationPage() {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
+  const workspaceRef = useRef<HTMLElement | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [member, setMember] = useState<MemberProfile | null>(null);
   const [requestStatus, setRequestStatus] = useState<ConversationRow["request_status"]>("ACCEPTED");
@@ -131,6 +132,23 @@ export default function DirectConversationPage() {
     return () => { void supabase.removeChannel(channel); };
   }, [conversationId, loadThread, supabase, viewerId]);
 
+  // iOS virtual keyboards can shrink visualViewport without resizing 100dvh.
+  // Limit the variable to this page so other screens keep their own viewport rules.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const resize = () => {
+      workspaceRef.current?.style.setProperty("--converge-chat-visible-height", `${Math.floor(viewport.height)}px`);
+    };
+    resize();
+    viewport.addEventListener("resize", resize);
+    window.addEventListener("resize", resize);
+    return () => {
+      viewport.removeEventListener("resize", resize);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
   // Scroll *within the conversation*, not the whole page. scrollIntoView previously
   // pushed the composer below the mobile viewport when a thread opened or refreshed.
   useEffect(() => {
@@ -214,7 +232,7 @@ export default function DirectConversationPage() {
   }
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main ref={workspaceRef} className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="converge-chat-workspace mx-auto flex min-h-[calc(100vh-72px)] max-w-[1400px] flex-col px-3 pb-6 pt-4 sm:px-7 sm:pt-7">
         <div className="converge-chat-grid">
