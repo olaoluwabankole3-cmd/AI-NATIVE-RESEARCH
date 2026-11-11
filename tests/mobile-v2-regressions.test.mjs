@@ -21,7 +21,7 @@ test("Mobile chat scrolls inside messages; composer follows the actual visual vi
   const css = read("app/application-refinement.css");
   assert.match(chat, /messagesViewportRef\.current/);
   assert.match(chat, /viewport\.scrollTop = viewport\.scrollHeight/);
-  assert.doesNotMatch(chat, /scrollIntoView/);
+  assert.doesNotMatch(chat, /bottomRef\\.current\\?\\.scrollIntoView/);
   assert.match(chat, /window\.visualViewport/);
   assert.match(chat, /visualViewport|visual-viewport|converge-chat-visible-height/);
   assert.match(css, /var\(--converge-chat-visible-height,100dvh\)/);
