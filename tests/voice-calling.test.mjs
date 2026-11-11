@@ -84,3 +84,17 @@ test("temporary TURN credentials never expose secret via a client environment va
   assert.doesNotMatch(route, /NEXT_PUBLIC_TURN_SHARED_SECRET/);
   assert.match(route, /"Cache-Control": "private, no-store/);
 });
+
+test("voice calling is disabled until database and relay release gates are satisfied", () => {
+  const config = read("lib/voice-calls-config.ts");
+  const layout = read("app/layout.tsx");
+  const api = read("app/api/calls/ice/route.ts");
+  const header = read("components/site-header.tsx");
+  const messages = read("app/messages/[conversationId]/page.tsx");
+  assert.match(config, /NEXT_PUBLIC_CONVERGE_CALLS_ENABLED === "true"/);
+  assert.match(layout, /voiceCallsEnabled && <IncomingVoiceCall \/>/);
+  assert.match(api, /if \(!voiceCallsEnabled\)/);
+  assert.match(api, /status: 503/);
+  assert.match(header, /voiceCallsEnabled \?/);
+  assert.match(messages, /voiceCallsEnabled && member/);
+});

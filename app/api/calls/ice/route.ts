@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ function listUrls(raw: string, allowed: string[]) {
 
 /** Issue short-lived coturn REST-style credentials only to call participants. */
 export async function GET(request: Request) {
+  if (!voiceCallsEnabled) return NextResponse.json({ error: "Voice calls are not enabled." }, { status: 503, headers });
   const callId = new URL(request.url).searchParams.get("callId") ?? "";
   if (!uuid.test(callId)) {
     return NextResponse.json({ error: "Invalid call ID." }, { status: 400, headers });

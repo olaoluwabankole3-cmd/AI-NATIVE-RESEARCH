@@ -1,6 +1,6 @@
 # Converge Voice — 1:1 internet calling
 
-Date: 10 November 2026. Status: review branch only — not released and SQL not applied.
+Date: 10 November 2026. Integrated into main for testing on 11 November 2026 behind an **off-by-default** `NEXT_PUBLIC_CONVERGE_CALLS_ENABLED` feature flag. SQL migration has **not** been applied; production calling is not enabled.
 
 ## What we are building
 
@@ -13,6 +13,12 @@ WhatsApp-style voice calling **between Converge members** (internet calls, not c
 - Supabase Postgres Changes notifies the caller and callee while their Converge tabs are open. An 8-second poll backs up incoming notifications; the active screen polls more frequently. No offline mobile push or native lock-screen ringing yet.
 - A server-only ICE endpoint at /api/calls/ice checks authenticated participation and generates temporary coturn credentials from TURN_SHARED_SECRET. Without TURN, carrier/mobile NAT and restrictive network calls can fail.
 - A call requires an accepted message conversation; blocks in either direction forbid calling and end any existing call. Call attempts are serialized, rings expire, and stale calls are cleaned up.
+
+## Integration and disabled-by-default release gate
+
+The `voice_calls` table is currently absent from the connected Supabase project. Call code is included in Converge, but with `NEXT_PUBLIC_CONVERGE_CALLS_ENABLED` unset, call links and incoming-call listeners are not mounted, and `/api/calls/ice` returns HTTP 503 with no database queries.
+
+Do not enable voice calls until the migration is verified in a disposable test database with adversarial RLS checks and the TURN relay and real-device testing are complete. Enabling requires a deployment. No production data or migrations were changed by merging this code.
 
 ## Database status — DO NOT apply blindly
 

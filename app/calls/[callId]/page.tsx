@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
 type CallStatus = "ringing" | "active" | "ended" | "declined" | "missed" | "failed";
 type Call = {
@@ -45,7 +46,7 @@ function waitForIceGathering(pc: RTCPeerConnection): Promise<void> {
   });
 }
 
-export default function VoiceCallPage() {
+function VoiceCallPageEnabled() {
   const { callId } = useParams<{ callId: string }>();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -373,4 +374,16 @@ export default function VoiceCallPage() {
       </div>
     </main>
   );
+}
+
+export default function VoiceCallPage() {
+  if (voiceCallsEnabled) return <VoiceCallPageEnabled />;
+  return <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <SiteHeader />
+    <section className="mx-auto max-w-2xl px-5 py-16">
+      <Link href="/messages" className="text-sm text-emerald-200">← Messages</Link>
+      <h1 className="mt-7 text-3xl font-semibold">Voice calls are not enabled</h1>
+      <p className="mt-3 text-sm text-white/60">Call testing requires the voice database migration and working relay.</p>
+    </section>
+  </main>;
 }
