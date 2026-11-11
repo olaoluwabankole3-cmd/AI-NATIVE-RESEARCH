@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { ConversationRail } from "@/components/conversation-rail";
 
 type ConversationRow = { id: string; user_low_id: string; user_high_id: string; created_by: string; request_status: "PENDING" | "ACCEPTED" | "IGNORED" };
 type MemberProfile = {
@@ -210,7 +211,10 @@ export default function DirectConversationPage() {
   return (
     <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
-      <div className="mx-auto flex min-h-[calc(100vh-72px)] max-w-[1120px] flex-col px-3 pb-6 pt-4 sm:px-7 sm:pt-7">
+      <div className="converge-chat-workspace mx-auto flex min-h-[calc(100vh-72px)] max-w-[1400px] flex-col px-3 pb-6 pt-4 sm:px-7 sm:pt-7">
+        <div className="converge-chat-grid">
+          <ConversationRail viewerId={viewerId} activeId={conversationId} />
+          <div className="converge-chat-main">
         <div className="mb-4 flex items-center gap-3">
           <Link href="/messages" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 text-lg text-white/65 transition hover:border-emerald-200/25 hover:text-white" aria-label="Back to inbox">←</Link>
           <div className="min-w-0 flex-1">
@@ -236,7 +240,7 @@ export default function DirectConversationPage() {
             <>
               <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3 sm:px-6">
                 <div className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/10 bg-emerald-200/[0.08] text-xs font-bold text-emerald-100">{member?.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member?.display_name ?? "Converge")}</div>
-                <p className="min-w-0 break-words text-xs leading-5 text-white/50">Private conversation · messages are visible only to these two members.</p>
+                <p className="min-w-0 break-words text-xs leading-5 text-white/50">Private conversation with this member.</p>
               </div>
               {isIncomingRequest && <div className="border-b border-amber-200/15 bg-amber-200/[0.04] px-4 py-4 sm:px-6">
                 <p className="text-sm font-semibold text-amber-100">Message request</p>
@@ -283,6 +287,22 @@ export default function DirectConversationPage() {
             </>
           )}
         </section>
+          </div>
+          <aside className="converge-chat-context" aria-label="Conversation details">
+            <div className="converge-chat-context__identity">
+              <div className="converge-chat-context__avatar" aria-hidden="true">{member?.avatar_url ? <img src={member.avatar_url} alt="" /> : initials(member?.display_name ?? "Converge")}</div>
+              <h2>{member?.display_name ?? "Conversation"}</h2>
+              {member?.headline && <p>{member.headline}</p>}
+              {member && <Link href={`/u/${member.username || member.id}`} className="converge-app-action">View member profile ↗</Link>}
+            </div>
+            <div className="converge-chat-context__privacy">
+              <span className="converge-app-eyebrow">PRIVACY &amp; CONTROLS</span>
+              <p>Message requests, blocking, and conversation access follow Converge's existing permissions.</p>
+              {member && <button type="button" disabled={moderatingRequest} onClick={() => void toggleBlock()} className="converge-app-action converge-app-action--danger">{moderatingRequest ? "Working…" : blockedByMe ? "Unblock person" : "Block person"}</button>}
+              <Link href="/messages" className="converge-app-action">All conversations ↗</Link>
+            </div>
+          </aside>
+        </div>
       </div>
     </main>
   );
