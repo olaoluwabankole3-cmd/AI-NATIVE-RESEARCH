@@ -126,8 +126,12 @@ export default function CommunitiesPage() {
   ];
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]" data-mobile-creating={showForm ? "true" : "false"}>
       <SiteHeader />
+      {showForm && <nav className="converge-create-mobile-back" aria-label="Create community navigation">
+        <button type="button" onClick={() => setShowForm(false)}>← Research</button>
+        <strong>New community</strong>
+      </nav>}
       <div className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
         <div className="converge-page-intro flex flex-col gap-2 border-b border-white/[0.09] py-7 sm:py-9">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">CONVERGE / RESEARCH</p>
@@ -185,7 +189,7 @@ export default function CommunitiesPage() {
             </div>
 
             {loading ? <div className="divide-y divide-white/[0.07]">{[0,1,2,3].map((item) => <div key={item} className="animate-pulse py-6"><div className="h-4 w-2/3 rounded bg-white/[0.06]" /><div className="mt-3 h-3 w-full rounded bg-white/[0.035]" /><div className="mt-2 h-3 w-1/3 rounded bg-white/[0.035]" /></div>)}</div>
-            : filteredTopics.length === 0 ? <div className="my-5 rounded-xl border border-dashed border-white/15 px-5 py-12 text-center"><span className="text-2xl text-emerald-200">↗</span><h3 className="mt-3 text-base font-semibold">{search ? "No matching topics" : filter === "RESEARCH" ? "No research topics yet" : filter === "DISCUSSION" ? "No discussions yet" : "The next good question starts here"}</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/40">{search ? "Try another search term or clear your search." : "Open a community and start a topic. A clear question gives others something useful to build on."}</p>{search ? <button onClick={() => setSearch("")} className="mt-4 text-xs font-semibold text-emerald-200">Clear search</button> : <Link href={communities[0] ? `/communities/${communities[0].slug}` : "#communities-directory"} className="mt-4 inline-block text-xs font-semibold text-emerald-200 hover:text-white">{communities[0] ? "Start a topic in a community →" : "Create a community above →"}</Link>}</div>
+            : filteredTopics.length === 0 ? <div className="my-5 rounded-xl border border-dashed border-white/15 px-5 py-12 text-center"><span className="text-2xl text-emerald-200">↗</span><h3 className="mt-3 text-base font-semibold">{search ? "No matching topics" : filter === "RESEARCH" ? "No research topics yet" : filter === "DISCUSSION" ? "No discussions yet" : "The next good question starts here"}</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/40">{search ? "Try another search term or clear your search." : "Open a community and start a topic. Open a community to start a topic."}</p>{search ? <button onClick={() => setSearch("")} className="mt-4 text-xs font-semibold text-emerald-200">Clear search</button> : <Link href={communities[0] ? `/communities/${communities[0].slug}` : "#communities-directory"} className="mt-4 inline-block text-xs font-semibold text-emerald-200 hover:text-white">{communities[0] ? "Start a topic in a community →" : "Create a community above →"}</Link>}</div>
             : <div className="converge-topic-card-list">{filteredTopics.map((topic) => <article key={topic.id} className="converge-topic-card group">
               <div className="flex items-start gap-3 sm:gap-4">
                 <span className={`mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border text-xs font-bold ${topic.type === "RESEARCH" ? "border-emerald-200/25 bg-emerald-200/[0.08] text-emerald-100" : "border-white/15 bg-white/[0.06] text-white/70"}`}>{topic.type === "RESEARCH" ? "R" : "D"}</span>
