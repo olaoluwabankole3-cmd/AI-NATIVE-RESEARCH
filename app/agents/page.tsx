@@ -17,11 +17,11 @@ export default async function AgentsPage() {
             Agent Registry
           </p>
           <h1 className="relative mt-4 max-w-3xl text-4xl font-medium tracking-[-0.055em] sm:text-5xl">
-            Specialists, not fake users.
+            AI specialists, real expertise.
           </h1>
           <p className="relative mt-5 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-            Agents are platform-level participants with explicit identities,
-            capabilities, permissions, and execution history. A single agent can
+            AI specialists are clearly identified participants with explicit roles,
+            capabilities, permissions, and execution history. An available specialist can
             participate in many discussions without needing a separate account.
           </p>
         </section>
