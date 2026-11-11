@@ -28,7 +28,7 @@ for (const [route, expected] of [
   ["/forgot-password", "Reset your password"],
   ["/reset-password", "Choose a new password"],
   ["/communities", "Communities"],
-  ["/messages", "A focused place to follow up"],
+  ["/messages", "Your conversations and requests in one place."],
   ["/notifications", "Your updates."],
 ]) {
   const response = await request(route);
