@@ -162,9 +162,13 @@ export default function NetworkPage() {
       <div className="mx-auto max-w-[1240px] px-4 pb-16 sm:px-7 lg:px-10">
         <section className="converge-page-intro border-b border-white/[0.09] py-9 sm:py-12">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Your network</p>
-          <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Your network, without the noise.</h1><p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Follow work you value, manage connection requests, and keep meaningful collaborations moving.</p></div><Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65 hover:border-emerald-200/25 hover:text-white">Discover people ↗</Link></div>
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            {[{ label: "Connections", count: connections.length, note: "Mutual relationships" }, { label: "Requests to review", count: visibleRequestsCount, note: "Waiting for your response" }, { label: "Following", count: follows.length, note: "People you keep up with" }].map((item) => <div key={item.label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4"><p className="text-2xl font-semibold tracking-[-0.05em] text-emerald-100">{loading ? "—" : String(item.count).padStart(2, "0")}</p><p className="mt-1 text-xs font-semibold text-white/75">{item.label}</p><p className="mt-1 text-[10px] text-white/35">{item.note}</p></div>)}
+          <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><h1 className="text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Your network</h1><p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Connections, requests and people you follow.</p></div><Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65 hover:border-emerald-200/25 hover:text-white">Discover people ↗</Link></div>
+          <div className="converge-directory-summary">
+            <span>{loading ? "Loading network…" : `${connections.length} connections`}</span>
+            <span aria-hidden="true">·</span>
+            <span>{visibleRequestsCount} requests</span>
+            <span aria-hidden="true">·</span>
+            <span>{follows.length} following</span>
           </div>
         </section>
 
