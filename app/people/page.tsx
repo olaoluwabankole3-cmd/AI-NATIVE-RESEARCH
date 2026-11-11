@@ -281,7 +281,7 @@ export default function PeopleDirectoryPage() {
                 const profileHref = `/u/${person.username || person.id}`;
                 const actionBusy = busyAction?.endsWith(person.id) ?? false;
                 return (
-                  <article key={person.id} className="converge-app-list-row overflow-hidden rounded-2xl border border-white/[0.09] bg-[#101815]/80 transition hover:border-emerald-200/20">
+                  <article key={person.id} className="converge-person-row converge-app-list-row overflow-hidden rounded-2xl border border-white/[0.09] bg-[#101815]/80 transition hover:border-emerald-200/20">
                     <div className="h-1 bg-gradient-to-r from-emerald-200/60 via-emerald-200/15 to-transparent" />
                     <div className="p-5">
                       <Link href={profileHref} className="group flex items-start gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
