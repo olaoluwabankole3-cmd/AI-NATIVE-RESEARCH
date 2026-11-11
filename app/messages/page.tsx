@@ -58,6 +58,8 @@ export default function MessagesInboxPage() {
   const [inboxView, setInboxView] = useState<"all" | "requests">("all");
 
   const loadInbox = useCallback(async (knownUserId?: string) => {
+    setLoading(true);
+    setLoadError("");
     const currentUserId = knownUserId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
     if (!currentUserId) {
       router.replace("/sign-in?next=/messages");
@@ -184,7 +186,7 @@ export default function MessagesInboxPage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Messages</p>
             <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Messages</h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">A focused place to follow up with people, review message requests and keep conversations moving.</p>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Your conversations and requests in one place.</p>
           </div>
           <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
         </section>
@@ -208,18 +210,19 @@ export default function MessagesInboxPage() {
         ) : (
           <>
             {filteredIncomingRequests.length > 0 && <section className="converge-inbox-requests mt-6 rounded-3xl border border-amber-200/20 bg-amber-200/[0.025] p-4 sm:p-6">
-              <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-100/70">Needs your decision</p><h2 className="mt-2 text-xl font-semibold">Message requests <span className="text-sm font-medium text-amber-100/60">· {filteredIncomingRequests.length}</span></h2><p className="mt-2 text-xs leading-5 text-white/45">Accept to open the conversation, ignore to dismiss it, or block a person from contacting you.</p></div>
+              <div className="mb-4"><h2 className="text-lg font-semibold">Requests <span className="text-sm font-medium text-amber-100/60">· {filteredIncomingRequests.length}</span></h2></div>
               <div className="divide-y divide-white/[0.08]">
                 {filteredIncomingRequests.map((conversation) => {
                   const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
                   const member = profiles[otherId] ?? { id: otherId, username: null, display_name: `Converge member · ${otherId.slice(0, 6)}`, avatar_url: null, headline: null };
                   const preview = previews[conversation.id];
                   const busy = busyRequestId === conversation.id;
-                  return <article key={conversation.id} className="flex flex-col justify-between gap-4 py-4 sm:flex-row sm:items-center">
+                  return <article key={conversation.id} className="converge-request-row flex flex-col justify-between gap-4 py-4 sm:flex-row sm:items-center">
                     <Link href={`/messages/${conversation.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
                       <div className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-[14px] border border-amber-200/20 bg-amber-200/[0.08] text-sm font-bold text-amber-100">{member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}</div>
                       <div className="min-w-0"><p className="truncate text-sm font-semibold text-white/90">{member.display_name}</p>{member.headline && <p className="mt-1 truncate text-[11px] text-white/35">{member.headline}</p>}<p className="mt-2 line-clamp-2 text-xs leading-5 text-white/55">{preview?.body ?? "This member wants to start a private conversation."}</p></div>
                     </Link>
+                    <Link href={`/messages/${conversation.id}`} className="converge-request-review">Review request →</Link>
                     <div className="converge-message-request-actions flex shrink-0 flex-wrap gap-2">
                       <button type="button" disabled={busy} onClick={() => void handleRequestAction(conversation, "accept")} className="rounded-full bg-emerald-200 px-3.5 py-2 text-[10px] font-bold text-[#0b1710] disabled:opacity-40">{busy ? "…" : "Accept"}</button>
                       <button type="button" disabled={busy} onClick={() => void handleRequestAction(conversation, "ignore")} className="rounded-full border border-white/15 px-3.5 py-2 text-[10px] font-semibold text-white/70 disabled:opacity-40">Ignore</button>
@@ -251,7 +254,7 @@ export default function MessagesInboxPage() {
             </section> : null}
             {!loadError && !loading && inboxView === "requests" && !filteredIncomingRequests.length && <div className="converge-inbox-empty" role="status"><h2>No message requests to review</h2><p>{search ? "Try another search." : "New requests will appear here. You choose whether to accept, ignore or block them."}</p></div>}
             {!loadError && !loading && search.trim() && inboxView === "all" && !filteredRegularConversations.length && !filteredIncomingRequests.length && <div className="converge-inbox-empty" role="status"><h2>No matching conversations</h2><p>Try a different name or message search.</p><button type="button" onClick={() => setSearch("")}>Clear search</button></div>}
-            {!loadError && !incomingRequests.length && !regularConversations.length && <section className="mt-6 rounded-3xl border border-dashed border-white/[0.12] px-6 py-16 text-center sm:px-12">
+            {!loadError && !loading && inboxView === "all" && !search.trim() && !incomingRequests.length && !regularConversations.length && <section className="mt-6 rounded-3xl border border-dashed border-white/[0.12] px-6 py-16 text-center sm:px-12">
               <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.05] text-2xl text-emerald-100">↗</div>
               <h2 className="mt-5 text-2xl font-semibold tracking-[-0.045em]">Your inbox is clear.</h2>
               <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-white/45">Find a member and send a message request. They can accept, ignore, or block the request before a conversation begins.</p>
