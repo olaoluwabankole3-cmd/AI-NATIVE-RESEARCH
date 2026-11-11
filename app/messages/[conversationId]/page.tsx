@@ -282,7 +282,7 @@ export default function DirectConversationPage() {
                   <textarea id="message-body" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={5000} rows={2} placeholder={isOutgoingRequest ? "Write your introductory message…" : "Write a message…"} className="min-w-0 max-h-36 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-base leading-6 text-white outline-none placeholder:text-white/35 sm:text-sm" />
                   <button type="submit" disabled={!draft.trim() || sending || draft.trim().length > 5000} className="mb-0.5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-200 px-4 py-3 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40">{sending ? "Sending…" : "Send ↗"}</button>
                 </div>
-                <p className="mt-2 px-1 text-[9px] text-white/30">{isOutgoingRequest ? "One introductory message · replies unlock when the request is accepted" : "Private conversation"} · {draft.length.toLocaleString()} / 5,000 characters</p>
+                {(isOutgoingRequest || draft.length > 4500) && <p className="mt-2 px-1 text-[10px] text-white/45">{isOutgoingRequest ? "Send one introductory message. Replies unlock when accepted." : `${(5000 - draft.length).toLocaleString()} characters remaining`}</p>}
               </form> : <div className="border-t border-white/[0.08] px-4 py-5 text-center text-xs leading-5 text-white/40">{blockedByMe ? "You have blocked this person." : blockedBetween ? "Messaging is unavailable because one of you has blocked the other." : isIncomingRequest ? "Accept the request to reply." : "Messaging is not available for this conversation."}</div>}
             </>
           )}
