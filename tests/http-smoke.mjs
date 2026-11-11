@@ -28,8 +28,8 @@ for (const [route, expected] of [
   ["/forgot-password", "Reset your password"],
   ["/reset-password", "Choose a new password"],
   ["/communities", "Communities"],
-  ["/messages", "Conversations that keep ideas moving."],
-  ["/notifications", "Stay in the loop."],
+  ["/messages", "A focused place to follow up"],
+  ["/notifications", "Your updates."],
 ]) {
   const response = await request(route);
   assert.equal(response.status, 200, route + " should render successfully");
