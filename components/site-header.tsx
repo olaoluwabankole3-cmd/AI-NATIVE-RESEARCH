@@ -105,6 +105,9 @@ function getInitials(value: string) {
 
 export function SiteHeader() {
   const pathname = usePathname();
+  // Detail screens own their mobile back button and composer. A permanent global dock
+  // makes those screens cramped and can cover the chat input when the keyboard opens.
+  const isFocusedMobileRoute = /^\/(?:messages|topics)\/[^/]+\/?$/.test(pathname);
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -367,7 +370,7 @@ export function SiteHeader() {
 
   return (
     <>
-    <header className="converge-app-header sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl">
+    <header className={["converge-app-header sticky top-0 z-30 border-b border-white/[0.08] bg-[#0b1110]/90 text-white backdrop-blur-xl", isFocusedMobileRoute ? "converge-app-header--focused" : ""].join(" ")}>
       <div className="converge-site-header__inner mx-auto grid h-[72px] max-w-[1480px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-5 sm:px-8 lg:px-14">
         <Link href={userEmail ? "/communities" : "/"} className="converge-brand-link justify-self-start" aria-label="Converge home" onClick={() => setMobileOpen(false)}>
           <Image
@@ -526,7 +529,7 @@ export function SiteHeader() {
         </div>
       )}
       {mobileMoreOverlay}
-      {authReady && userEmail && (
+      {authReady && userEmail && !isFocusedMobileRoute && (
         <nav className="converge-mobile-dock" aria-label="Mobile primary navigation">
           {mobileLinksPrimary.map((item) => {
             const active = isActiveDestination(pathname, item.href);
