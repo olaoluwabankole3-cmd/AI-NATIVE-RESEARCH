@@ -235,9 +235,16 @@ export default function CommunitySettingsPage() {
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/45">Manage who can enter this space, who can open research topics, and how this community's AI agents think and contribute.</p>
         </section>
 
+        <nav aria-label="Community settings sections" className="converge-owner-shortcuts">
+          <a href="#community-access">Access &amp; permissions</a>
+          <a href="#community-requests">Join requests</a>
+          <a href="#community-ai-agents">AI specialists</a>
+          <a href="#delete-community">Delete community</a>
+        </nav>
+
         {message && <p role="status" className={"mt-5 rounded-lg border px-4 py-3 text-sm " + (error ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-100")}>{message}</p>}
 
-        <section className="mt-7 rounded-xl border border-white/[0.09] bg-white/[0.015] p-5 sm:p-7">
+        <section id="community-access" className="converge-app-section-card mt-7 rounded-xl border border-white/[0.09] bg-white/[0.015] p-5 sm:p-7">
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">01 · Access and permissions</p>
           <h2 className="mt-2 text-xl font-semibold">Decide who gets in and who can start a discussion.</h2>
           <form onSubmit={saveCommunity} className="mt-5 space-y-5">
@@ -249,12 +256,12 @@ export default function CommunitySettingsPage() {
           </form>
         </section>
 
-        <section className="mt-6 rounded-xl border border-white/[0.09] bg-white/[0.015] p-5 sm:p-7">
+        <section id="community-requests" className="converge-app-section-card mt-6 rounded-xl border border-white/[0.09] bg-white/[0.015] p-5 sm:p-7">
           <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">02 · Membership requests</p><h2 className="mt-2 text-xl font-semibold">Review who wants to join.</h2><p className="mt-2 text-sm text-white/40">{requests.length} pending {requests.length === 1 ? "request" : "requests"}</p></div><button type="button" onClick={() => void loadSettings()} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/65 hover:text-white">Refresh requests</button></div>
           {requests.length === 0 ? <div className="mt-5 rounded-lg border border-dashed border-white/10 px-4 py-7 text-sm text-white/35">No pending requests. New requests to this community will appear here.</div> : <div className="mt-5 divide-y divide-white/[0.08]">{requests.map((request) => <article key={request.id} className="flex flex-col justify-between gap-4 py-5 sm:flex-row sm:items-start"><div className="min-w-0"><p className="text-sm font-semibold">{request.profile?.display_name || request.profile?.username || "Converge member"}</p><p className="mt-1 text-xs text-white/35">{request.profile?.username ? "@" + request.profile.username + " · " : ""}{new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(request.created_at))}</p><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/55">{request.message || "No note was added to this request."}</p></div><div className="flex shrink-0 gap-2"><button type="button" disabled={Boolean(reviewingId)} onClick={() => void reviewRequest(request.id, "REJECTED")} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-white/60 hover:border-red-300/20 hover:text-red-100 disabled:opacity-50">Decline</button><button type="button" disabled={Boolean(reviewingId)} onClick={() => void blockPendingApplicant(request)} className="rounded-lg border border-red-300/25 px-3 py-2 text-xs font-semibold text-red-100/80 hover:bg-red-300/[0.05] disabled:opacity-50">Block</button><button type="button" disabled={Boolean(reviewingId)} onClick={() => void reviewRequest(request.id, "APPROVED")} className="rounded-lg bg-emerald-200 px-3 py-2 text-xs font-semibold text-[#0b1710] disabled:opacity-50">{reviewingId === request.id ? "Reviewing…" : "Approve access"}</button></div></article>)}</div>}
         </section>
 
-        <section className="mt-6 rounded-xl border border-white/[0.09] bg-white/[0.015] p-5 sm:p-7">
+        <section id="community-ai-agents" className="converge-app-section-card mt-6 rounded-xl border border-white/[0.09] bg-white/[0.015] p-5 sm:p-7">
           <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">03 · Community AI agents</p><h2 className="mt-2 text-xl font-semibold">Create your own specialist.</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-white/40">Shape an agent's role, specialties, participation guidance, and system prompt. Only you can see or edit its private prompt.</p></div><button type="button" onClick={startCreateAgent} className="rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710]">+ Create AI agent</button></div>
 
           {agentFormOpen && <form onSubmit={saveAgent} className="mt-6 rounded-xl border border-emerald-200/15 bg-[#0c1511] p-4 sm:p-6">

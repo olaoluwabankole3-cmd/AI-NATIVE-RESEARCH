@@ -57,6 +57,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
+  const [view, setView] = useState<"all" | "unread">("all");
 
   const loadNotifications = useCallback(async (knownViewerId?: string) => {
     const currentViewerId = knownViewerId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
@@ -187,20 +188,24 @@ export default function NotificationsPage() {
         <section className="converge-page-intro flex flex-col justify-between gap-5 border-b border-white/[0.09] py-9 sm:flex-row sm:items-end sm:py-12">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Notifications</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Stay in the loop.</h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Messages, community activity, and replies that bring your work forward.</p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Your updates.</h1>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Research replies, member requests, connections, and AI activity—organised in one calm inbox.</p>
           </div>
           <button type="button" onClick={() => void markAllRead()} disabled={!notifications.some((item) => !item.is_read) || busyId === "all"} className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/65 transition hover:border-emerald-200/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-35">{busyId === "all" ? "Updating…" : "Mark all as read ✓"}</button>
         </section>
 
+        <div className="converge-notifications-controls" role="tablist" aria-label="Notification view">
+          <button type="button" role="tab" aria-selected={view === "all"} onClick={() => setView("all")}>All updates</button>
+          <button type="button" role="tab" aria-selected={view === "unread"} onClick={() => setView("unread")}>Unread · {notifications.filter((item) => !item.is_read).length}</button>
+        </div>
         {notice && <p role="alert" className="mt-5 rounded-xl border border-amber-200/20 bg-amber-200/[0.05] px-4 py-3 text-sm leading-6 text-amber-100">{notice}</p>}
 
-        <section className="mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
+        <section className="converge-notifications-list mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
           {loading ? <div className="grid gap-0">{[0,1,2,3].map((item) => <div key={item} className="h-24 animate-pulse border-b border-white/[0.06] bg-white/[0.02]" />)}</div>
-            : notifications.length ? notifications.map((item) => {
+            : notifications.filter((item) => view === "all" || !item.is_read).length ? notifications.filter((item) => view === "all" || !item.is_read).map((item) => {
               const actor = item.actor_id ? actors[item.actor_id] : undefined;
               return (
-                <div key={item.id} className={["flex items-start gap-3 px-4 py-4 transition sm:gap-4 sm:px-6 sm:py-5", item.is_read ? "bg-transparent" : "bg-emerald-200/[0.035]", "border-b border-white/[0.06] last:border-b-0"].join(" ")}>
+                <div key={item.id} className={["flex items-start gap-3 px-4 py-4 transition sm:gap-4 sm:px-6 sm:py-5", item.is_read ? "bg-transparent" : "is-unread bg-emerald-200/[0.035]", "border-b border-white/[0.06] last:border-b-0"].join(" ")}>
                   <div className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.07] text-sm font-bold text-emerald-100">
                     {actor?.avatar_url ? <img src={actor.avatar_url} alt="" className="size-full object-cover" /> : initials(actor?.display_name ?? (item.notification_type === "topic_reply" ? "Research" : "Converge"))}
                     {!item.is_read && <span className="absolute right-0.5 top-0.5 size-2 rounded-full bg-emerald-200 ring-2 ring-[#101815]" />}
@@ -219,9 +224,9 @@ export default function NotificationsPage() {
             })
             : <div className="px-6 py-16 text-center">
               <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.05] text-2xl text-emerald-100">♧</div>
-              <h2 className="mt-5 text-xl font-semibold">You’re all caught up.</h2>
-              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/45">When someone messages you, requests community access, approves a request, or responds to your work, you’ll see it here.</p>
-              <Link href="/feed" className="mt-6 inline-flex rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Explore activity ↗</Link>
+              <h2 className="mt-5 text-xl font-semibold">{view === "unread" ? "No unread notifications." : "You’re all caught up."}</h2>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-white/45">{view === "unread" ? "You have reviewed your recent updates. Switch to All updates to see the full history." : "Messages, research replies, access requests and network updates will appear here."}</p>
+              <Link href="/communities" className="mt-6 inline-flex rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Explore research ↗</Link>
             </div>}
         </section>
         <p className="mt-6 text-[10px] leading-5 text-white/30">Notifications are visible only to their intended recipient. You can mark all as read or dismiss individual items.</p>

@@ -225,13 +225,13 @@ export default function AgentAdminPage() {
 
   return (
     <main className="converge-app-page relative min-h-screen isolate overflow-hidden bg-[#07110f] text-[#eff8f1]">
+      <SiteHeader />
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute -right-48 -top-48 h-[34rem] w-[34rem] rounded-full bg-emerald-400/[0.07] blur-[100px]" />
         <div className="absolute -bottom-72 -left-48 h-[34rem] w-[34rem] rounded-full bg-teal-500/[0.05] blur-[110px]" />
         <div className="absolute inset-0 opacity-[0.12]" style={{ backgroundImage: "radial-gradient(rgba(173,232,190,.45) .65px, transparent .65px)", backgroundSize: "22px 22px", maskImage: "linear-gradient(to bottom, black, transparent 75%)" }} />
       </div>
       <div className="relative z-10">
-        <SiteHeader />
         <div className="mx-auto max-w-[1500px] px-4 pb-16 pt-6 sm:px-6 sm:pt-9 lg:px-10 xl:px-12">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-white/40">

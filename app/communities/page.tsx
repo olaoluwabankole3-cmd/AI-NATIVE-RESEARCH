@@ -130,11 +130,11 @@ export default function CommunitiesPage() {
       <SiteHeader />
       <div className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
         <div className="converge-page-intro flex flex-col gap-2 border-b border-white/[0.09] py-7 sm:py-9">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Community</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">CONVERGE / RESEARCH</p>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">The conversation space</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">Questions, research, and ideas in progress — shaped by people and specialist AI perspectives.</p>
+              <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Where ideas become evidence.</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">Follow meaningful questions, work with people and specialist AI, and preserve the findings that matter.</p>
             </div>
             <button type="button" aria-expanded={showForm} aria-controls="create-community-form" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100">
               <span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Close form" : "New community"}
@@ -155,15 +155,25 @@ export default function CommunitiesPage() {
 
         {message && <p role={messageTone === "error" ? "alert" : "status"} className={`mt-4 rounded-lg border px-4 py-3 text-sm ${messageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-100"}`}>{message}</p>}
 
+        <section aria-label="Discover research" className="converge-research-discovery">
+          <div>
+            <label htmlFor="converge-research-search">Find your next conversation</label>
+            <p>Search communities and research topics together.</p>
+          </div>
+          <div className="converge-research-discovery__search">
+            <input id="converge-research-search" type="search" aria-label="Search communities and topics" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search communities or topics…" />
+          </div>
+        </section>
+
         <div className="mt-5 flex flex-wrap items-center gap-2 lg:hidden" aria-label="Quick navigation">
           <a href="#converge-topic-list" className="inline-flex min-h-11 items-center rounded-lg border border-emerald-200/20 bg-emerald-200/[0.06] px-4 text-xs font-semibold text-emerald-100">Browse topics ↓</a>
           <a href="#communities-directory" className="inline-flex min-h-11 items-center rounded-lg border border-white/10 px-4 text-xs font-semibold text-white/70">Community directory ↓</a>
         </div>
-        <div className="grid gap-7 pt-6 lg:grid-cols-[220px_minmax(0,1fr)_270px] lg:gap-8">
+        <div className="converge-research-board grid gap-7 pt-6 lg:grid-cols-[220px_minmax(0,1fr)_270px] lg:gap-8">
           <aside className="space-y-6">
             <section className="rounded-xl border border-white/[0.09] bg-white/[0.018] p-4">
               <div className="flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[0.13em] text-white/65">Your spaces</h2><span className="text-xs tabular-nums text-white/35">{communities.length}</span></div>
-              <label className="mt-4 block"><span className="mb-2 block text-xs font-medium text-white/55">Search research spaces</span><input type="search" aria-label="Search communities and topics" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search everything…" className="w-full rounded-lg border border-white/10 bg-black/15 px-3 py-2.5 text-xs outline-none placeholder:text-white/25 focus:border-emerald-200/40" /></label>
+              <p className="mt-4 text-xs leading-5 text-white/40">Your spaces and recent topics are filtered by the search above.</p>
               <div className="mt-3 space-y-1">
                 {loading ? <p className="px-2 py-3 text-xs text-white/35">Loading spaces…</p> : filteredCommunities.slice(0, 8).map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-white/65 transition hover:bg-white/[0.045] hover:text-emerald-100"><span className="grid size-6 shrink-0 place-items-center rounded-md bg-emerald-200/10 text-[10px] font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><span className="min-w-0 flex-1 truncate">{community.name}</span><span title={community.visibility === "PRIVATE" ? "Private community" : "Public community"} className="text-[10px] text-white/30">{community.visibility === "PRIVATE" ? "▣" : "◉"}</span></Link>)}
                 {!loading && filteredCommunities.length === 0 && <p className="px-2 py-3 text-xs text-white/35">{search ? "No spaces match this search." : "No communities yet."}</p>}
@@ -185,14 +195,14 @@ export default function CommunitiesPage() {
 
             {loading ? <div className="divide-y divide-white/[0.07]">{[0,1,2,3].map((item) => <div key={item} className="animate-pulse py-6"><div className="h-4 w-2/3 rounded bg-white/[0.06]" /><div className="mt-3 h-3 w-full rounded bg-white/[0.035]" /><div className="mt-2 h-3 w-1/3 rounded bg-white/[0.035]" /></div>)}</div>
             : filteredTopics.length === 0 ? <div className="my-5 rounded-xl border border-dashed border-white/15 px-5 py-12 text-center"><span className="text-2xl text-emerald-200">↗</span><h3 className="mt-3 text-base font-semibold">{search ? "No matching topics" : filter === "RESEARCH" ? "No research topics yet" : filter === "DISCUSSION" ? "No discussions yet" : "The next good question starts here"}</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/40">{search ? "Try another search term or clear your search." : "Open a community and start a topic. A clear question gives others something useful to build on."}</p>{search ? <button onClick={() => setSearch("")} className="mt-4 text-xs font-semibold text-emerald-200">Clear search</button> : <Link href={communities[0] ? `/communities/${communities[0].slug}` : "#communities-directory"} className="mt-4 inline-block text-xs font-semibold text-emerald-200 hover:text-white">{communities[0] ? "Start a topic in a community →" : "Create a community above →"}</Link>}</div>
-            : <div className="divide-y divide-white/[0.085]">{filteredTopics.map((topic) => <article key={topic.id} className="group py-5 sm:py-6">
+            : <div className="converge-topic-card-list">{filteredTopics.map((topic) => <article key={topic.id} className="converge-topic-card group">
               <div className="flex items-start gap-3 sm:gap-4">
-                <span className={`mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border text-xs font-bold ${topic.type === "RESEARCH" ? "border-sky-300/20 bg-sky-300/[0.07] text-sky-200" : "border-emerald-200/20 bg-emerald-200/[0.06] text-emerald-200"}`}>{topic.type === "RESEARCH" ? "R" : "D"}</span>
+                <span className={`mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border text-xs font-bold ${topic.type === "RESEARCH" ? "border-emerald-200/25 bg-emerald-200/[0.08] text-emerald-100" : "border-white/15 bg-white/[0.06] text-white/70"}`}>{topic.type === "RESEARCH" ? "R" : "D"}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]"><span className={topic.type === "RESEARCH" ? "text-sky-200/80" : "text-emerald-200/80"}>{topic.type === "RESEARCH" ? "Research" : "Discussion"}</span>{topic.community && <><span className="text-white/20">/</span><Link href={`/communities/${topic.community.slug}`} className="max-w-[200px] truncate text-white/45 hover:text-emerald-100">{topic.community.name}</Link></>}<span className="text-white/25">· {relativeDate(topic.created_at)}</span></div>
+                  <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]"><span className={topic.type === "RESEARCH" ? "text-emerald-100" : "text-white/70"}>{topic.type === "RESEARCH" ? "Research" : "Discussion"}</span>{topic.community && <><span className="text-white/20">/</span><Link href={`/communities/${topic.community.slug}`} className="max-w-[200px] truncate text-white/45 hover:text-emerald-100">{topic.community.name}</Link></>}<span className="text-white/25">· {relativeDate(topic.created_at)}</span></div>
                   <Link href={`/topics/${topic.id}`} className="mt-2 block text-base font-semibold leading-6 tracking-[-0.015em] text-white/90 transition group-hover:text-emerald-100 sm:text-lg">{topic.title}</Link>
                   <p className="mt-2 line-clamp-2 whitespace-pre-line text-sm leading-6 text-white/45">{topic.body}</p>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] text-white/30"><span>Open topic</span><span>·</span><span>Join the conversation <span className="text-emerald-200/70">↗</span></span></div>
+                  <Link href={`/topics/${topic.id}`} className="converge-topic-card__action">{topic.type === "RESEARCH" ? "Open research room" : "Join discussion"} <span aria-hidden="true">↗</span></Link>
                 </div>
               </div>
             </article>)}</div>}
@@ -215,7 +225,7 @@ export default function CommunitiesPage() {
 
         <section id="communities-directory" className="mt-12 scroll-mt-24 border-t border-white/[0.09] pt-7">
           <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/70">Explore</p><h2 className="mt-2 text-xl font-semibold">Community directory</h2></div><span className="text-xs text-white/35">{filteredCommunities.length} spaces</span></div>
-          {filteredCommunities.length > 0 ? <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{filteredCommunities.map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="rounded-lg border border-white/[0.09] bg-white/[0.015] p-4 transition hover:border-emerald-200/25 hover:bg-white/[0.03]"><div className="flex items-center gap-2"><span className="grid size-8 place-items-center rounded-lg bg-emerald-200/10 text-xs font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><h3 className="text-sm font-semibold">{community.name}</h3></div><p className="mt-3 line-clamp-2 text-xs leading-5 text-white/40">{community.description || "A shared space for discussion and research."}</p><p className="mt-3 text-[10px] font-semibold text-emerald-200/70">Open community →</p></Link>)}</div> : <p className="mt-4 text-sm text-white/40">No communities found.</p>}
+          {filteredCommunities.length > 0 ? <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{filteredCommunities.map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="converge-directory-card rounded-lg border border-white/[0.09] bg-white/[0.015] p-4 transition hover:border-emerald-200/25 hover:bg-white/[0.03]"><div className="flex items-center gap-2"><span className="grid size-8 place-items-center rounded-lg bg-emerald-200/10 text-xs font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><h3 className="text-sm font-semibold">{community.name}</h3></div><p className="mt-3 line-clamp-2 text-xs leading-5 text-white/40">{community.description || "A shared space for discussion and research."}</p><p className="mt-3 text-[10px] font-semibold text-emerald-200/70">Open community →</p></Link>)}</div> : <p className="mt-4 text-sm text-white/40">No communities found.</p>}
         </section>
       </div>
     </main>

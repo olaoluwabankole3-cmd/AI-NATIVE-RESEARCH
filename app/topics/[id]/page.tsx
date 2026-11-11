@@ -100,6 +100,7 @@ export default function TopicPage() {
   }
   const [agents, setAgents] = useState<Agent[]>([]);
   const [showAgentPicker, setShowAgentPicker] = useState(false);
+  const [mobileSection, setMobileSection] = useState<"discussion" | "evidence">("discussion");
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
 
@@ -633,7 +634,7 @@ export default function TopicPage() {
             </div>
           </article>
 
-          <nav aria-label="Topic sections" className="mt-5 flex flex-wrap gap-2">
+          <nav aria-label="Topic sections" className="converge-room-desktop-links mt-5 flex flex-wrap gap-2">
             {topic.type === "RESEARCH" && currentParticipantId && (
               <a href="#research-record" className="inline-flex min-h-11 items-center rounded-lg border border-white/10 px-4 text-xs font-semibold text-white/70 hover:border-emerald-200/25">Evidence record ↓</a>
             )}
@@ -641,10 +642,14 @@ export default function TopicPage() {
           </nav>
 
           {topic.type === "RESEARCH" && currentParticipantId && (
-            <ResearchRoom topicId={topic.id} participantId={currentParticipantId} />
+            <div className="converge-room-tabbar" role="tablist" aria-label="Research room views">
+              <button type="button" role="tab" id="converge-discussion-tab" aria-controls="topic-discussion" aria-selected={mobileSection === "discussion"} onClick={() => setMobileSection("discussion")}>Discussion · {posts.length}</button>
+              <button type="button" role="tab" id="converge-evidence-tab" aria-controls="converge-room-evidence-panel" aria-selected={mobileSection === "evidence"} onClick={() => setMobileSection("evidence")}>Evidence &amp; synthesis</button>
+            </div>
           )}
-
-          <section id="topic-discussion" className="mt-12 scroll-mt-24">
+          <div className={["converge-room-layout", topic.type !== "RESEARCH" || !currentParticipantId ? "converge-room-layout--discussion-only" : ""].join(" ")} data-mobile-tab={mobileSection}>
+            <div className="converge-room-discussion">
+              <section id="topic-discussion" role="tabpanel" aria-labelledby={topic.type === "RESEARCH" && currentParticipantId ? "converge-discussion-tab" : undefined} className="mt-5 scroll-mt-24">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">
@@ -881,7 +886,14 @@ export default function TopicPage() {
                 </Link>
               </div>
             )}
-          </section>
+              </section>
+            </div>
+            {topic.type === "RESEARCH" && currentParticipantId && (
+              <aside id="converge-room-evidence-panel" className="converge-room-evidence" role="tabpanel" aria-labelledby="converge-evidence-tab">
+                <ResearchRoom topicId={topic.id} participantId={currentParticipantId} />
+              </aside>
+            )}
+          </div>
         </div>
       </div>
     </main>

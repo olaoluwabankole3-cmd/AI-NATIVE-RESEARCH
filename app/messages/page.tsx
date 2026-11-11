@@ -54,6 +54,8 @@ export default function MessagesInboxPage() {
   const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
   const [busyRequestId, setBusyRequestId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState("");
+  const [search, setSearch] = useState("");
+  const [inboxView, setInboxView] = useState<"all" | "requests">("all");
 
   const loadInbox = useCallback(async (knownUserId?: string) => {
     const currentUserId = knownUserId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
@@ -114,6 +116,17 @@ export default function MessagesInboxPage() {
   );
   const incomingRequestIds = new Set(incomingRequests.map((conversation) => conversation.id));
   const regularConversations = conversations.filter((conversation) => !incomingRequestIds.has(conversation.id));
+  const matchesSearch = (conversation: ConversationRow) => {
+    const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
+    const profile = profiles[otherId];
+    const preview = previews[conversation.id];
+    const term = search.trim().toLocaleLowerCase();
+    return !term || (profile?.display_name ?? "").toLocaleLowerCase().includes(term)
+      || (profile?.headline ?? "").toLocaleLowerCase().includes(term)
+      || (preview?.body ?? "").toLocaleLowerCase().includes(term);
+  };
+  const filteredIncomingRequests = incomingRequests.filter(matchesSearch);
+  const filteredRegularConversations = regularConversations.filter(matchesSearch);
 
   async function handleRequestAction(conversation: ConversationRow, action: "accept" | "ignore" | "block") {
     if (!viewerId || busyRequestId) return;
@@ -170,10 +183,19 @@ export default function MessagesInboxPage() {
         <section className="converge-page-intro flex flex-col justify-between gap-5 border-b border-white/[0.09] py-9 sm:flex-row sm:items-end sm:py-12">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Messages</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Conversations that keep ideas moving.</h1>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">A private space to follow up, exchange ideas, and work with people in your network.</p>
+            <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">Messages</h1>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">A focused place to follow up with people, review message requests and keep conversations moving.</p>
           </div>
           <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
+        </section>
+
+        <section className="converge-inbox-controls" aria-label="Find conversations">
+          <label htmlFor="converge-inbox-search" className="sr-only">Search conversations</label>
+          <input id="converge-inbox-search" value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Search people or messages…" />
+          <div role="tablist" aria-label="Message view" className="converge-inbox-controls__tabs">
+            <button type="button" role="tab" aria-selected={inboxView === "all"} onClick={() => setInboxView("all")}>All conversations</button>
+            <button type="button" role="tab" aria-selected={inboxView === "requests"} onClick={() => setInboxView("requests")}>Requests{incomingRequests.length ? ` · ${incomingRequests.length}` : ""}</button>
+          </div>
         </section>
 
         {loadError && <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-4 py-3 text-sm leading-6 text-red-200">
@@ -185,10 +207,10 @@ export default function MessagesInboxPage() {
           <div role="status" aria-label="Loading conversations" className="mt-6 grid gap-3">{[0, 1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-white/[0.08] bg-white/[0.02]" />)}</div>
         ) : (
           <>
-            {incomingRequests.length > 0 && <section className="mt-6 rounded-3xl border border-amber-200/20 bg-amber-200/[0.025] p-4 sm:p-6">
-              <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-100/70">Needs your decision</p><h2 className="mt-2 text-xl font-semibold">Message requests <span className="text-sm font-medium text-amber-100/60">· {incomingRequests.length}</span></h2><p className="mt-2 text-xs leading-5 text-white/45">Accept to open the conversation, ignore to dismiss it, or block a person from contacting you.</p></div>
+            {filteredIncomingRequests.length > 0 && <section className="converge-inbox-requests mt-6 rounded-3xl border border-amber-200/20 bg-amber-200/[0.025] p-4 sm:p-6">
+              <div className="mb-4"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-100/70">Needs your decision</p><h2 className="mt-2 text-xl font-semibold">Message requests <span className="text-sm font-medium text-amber-100/60">· {filteredIncomingRequests.length}</span></h2><p className="mt-2 text-xs leading-5 text-white/45">Accept to open the conversation, ignore to dismiss it, or block a person from contacting you.</p></div>
               <div className="divide-y divide-white/[0.08]">
-                {incomingRequests.map((conversation) => {
+                {filteredIncomingRequests.map((conversation) => {
                   const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
                   const member = profiles[otherId] ?? { id: otherId, username: null, display_name: `Converge member · ${otherId.slice(0, 6)}`, avatar_url: null, headline: null };
                   const preview = previews[conversation.id];
@@ -207,8 +229,8 @@ export default function MessagesInboxPage() {
                 })}
               </div>
             </section>}
-            {regularConversations.length ? <section className="mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
-              {regularConversations.map((conversation, index) => {
+            {inboxView === "all" && filteredRegularConversations.length ? <section className="converge-inbox-list mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
+              {filteredRegularConversations.map((conversation, index) => {
                 const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
                 const member = profiles[otherId] ?? { id: otherId, username: null, display_name: `Converge member · ${otherId.slice(0, 6)}`, avatar_url: null, headline: null };
                 const preview = previews[conversation.id];
@@ -227,6 +249,8 @@ export default function MessagesInboxPage() {
                 </div>;
               })}
             </section> : null}
+            {!loadError && !loading && inboxView === "requests" && !filteredIncomingRequests.length && <div className="converge-inbox-empty" role="status"><h2>No message requests to review</h2><p>{search ? "Try another search." : "New requests will appear here. You choose whether to accept, ignore or block them."}</p></div>}
+            {!loadError && !loading && search.trim() && inboxView === "all" && !filteredRegularConversations.length && !filteredIncomingRequests.length && <div className="converge-inbox-empty" role="status"><h2>No matching conversations</h2><p>Try a different name or message search.</p><button type="button" onClick={() => setSearch("")}>Clear search</button></div>}
             {!loadError && !incomingRequests.length && !regularConversations.length && <section className="mt-6 rounded-3xl border border-dashed border-white/[0.12] px-6 py-16 text-center sm:px-12">
               <div className="mx-auto grid size-14 place-items-center rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.05] text-2xl text-emerald-100">↗</div>
               <h2 className="mt-5 text-2xl font-semibold tracking-[-0.045em]">Your inbox is clear.</h2>

@@ -254,7 +254,7 @@ export default function ProfilePage() {
           <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <h1 className="text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">Make your perspective known.</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/50">Give people context about who you are, what you work on, and the questions you care about.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/50">Your identity across research spaces, conversations, and communities. Keep it clear and recognisable.</p>
             </div>
             {profileUrl && <Link href={profileUrl} target="_blank" className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-4 py-2.5 text-xs font-semibold text-white/70 transition hover:border-emerald-200/35 hover:text-emerald-100">View public profile <span aria-hidden="true">↗</span></Link>}
           </div>
@@ -264,7 +264,7 @@ export default function ProfilePage() {
 
         <div className="grid gap-6 pt-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
           <form onSubmit={handleSave} className="space-y-5">
-            <section className="rounded-2xl border border-white/[0.09] bg-[#101815]/85 p-5 sm:p-7">
+            <section className="converge-app-section-card rounded-2xl border border-white/[0.09] bg-[#101815]/85 p-5 sm:p-7">
               <div className="flex items-start gap-4 border-b border-white/[0.08] pb-5 sm:gap-5">
                 <div className="grid size-[76px] shrink-0 place-items-center overflow-hidden rounded-[23px] border border-emerald-200/20 bg-emerald-200/[0.09] text-xl font-bold text-emerald-100 sm:size-[88px]">
                   {form.avatar_url ? <img src={form.avatar_url} alt="Profile picture preview" className="size-full object-cover" /> : nameInitials}
@@ -292,7 +292,7 @@ export default function ProfilePage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-white/[0.09] bg-[#101815]/85 p-5 sm:p-7">
+            <section className="converge-app-section-card rounded-2xl border border-white/[0.09] bg-[#101815]/85 p-5 sm:p-7">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/80">Visibility</p>
               <h2 className="mt-2 text-lg font-semibold tracking-[-0.03em]">Choose who can see your profile.</h2>
               <p className="mt-1.5 text-xs leading-5 text-white/45">Your email address is never displayed on your public profile.</p>
