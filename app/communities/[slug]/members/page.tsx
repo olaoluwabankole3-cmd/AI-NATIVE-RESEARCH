@@ -29,6 +29,8 @@ export default function CommunityMembersPage() {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [noticeError, setNoticeError] = useState(false);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberTab, setMemberTab] = useState<"members" | "blocked">("members");
 
   const isOwner = Boolean(community && viewerId && community.created_by === viewerId);
 
@@ -129,6 +131,14 @@ export default function CommunityMembersPage() {
   }
 
   const canModerate = viewerRole === "OWNER" || viewerRole === "MODERATOR";
+  const matchesSearch = (id: string) => {
+    const person = profiles[id];
+    const query = memberSearch.trim().toLocaleLowerCase();
+    return !query || [person?.display_name ?? "", person?.username ?? "", person?.headline ?? ""]
+      .some((value) => value.toLocaleLowerCase().includes(query));
+  };
+  const filteredMembers = members.filter((row) => matchesSearch(row.user_id));
+  const filteredBans = bans.filter((row) => matchesSearch(row.user_id));
   return (
     <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
@@ -144,10 +154,19 @@ export default function CommunityMembersPage() {
 
         {notice && <p role={noticeError ? "alert" : "status"} className={["mt-5 rounded-xl border px-4 py-3 text-sm leading-6", noticeError ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/20 bg-emerald-200/[0.05] text-emerald-100"].join(" ")}>{notice}</p>}
 
-        <section className="mt-7 rounded-2xl border border-white/[0.09] bg-[#101815]/70 p-4 sm:p-6">
+        <nav aria-label="Community membership views" className="converge-moderation-tabs">
+          <button type="button" aria-pressed={memberTab === "members"} onClick={() => setMemberTab("members")}>Members · {members.length}</button>
+          {isOwner && <Link href={`/communities/${params.slug}/settings#community-requests`}>Join requests ↗</Link>}
+          <button type="button" aria-pressed={memberTab === "blocked"} onClick={() => setMemberTab("blocked")}>Blocked · {bans.length}</button>
+        </nav>
+        <label className="converge-moderation-search">
+          <span className="sr-only">Search community members</span>
+          <input type="search" value={memberSearch} onChange={(event) => setMemberSearch(event.target.value)} placeholder="Search members by name or interest…" />
+        </label>
+        <section hidden={memberTab !== "members"} className="converge-app-section-card mt-7 rounded-2xl border border-white/[0.09] bg-[#101815]/70 p-4 sm:p-6">
           <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/70">01 / Current members</p><h2 className="mt-2 text-xl font-semibold">{community?.name ?? "Community"} · {members.length}</h2></div><button type="button" onClick={() => void loadMembers()} className="rounded-full border border-white/15 px-3.5 py-2 text-[10px] font-semibold text-white/65 hover:text-white">Refresh</button></div>
-          {loading ? <div className="mt-5 h-24 animate-pulse rounded-xl bg-white/[0.035]" /> : members.length ? <div className="mt-4 divide-y divide-white/[0.08]">
-            {members.map((row) => {
+          {loading ? <div className="mt-5 h-24 animate-pulse rounded-xl bg-white/[0.035]" /> : filteredMembers.length ? <div className="mt-4 divide-y divide-white/[0.08]">
+            {filteredMembers.map((row) => {
               const profile = profiles[row.user_id];
               const name = profile?.display_name || profile?.username || "Converge member";
               const isSelf = row.user_id === viewerId;
@@ -163,21 +182,21 @@ export default function CommunityMembersPage() {
                 </div>
               </article>;
             })}
-          </div> : <p className="mt-5 rounded-xl border border-dashed border-white/10 px-4 py-7 text-sm text-white/40">No membership records yet. The community owner is managed separately.</p>}
+          </div> : <p className="mt-5 rounded-xl border border-dashed border-white/10 px-4 py-7 text-sm text-white/40">{memberSearch ? "No members match your search." : "No membership records yet. The community owner is managed separately."}</p>}
           {viewerRole === "MODERATOR" && <p className="mt-4 text-[10px] leading-5 text-white/35">Moderators can remove or block regular members. Only the community owner can remove other moderators or lift a block.</p>}
         </section>
 
-        <section className="mt-6 rounded-2xl border border-red-300/15 bg-red-300/[0.025] p-4 sm:p-6">
+        <section hidden={memberTab !== "blocked"} className="converge-app-section-card mt-6 rounded-2xl border border-red-300/15 bg-red-300/[0.025] p-4 sm:p-6">
           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-red-100/70">02 / Community blocks</p>
           <h2 className="mt-2 text-xl font-semibold">Blocked from this community</h2>
           <p className="mt-2 text-xs leading-5 text-white/40">Blocked people are removed immediately and cannot rejoin or submit a new access request. This is a community-specific restriction; it does not block them across all of Converge.</p>
-          {bans.length ? <div className="mt-4 divide-y divide-white/[0.08]">
-            {bans.map((ban) => {
+          {filteredBans.length ? <div className="mt-4 divide-y divide-white/[0.08]">
+            {filteredBans.map((ban) => {
               const profile = profiles[ban.user_id];
               const name = profile?.display_name || profile?.username || "Converge member";
               return <article key={ban.user_id} className="flex flex-col justify-between gap-3 py-4 sm:flex-row sm:items-center"><div className="flex min-w-0 items-center gap-3"><div className="grid size-10 shrink-0 place-items-center rounded-xl border border-red-200/15 bg-red-200/[0.05] text-xs font-bold text-red-100">{initials(name)}</div><div className="min-w-0"><p className="truncate text-sm font-semibold">{name}</p><p className="mt-1 text-[10px] text-white/35">Blocked {new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(ban.created_at))}{ban.reason ? " · " + ban.reason : ""}</p></div></div>{isOwner && <button type="button" disabled={Boolean(busyKey)} onClick={() => void moderate(ban.user_id, "UNBLOCK")} className="rounded-full border border-emerald-200/20 px-3.5 py-2 text-[10px] font-semibold text-emerald-100 disabled:opacity-40">{busyKey === ban.user_id + "UNBLOCK" ? "…" : "Lift block"}</button>}</article>;
             })}
-          </div> : <p className="mt-4 rounded-xl border border-dashed border-white/10 px-4 py-6 text-sm text-white/35">No one is currently blocked from this community.</p>}
+          </div> : <p className="mt-4 rounded-xl border border-dashed border-white/10 px-4 py-6 text-sm text-white/35">{memberSearch ? "No blocked people match your search." : "No one is currently blocked from this community."}</p>}
         </section>
       </div>
     </main>
