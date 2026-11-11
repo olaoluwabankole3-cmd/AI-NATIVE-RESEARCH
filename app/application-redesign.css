@@ -756,3 +756,165 @@
   .converge-app-page .converge-inbox-controls__tabs { align-self: flex-start; }
   .converge-app-page .converge-inbox-list > div { padding: 13px 7px !important; }
 }
+
+/* Specialist registry: searchable list, live selection, context—not fabricated capabilities. */
+.converge-app-page .converge-specialist-directory {
+  display: grid;
+  grid-template-columns: minmax(222px,292px) minmax(0,1fr) minmax(212px,280px);
+  border: 1px solid var(--cx-line);
+  border-radius: 20px;
+  overflow: clip;
+  min-height: 640px;
+  margin-top: 20px;
+  background: #0c1510;
+}
+.converge-app-page .converge-specialist-directory__list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-right: 1px solid var(--cx-line);
+  padding: 25px 14px;
+  background: #0e1914;
+}
+.converge-app-page .converge-specialist-directory__heading { display: flex; align-items: center; justify-content: space-between; padding: 0 10px 20px; gap: 7px; }
+.converge-app-page .converge-specialist-directory__heading h2 { font-size: 22px; font-weight: 800; letter-spacing: -.06em; }
+.converge-app-page .converge-specialist-directory__heading span { color: var(--cx-muted); font-size: 11px; }
+.converge-app-page .converge-specialist-directory__list > input { width: 100%; min-height: 45px; padding: 10px 14px; }
+.converge-app-page .converge-specialist-directory__filters { display: flex; gap: 6px; flex-wrap: wrap; padding: 15px 0; }
+.converge-app-page .converge-specialist-directory__filters button {
+  min-height: 35px;
+  border: 1px solid var(--cx-line);
+  border-radius: 11px;
+  background: #1b2b21;
+  padding: 7px 11px;
+  color: var(--cx-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.converge-app-page .converge-specialist-directory__filters button[aria-pressed="true"] { border-color: transparent; background: var(--cx-mint); color: #102418; }
+.converge-app-page .converge-specialist-directory__list > .converge-app-eyebrow { padding: 19px 10px 10px; font-size: 10px; }
+.converge-app-page .converge-specialist-directory__items { display: grid; gap: 5px; }
+.converge-app-page .converge-specialist-directory__item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+  gap: 11px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  padding: 14px 10px;
+  background: transparent;
+  color: #f0f8f1;
+  text-align: left;
+}
+.converge-app-page .converge-specialist-directory__item:hover { background: #1b2e21; }
+.converge-app-page .converge-specialist-directory__item[aria-pressed="true"] { border-color: rgba(91,204,142,.65); background: #243e2d; }
+.converge-app-page .converge-specialist-directory__item > span:last-child { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 5px; }
+.converge-app-page .converge-specialist-directory__item strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.converge-app-page .converge-specialist-directory__item small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cx-muted); font-size: 11px; }
+.converge-app-page .converge-specialist-directory__avatar {
+  display: grid; flex: 0 0 43px; width: 43px; height: 43px; place-items: center;
+  border-radius: 50%; background: #264431; color: var(--cx-mint); font-size: 12px; font-weight: 800;
+}
+.converge-app-page .converge-specialist-directory__manage { margin-top: auto; justify-content: center; }
+.converge-app-page .converge-specialist-directory__detail { padding: 38px clamp(18px,2.3vw,37px); min-width: 0; }
+.converge-app-page .converge-specialist-directory__detail > h2 { margin-top: 23px; font-size: clamp(22px,2.2vw,29px); font-weight: 800; letter-spacing: -.05em; }
+.converge-app-page .converge-specialist-directory__intro { margin-top: 11px; color: var(--cx-muted); font-size: 13px; line-height: 1.6; }
+.converge-app-page .converge-specialist-directory__profile {
+  display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: center;
+  border: 1px solid var(--cx-line); border-radius: 18px; background: #1c3023;
+  margin-top: 28px; padding: 27px 24px;
+}
+.converge-app-page .converge-specialist-directory__profile > div:not(.converge-specialist-directory__tags) { min-width: 0; flex: 1; }
+.converge-app-page .converge-specialist-directory__avatar--large { flex-basis: 70px; width: 70px; height: 70px; font-size: 18px; }
+.converge-app-page .converge-specialist-directory__profile h3 { color: #fff; font-size: 20px; font-weight: 750; }
+.converge-app-page .converge-specialist-directory__profile :is(> p,> .converge-specialist-directory__tags) { flex-basis: 100%; }
+.converge-app-page .converge-specialist-directory__profile > p:not(.converge-app-eyebrow) { margin-top: 10px; color: #d3e1d6; font-size: 13px; line-height: 1.7; }
+.converge-app-page .converge-specialist-directory__tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.converge-app-page .converge-specialist-directory__tags span { border: 1px solid var(--cx-line); border-radius: 10px; padding: 7px 10px; color: #c0d5c4; font-size: 10px; }
+.converge-app-page .converge-specialist-directory__participation { border: 1px solid var(--cx-line); border-radius: 17px; background: #15281d; margin-top: 22px; padding: 23px; }
+.converge-app-page .converge-specialist-directory__participation h3 { margin-top: 10px; font-size: 18px; font-weight: 750; }
+.converge-app-page .converge-specialist-directory__participation p:not(.converge-app-eyebrow) { margin: 12px 0 18px; color: var(--cx-muted); font-size: 12px; line-height: 1.7; }
+.converge-app-page .converge-specialist-directory__context { border-left: 1px solid var(--cx-line); background: #14261b; padding: 36px 20px; }
+.converge-app-page .converge-specialist-directory__context h2 { margin-top: 23px; font-size: 20px; font-weight: 750; line-height: 1.35; }
+.converge-app-page .converge-specialist-directory__context p:not(.converge-app-eyebrow) { margin: 22px 0; color: var(--cx-muted); font-size: 13px; line-height: 1.65; }
+.converge-app-page .converge-specialist-directory__context .converge-app-action { width: 100%; margin-top: 9px; }
+.converge-app-page .converge-specialist-directory__empty { padding: 17px; color: var(--cx-muted); font-size: 13px; line-height: 1.6; }
+.converge-app-page .converge-specialist-directory__empty button { color: var(--cx-mint); text-decoration: underline; }
+
+/* Notification affordances and read/unread clarity. */
+.converge-app-page .converge-notifications-controls {
+  display: inline-flex;
+  gap: 6px;
+  border: 1px solid var(--cx-line);
+  border-radius: 12px;
+  background: #1a2b20;
+  padding: 5px;
+  margin-top: 22px;
+}
+.converge-app-page .converge-notifications-controls > button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 9px;
+  padding: 8px 17px;
+  color: var(--cx-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.converge-app-page .converge-notifications-controls > button[aria-selected="true"] {
+  background: var(--cx-mint);
+  color: #0e2516;
+}
+.converge-app-page .converge-notifications-list { padding: 10px; }
+.converge-app-page .converge-notifications-list > div > div:not(.grid) { border: 1px solid transparent; border-radius: 14px; margin-block: 4px; }
+.converge-app-page .converge-notifications-list > div > div.bg-emerald-200\\/\\[0\\.035\\] { border-color: rgba(166,230,189,.16); }
+.converge-app-page .converge-notifications-list button:not(:disabled):hover { color: var(--cx-mint); }
+
+/* Figma style discovery cards and workflow-based information density. */
+.converge-app-page .converge-app-list-row,
+.converge-app-page .converge-directory-card {
+  background: #1b3023 !important;
+  border: 1px solid var(--cx-line) !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.02);
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
+}
+.converge-app-page .converge-app-list-row:hover,
+.converge-app-page .converge-directory-card:hover {
+  background: #254333 !important;
+  border-color: rgba(166,230,189,.43) !important;
+  transform: translateY(-1px);
+}
+.converge-app-page .converge-app-list-row > div:first-child[class*="h-1"] { display: none; }
+.converge-app-page .converge-app-list-row > div.p-5 { padding: 23px; }
+.converge-app-page .converge-app-list-row :is(button, a)[class*="rounded-full"] { border-radius: 11px !important; }
+.converge-app-page .converge-app-section-card { background: #16291e !important; border-color: var(--cx-line) !important; }
+.converge-app-page .converge-settings > div:first-child {
+  margin-bottom: 20px;
+  border-color: var(--cx-line);
+}
+.converge-app-page .converge-settings > section:not([id="account-deletion"]) {
+  border: 1px solid var(--cx-line);
+  border-radius: 18px;
+  background: #14241b;
+  padding: 22px;
+}
+.converge-app-page .converge-settings > section[id="account-deletion"] {
+  border-radius: 17px;
+  margin-top: 29px;
+}
+@media (max-width: 1280px) {
+  .converge-app-page .converge-specialist-directory { grid-template-columns: minmax(205px,270px) minmax(0,1fr); }
+  .converge-app-page .converge-specialist-directory__context { display: none; }
+}
+@media (max-width: 720px) {
+  .converge-app-page .converge-specialist-directory { grid-template-columns: minmax(0,1fr); }
+  .converge-app-page .converge-specialist-directory__list { border-right: 0; border-bottom: 1px solid var(--cx-line); }
+  .converge-app-page .converge-specialist-directory__list .converge-specialist-directory__items { display: flex; overflow-x: auto; gap: 7px; padding: 3px 0 11px; }
+  .converge-app-page .converge-specialist-directory__item { min-width: 212px; width: 212px; }
+  .converge-app-page .converge-specialist-directory__manage { align-self: flex-start; }
+  .converge-app-page .converge-specialist-directory__detail { padding: 24px 17px; }
+  .converge-app-page .converge-specialist-directory__profile { padding: 20px 15px; }
+  .converge-app-page .converge-specialist-directory__participation { padding: 19px; }
+  .converge-app-page .converge-settings > section:not([id="account-deletion"]) { padding: 15px; }
+}
