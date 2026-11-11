@@ -169,8 +169,8 @@ export default function OrganizationsPage() {
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div className="max-w-3xl">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Organisations</p>
-              <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.06em] sm:text-5xl">Where teams do their thinking.</h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50 sm:text-base">A home for universities, companies, labs, and research groups to share their work and bring people together around meaningful questions.</p>
+              <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-[-0.06em] sm:text-5xl">Built around shared purpose.</h1>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50 sm:text-base">Explore organisations, discover collaborators, and build communities around research that matters.</p>
             </div>
             <button type="button" onClick={() => { if (!userId) { router.push("/sign-in?next=/organizations"); return; } setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-5 py-3 text-sm font-bold text-[#0b1710] transition hover:bg-emerald-100"><span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Close form" : "Create organisation"}</button>
           </div>
@@ -215,7 +215,7 @@ export default function OrganizationsPage() {
             filtered.length ? <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {filtered.map((org) => {
                 const membership = memberships.find((item) => item.organization_id === org.id && item.user_id === userId);
-                return <Link key={org.id} href={`/organizations/${org.slug}`} className="group overflow-hidden rounded-2xl border border-white/[0.09] bg-[#101815]/75 transition hover:-translate-y-0.5 hover:border-emerald-200/25 hover:bg-[#121d17]">
+                return <Link key={org.id} href={`/organizations/${org.slug}`} className="converge-directory-card group overflow-hidden rounded-2xl border border-white/[0.09] bg-[#101815]/75 transition hover:-translate-y-0.5 hover:border-emerald-200/25 hover:bg-[#121d17]">
                   <div className="h-1 bg-gradient-to-r from-emerald-200/65 via-emerald-200/15 to-transparent" />
                   <div className="p-5">
                     <div className="flex items-start justify-between gap-3"><div className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl border border-white/10 bg-emerald-200/[0.08] text-sm font-bold text-emerald-100">{org.logo_url ? <img src={org.logo_url} alt="" className="size-full object-cover" /> : initials(org.name)}</div><span className="rounded-full border border-white/[0.09] px-2.5 py-1.5 text-[9px] font-semibold text-white/45">{typeLabel(org.organization_type)}</span></div>
