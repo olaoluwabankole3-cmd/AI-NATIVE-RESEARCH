@@ -520,3 +520,71 @@
     background: transparent !important;
   }
 }
+
+/* Create-community and create-topic forms are their own mobile task, not a
+   panel pushed into a long directory. Existing draft/error logic is retained. */
+.converge-app-page .converge-create-mobile-back { display: none; }
+@media (max-width: 767px) {
+  main.converge-app-page[data-mobile-creating="true"],
+  main.converge-app-page[data-mobile-creating-topic="true"] {
+    padding-bottom: 0 !important;
+    min-height: 100dvh;
+  }
+  main.converge-app-page[data-mobile-creating="true"] > .converge-app-header,
+  main.converge-app-page[data-mobile-creating-topic="true"] > .converge-app-header,
+  main.converge-app-page[data-mobile-creating="true"] > .converge-mobile-dock,
+  main.converge-app-page[data-mobile-creating-topic="true"] > .converge-mobile-dock {
+    display: none !important;
+  }
+  main.converge-app-page[data-mobile-creating="true"] > div.mx-auto > :not(#create-community-form):not([role="status"]):not([role="alert"]),
+  main.converge-app-page[data-mobile-creating-topic="true"] > div.mx-auto > :not(#create-topic-form):not([role="status"]):not([role="alert"]) {
+    display: none !important;
+  }
+  .converge-app-page .converge-create-mobile-back {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 60px;
+    gap: 14px;
+    border-bottom: 1px solid var(--converge-rule);
+    background: #0e1913;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  .converge-app-page .converge-create-mobile-back button {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 60%;
+    min-height: 44px;
+    overflow: hidden;
+    color: #b9edcf;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+  .converge-app-page .converge-create-mobile-back strong {
+    color: #f1f8f1;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .converge-app-page #create-community-form,
+  .converge-app-page #create-topic-form {
+    min-height: calc(100dvh - 70px);
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 23px 0 40px !important;
+  }
+  .converge-app-page #create-community-form textarea,
+  .converge-app-page #create-topic-form textarea,
+  .converge-app-page #create-community-form input,
+  .converge-app-page #create-topic-form input {
+    font-size: 16px !important;
+  }
+  .converge-app-page #create-topic-form > div:first-child > p:last-child { display: none; }
+}
