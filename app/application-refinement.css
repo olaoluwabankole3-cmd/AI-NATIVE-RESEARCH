@@ -480,3 +480,43 @@
   .converge-app-page *::before,
   .converge-app-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* People, organisations and network: useful counts, not dashboard cards. */
+.converge-app-page .converge-directory-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 19px;
+  color: #9fb5a4;
+  font-size: 12px;
+}
+.converge-app-page .converge-directory-summary > a {
+  color: #a6e6bd;
+  font-weight: 700;
+}
+@media (max-width: 767px) {
+  .converge-app-page .converge-person-row {
+    border: 0 !important;
+    border-bottom: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .converge-app-page .converge-person-row > div:first-child[class*="h-1"] { display: none !important; }
+  .converge-app-page .converge-person-row > div.p-5 { padding: 17px 0 !important; }
+  .converge-app-page .converge-person-row :is(a,button) { min-height: 40px; }
+  .converge-app-page .converge-settings > section:not([id="account-deletion"]) {
+    border: 0 !important;
+    border-bottom: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 20px 0 !important;
+  }
+  .converge-app-page .converge-app-section-card:not([id="account-deletion"]) {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+}
