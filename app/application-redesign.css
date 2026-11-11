@@ -700,3 +700,59 @@
   .converge-app-page .converge-chat-main > div:first-child { padding: 12px 0; }
   .converge-app-page .converge-chat-main > .converge-chat-thread { min-height: 320px; max-height: none; border: 1px solid var(--cx-line) !important; border-radius: 17px !important; }
 }
+
+/* Functional inbox search and request tabs — no invented unread state. */
+.converge-app-page .converge-inbox-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 13px 20px;
+  padding: 21px 0 5px;
+}
+.converge-app-page .converge-inbox-controls > input {
+  width: min(430px, 100%);
+  min-width: 220px;
+  min-height: 45px;
+  padding: 11px 16px;
+}
+.converge-app-page .converge-inbox-controls__tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  border: 1px solid var(--cx-line);
+  border-radius: 13px;
+  background: var(--cx-card);
+  padding: 4px;
+}
+.converge-app-page .converge-inbox-controls__tabs button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 10px;
+  padding: 7px 14px;
+  background: transparent;
+  color: var(--cx-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.converge-app-page .converge-inbox-controls__tabs button[aria-selected="true"] {
+  background: var(--cx-mint);
+  color: #0d2015;
+}
+.converge-app-page .converge-inbox-empty {
+  margin: 20px 0;
+  border: 1px dashed var(--cx-line);
+  border-radius: 16px;
+  padding: 44px 22px;
+  text-align: center;
+}
+.converge-app-page .converge-inbox-empty h2 { font-size: 18px; font-weight: 750; }
+.converge-app-page .converge-inbox-empty p { margin-top: 9px; color: var(--cx-muted); font-size: 13px; }
+.converge-app-page .converge-inbox-empty button { margin-top: 16px; color: var(--cx-mint); font-size: 12px; font-weight: 700; }
+@media (max-width: 600px) {
+  .converge-app-page .converge-inbox-controls { align-items: stretch; flex-direction: column; }
+  .converge-app-page .converge-inbox-controls > input { min-width: 0; width: 100%; }
+  .converge-app-page .converge-inbox-controls__tabs { align-self: flex-start; }
+  .converge-app-page .converge-inbox-list > div { padding: 13px 7px !important; }
+}
