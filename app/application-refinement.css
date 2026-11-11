@@ -1,0 +1,602 @@
+/*
+ * Converge V2.1: focused mobile routes and an editorial, low-chrome application.
+ * This file is deliberately loaded AFTER V2, and does not target public/auth pages.
+ * A future consolidation can remove the superseded V2 declarations in one review.
+ */
+.converge-app-page {
+  --converge-rule: rgba(178,224,189,.12);
+  --converge-muted: #a1b5a5;
+}
+.converge-app-page :is(a,button,input,select,textarea):focus-visible {
+  outline: 2px solid #a6e6bd;
+  outline-offset: 2px;
+}
+.converge-app-page .converge-research-discovery {
+  display: flex !important;
+  align-items: center !important;
+  flex-direction: row !important;
+  gap: 12px;
+  margin-top: 19px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+.converge-app-page .converge-research-discovery__input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  border: 1px solid var(--converge-rule) !important;
+  border-radius: 13px !important;
+  background: #14221a !important;
+  padding: 10px 17px;
+  font-size: 14px;
+}
+.converge-app-page .converge-search-clear {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: 44px;
+  padding: 5px 12px;
+  color: #b9edd0;
+  font-size: 12px;
+  font-weight: 700;
+}
+@media (min-width: 1280px) {
+  .converge-app-page .converge-research-board--clean {
+    grid-template-columns: minmax(214px,252px) minmax(0,1fr) !important;
+    max-width: 1100px;
+    column-gap: clamp(24px,3vw,44px) !important;
+  }
+}
+/* Row-based research discovery: one information hierarchy, not cards of cards. */
+.converge-app-page .converge-topic-card-list {
+  display: block !important;
+  padding-top: 5px !important;
+}
+.converge-app-page .converge-topic-card {
+  transform: none !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--converge-rule) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 20px 4px !important;
+  box-shadow: none !important;
+}
+.converge-app-page .converge-topic-card:hover {
+  background: rgba(166,230,189,.035) !important;
+  transform: none !important;
+}
+.converge-app-page .converge-topic-card:last-child { border-bottom: 0 !important; }
+.converge-app-page .converge-topic-card > div > span:first-child {
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: #213c2a !important;
+}
+.converge-app-page .converge-directory-card {
+  border-color: var(--converge-rule) !important;
+  background: #16251b !important;
+  box-shadow: none !important;
+}
+.converge-app-page .converge-directory-card:hover { transform: none !important; background: #1d3023 !important; }
+.converge-app-page .converge-research-board--clean > aside:first-child > section:first-child {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 3px 0 !important;
+}
+.converge-app-page .converge-research-board--clean > aside:first-child > section:first-child > div:first-child { border-bottom: 1px solid var(--converge-rule); padding: 0 0 13px; }
+.converge-app-page .converge-room-participants {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 17px;
+  color: var(--converge-muted);
+  font-size: 12px;
+}
+.converge-app-page .converge-room-agent-label { color: #8dd3ad; font-size: 11px; }
+
+/* The mobile AI registry behaves like a list -> detail flow. */
+.converge-app-page .converge-specialist-mobile-back { display: none; }
+@media (max-width: 767px) {
+  .converge-app-page .converge-specialist-directory[data-mobile-view="list"] > .converge-specialist-directory__detail,
+  .converge-app-page .converge-specialist-directory[data-mobile-view="detail"] > .converge-specialist-directory__list {
+    display: none !important;
+  }
+  .converge-app-page .converge-specialist-mobile-back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: -7px 0 14px;
+    color: #b3e9c9;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .converge-app-page .converge-specialist-directory__list { padding: 10px 0 8px !important; }
+  .converge-app-page .converge-specialist-directory__list .converge-specialist-directory__items {
+    display: grid !important;
+    gap: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .converge-app-page .converge-specialist-directory__item {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 70px;
+    border: 0 !important;
+    border-bottom: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+  .converge-app-page .converge-specialist-directory__item[aria-pressed="true"] { background: rgba(166,230,189,.055) !important; }
+  .converge-app-page .converge-specialist-directory__detail {
+    min-height: calc(100dvh - 230px);
+    padding: 15px 4px 24px !important;
+  }
+  .converge-app-page .converge-specialist-directory__profile {
+    border: 0 !important;
+    border-top: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 23px 0 !important;
+  }
+  .converge-app-page .converge-specialist-directory__participation {
+    border: 0 !important;
+    border-top: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 20px 0 !important;
+  }
+}
+
+/* Focused mobile research and messaging: the route owns back navigation and composer. */
+@media (max-width: 1023px) {
+  main.converge-app-page > .converge-app-header--focused {
+    display: none !important;
+  }
+  main.converge-app-page:has(> .converge-app-header--focused) {
+    padding-bottom: 0 !important;
+  }
+  .converge-app-page .converge-mobile-dock {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    min-height: 68px !important;
+    height: calc(68px + env(safe-area-inset-bottom)) !important;
+    border: 0 !important;
+    border-top: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: #0d1912 !important;
+    padding: 5px 8px env(safe-area-inset-bottom) !important;
+    box-shadow: 0 -8px 26px rgba(0,0,0,.16) !important;
+  }
+  .converge-app-page .converge-mobile-dock__item {
+    min-height: 53px !important;
+    border-radius: 10px !important;
+    background: transparent !important;
+    font-size: 10px !important;
+  }
+  .converge-app-page .converge-mobile-dock__item.is-active {
+    color: #a6e6bd !important;
+    background: rgba(166,230,189,.07) !important;
+  }
+  .converge-app-page .converge-mobile-dock__item.is-active::before { display: none !important; }
+}
+@media (max-width: 767px) {
+  /* Core screens: fewer introductory statements, softer structure and clear rows. */
+  main.converge-app-page > div.mx-auto:not(.converge-chat-workspace) {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .converge-app-page .converge-page-intro {
+    padding-top: 22px !important;
+    padding-bottom: 18px !important;
+  }
+  .converge-app-page .converge-page-intro h1 {
+    font-size: 28px !important;
+    letter-spacing: -.055em !important;
+  }
+  main.converge-app-page:has(.converge-research-discovery) .converge-page-intro > p:first-child,
+  main.converge-app-page:has(.converge-research-discovery) .converge-page-intro .text-sm.leading-6,
+  main.converge-app-page:has(.converge-inbox-controls) .converge-page-intro p.text-sm {
+    display: none !important;
+  }
+  .converge-app-page .converge-research-board--clean {
+    display: flex !important;
+    flex-direction: column;
+    gap: 19px !important;
+    padding-top: 17px !important;
+  }
+  .converge-app-page .converge-research-board--clean > aside:first-child {
+    display: block !important;
+    width: 100%;
+    min-width: 0;
+  }
+  .converge-app-page .converge-research-board--clean > aside:first-child > section:first-child {
+    padding: 0 !important;
+    position: static !important;
+  }
+  .converge-app-page .converge-research-board--clean > aside:first-child > section:first-child > div.mt-3.space-y-1 {
+    display: flex !important;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 0 3px;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+  .converge-app-page .converge-research-board--clean > aside:first-child > section:first-child > div.mt-3.space-y-1 > a {
+    min-width: 145px;
+    min-height: 42px;
+    flex: 0 0 auto;
+    border: 1px solid var(--converge-rule);
+    border-radius: 11px;
+    background: #14251a;
+    padding: 7px 10px;
+    scroll-snap-align: start;
+    font-size: 12px;
+  }
+  .converge-app-page .converge-research-board--clean > section#converge-topic-list { width: 100%; min-width: 0; }
+  .converge-app-page .converge-topic-card { padding: 16px 0 !important; }
+  .converge-app-page .converge-topic-card > div { gap: 10px !important; }
+  .converge-app-page .converge-topic-card > div > span:first-child { width: 30px; height: 30px; }
+  .converge-app-page .converge-topic-card p.line-clamp-2 { margin-top: 5px; font-size: 12px; line-height: 1.65; }
+  .converge-app-page .converge-research-discovery__input { height: 45px; font-size: 16px; }
+  .converge-app-page #communities-directory { margin-top: 29px; padding-top: 24px; }
+  .converge-app-page #communities-directory .converge-directory-card {
+    border: 0 !important;
+    border-bottom: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 15px 0 !important;
+  }
+  .converge-app-page .converge-topic-workspace {
+    padding: 0 15px 26px !important;
+  }
+  .converge-app-page .converge-mobile-topic-back {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 60px;
+    gap: 8px;
+    border-bottom: 1px solid var(--converge-rule);
+    color: #9aafa0;
+    font-size: 11px;
+  }
+  .converge-app-page .converge-mobile-topic-back > a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    min-width: 0;
+    max-width: 65%;
+    gap: 8px;
+    color: #b9e9ce;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .converge-app-page .converge-topic-workspace > .py-7 { padding: 15px 0 0 !important; }
+  .converge-app-page .converge-topic-workspace nav[aria-label="Breadcrumb"] { display: none !important; }
+  .converge-app-page .converge-topic-hero {
+    margin-top: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 8px 0 15px !important;
+  }
+  .converge-app-page .converge-topic-hero h1 {
+    margin-top: 13px !important;
+    font-size: 25px !important;
+    line-height: 1.2 !important;
+  }
+  .converge-app-page .converge-topic-hero .whitespace-pre-wrap { margin-top: 13px !important; font-size: 14px; line-height: 1.65; }
+  .converge-app-page .converge-topic-hero > div:last-child { margin-top: 14px !important; padding-top: 13px !important; font-size: 11px; }
+  .converge-app-page .converge-room-tabbar {
+    position: sticky;
+    top: 0;
+    z-index: 15;
+    margin: 0 0 6px !important;
+    border-bottom: 1px solid var(--converge-rule);
+    background: #0b1110;
+    padding: 8px 0;
+  }
+  .converge-app-page .converge-room-tabbar button {
+    min-height: 44px;
+    border: 0 !important;
+    border-radius: 9px !important;
+    background: transparent !important;
+  }
+  .converge-app-page .converge-room-tabbar button[aria-selected="true"] {
+    background: #1d3b29 !important;
+    color: #b8ebcb !important;
+  }
+  .converge-app-page .converge-room-layout > .converge-room-discussion > section { margin-top: 14px !important; }
+  .converge-app-page .converge-room-discussion section > div.flex > div > p.leading-6 { display: none; }
+  .converge-app-page .converge-room-discussion [class*="rounded-2xl"][class*="border"] { border-radius: 10px !important; }
+  .converge-app-page .converge-room-discussion > section > div.mt-6.overflow-hidden {
+    border: 0 !important;
+    border-top: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+  .converge-app-page .converge-room-discussion > section > div.mt-6.overflow-hidden > article {
+    padding: 18px 2px !important;
+  }
+  .converge-app-page .converge-room-discussion form:has(#topic-reply) {
+    position: sticky;
+    bottom: 0;
+    z-index: 12;
+    margin-top: 17px !important;
+    border: 0 !important;
+    border-top: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: rgba(10,19,13,.98) !important;
+    padding: 12px 0 max(12px,env(safe-area-inset-bottom)) !important;
+  }
+  .converge-app-page .converge-room-discussion form:has(#topic-reply) h3 { display: none; }
+  .converge-app-page .converge-room-discussion form:has(#topic-reply) textarea {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    max-height: 115px;
+    margin-top: 0 !important;
+    resize: vertical;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+  .converge-app-page .converge-room-discussion form:has(#topic-reply) > div:last-child {
+    margin-top: 8px !important;
+  }
+  .converge-app-page .converge-room-discussion form:has(#topic-reply) > div:last-child > span { display: none; }
+  .converge-app-page .converge-room-evidence .converge-research-room {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 9px 0 28px !important;
+  }
+  .converge-app-page .converge-inbox-controls { padding-top: 14px !important; gap: 12px !important; }
+  .converge-app-page .converge-inbox-controls__tabs { border: 0 !important; border-bottom: 1px solid var(--converge-rule) !important; border-radius: 0 !important; background: transparent !important; padding: 0 0 6px !important; }
+  .converge-app-page .converge-inbox-controls__tabs > button[aria-selected="true"] { background: #23442f !important; color: #bbf0cf !important; }
+  .converge-app-page .converge-inbox-requests { margin-top: 12px !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; padding: 0 !important; }
+  .converge-app-page .converge-request-row { display: flex; align-items: center; min-height: 83px; flex-direction: row; padding: 13px 0; border-bottom: 1px solid var(--converge-rule); }
+  .converge-app-page .converge-request-row > a:first-child { min-width: 0; }
+  .converge-app-page .converge-request-row .converge-message-request-actions { display: none !important; }
+  .converge-app-page .converge-request-review {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    min-height: 44px;
+    color: #a6e6bd;
+    font-size: 11px;
+    font-weight: 750;
+  }
+  .converge-app-page .converge-inbox-list { margin-top: 14px !important; border: 0 !important; border-radius: 0 !important; background: transparent !important; padding: 0 !important; }
+  .converge-app-page .converge-inbox-list > div { min-height: 75px; border: 0 !important; border-bottom: 1px solid var(--converge-rule) !important; border-radius: 0 !important; margin: 0 !important; padding: 12px 0 !important; }
+  .converge-app-page .converge-inbox-list > div:hover { background: rgba(166,230,189,.04) !important; }
+  .converge-app-page .converge-chat-context { display: none !important; }
+}
+/* Compact mobile chat is a real full-height detail view, not a scrolling page
+ * with an arbitrary 560px minimum that hides the composer under the keyboard.
+ */
+@media (max-width: 767px) {
+  main.converge-app-page:has(> .converge-app-header--focused):has(.converge-chat-grid) {
+    display: flex !important;
+    flex-direction: column;
+    height: var(--converge-chat-visible-height,100dvh) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  main.converge-app-page .converge-chat-workspace {
+    width: 100% !important;
+    height: var(--converge-chat-visible-height,100dvh) !important;
+    min-height: 0 !important;
+    max-height: var(--converge-chat-visible-height,100dvh) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  main.converge-app-page .converge-chat-grid {
+    width: 100%;
+    height: 100%;
+    min-height: 0 !important;
+    max-height: 100%;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+  main.converge-app-page .converge-chat-main {
+    display: flex !important;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+  main.converge-app-page .converge-chat-header {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    min-height: 64px;
+    margin: 0 !important;
+    border-bottom: 1px solid var(--converge-rule);
+    background: #0d1a12;
+    padding: 8px 12px !important;
+  }
+  main.converge-app-page .converge-chat-header__eyebrow { display: none !important; }
+  main.converge-app-page .converge-chat-header h1 { font-size: 16px; }
+  main.converge-app-page .converge-chat-header > button { min-width: 46px; min-height: 42px; }
+  main.converge-app-page .converge-chat-header > a:first-child { min-height: 44px; }
+  main.converge-app-page .converge-chat-thread {
+    display: flex;
+    flex: 1 1 auto !important;
+    flex-direction: column;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #0b1110 !important;
+  }
+  main.converge-app-page .converge-chat-messages {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    padding: 14px 13px 18px !important;
+    overscroll-behavior-y: contain;
+  }
+  main.converge-app-page .converge-chat-messages > div.flex > div { max-width: 85% !important; padding: 10px 13px !important; }
+  main.converge-app-page .converge-chat-composer {
+    flex: 0 0 auto !important;
+    border-top: 1px solid var(--converge-rule) !important;
+    background: #0d1912 !important;
+    padding: 9px 11px max(10px,env(safe-area-inset-bottom)) !important;
+  }
+  main.converge-app-page .converge-chat-composer > div { border-radius: 16px !important; background: #1b2b20 !important; }
+  main.converge-app-page .converge-chat-composer textarea {
+    min-height: 45px !important;
+    max-height: 108px !important;
+    resize: none !important;
+    font-size: 16px !important;
+  }
+  main.converge-app-page .converge-chat-composer button[type="submit"] { min-height: 43px; }
+  .converge-app-page .converge-chat-thread .converge-message-request-actions { width: 100%; }
+}
+@media (min-width: 768px) {
+  .converge-app-page .converge-mobile-topic-back,
+  .converge-app-page .converge-request-review { display: none; }
+}
+/* Allow user-generated names, URLs and messages to wrap rather than force 320px overflow. */
+.converge-app-page :is(article,section,aside) { min-width: 0; }
+.converge-app-page :is(h1,h2,h3,p) { overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+  .converge-app-page *,
+  .converge-app-page *::before,
+  .converge-app-page *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* People, organisations and network: useful counts, not dashboard cards. */
+.converge-app-page .converge-directory-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 19px;
+  color: #9fb5a4;
+  font-size: 12px;
+}
+.converge-app-page .converge-directory-summary > a {
+  color: #a6e6bd;
+  font-weight: 700;
+}
+@media (max-width: 767px) {
+  .converge-app-page .converge-person-row {
+    border: 0 !important;
+    border-bottom: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .converge-app-page .converge-person-row > div:first-child[class*="h-1"] { display: none !important; }
+  .converge-app-page .converge-person-row > div.p-5 { padding: 17px 0 !important; }
+  .converge-app-page .converge-person-row :is(a,button) { min-height: 40px; }
+  .converge-app-page .converge-settings > section:not([id="account-deletion"]) {
+    border: 0 !important;
+    border-bottom: 1px solid var(--converge-rule) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 20px 0 !important;
+  }
+  .converge-app-page .converge-app-section-card:not([id="account-deletion"]) {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+}
+
+/* Create-community and create-topic forms are their own mobile task, not a
+   panel pushed into a long directory. Existing draft/error logic is retained. */
+.converge-app-page .converge-create-mobile-back { display: none; }
+@media (max-width: 767px) {
+  main.converge-app-page[data-mobile-creating="true"],
+  main.converge-app-page[data-mobile-creating-topic="true"] {
+    padding-bottom: 0 !important;
+    min-height: 100dvh;
+  }
+  main.converge-app-page[data-mobile-creating="true"] > .converge-app-header,
+  main.converge-app-page[data-mobile-creating-topic="true"] > .converge-app-header,
+  main.converge-app-page[data-mobile-creating="true"] > .converge-mobile-dock,
+  main.converge-app-page[data-mobile-creating-topic="true"] > .converge-mobile-dock {
+    display: none !important;
+  }
+  main.converge-app-page[data-mobile-creating="true"] > div.mx-auto > :not(#create-community-form):not([role="status"]):not([role="alert"]),
+  main.converge-app-page[data-mobile-creating-topic="true"] > div.mx-auto > :not(#create-topic-form):not([role="status"]):not([role="alert"]) {
+    display: none !important;
+  }
+  .converge-app-page .converge-create-mobile-back {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 60px;
+    gap: 14px;
+    border-bottom: 1px solid var(--converge-rule);
+    background: #0e1913;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  .converge-app-page .converge-create-mobile-back button {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 60%;
+    min-height: 44px;
+    overflow: hidden;
+    color: #b9edcf;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+  .converge-app-page .converge-create-mobile-back strong {
+    color: #f1f8f1;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .converge-app-page #create-community-form,
+  .converge-app-page #create-topic-form {
+    min-height: calc(100dvh - 70px);
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 23px 0 40px !important;
+  }
+  .converge-app-page #create-community-form textarea,
+  .converge-app-page #create-topic-form textarea,
+  .converge-app-page #create-community-form input,
+  .converge-app-page #create-topic-form input {
+    font-size: 16px !important;
+  }
+  .converge-app-page #create-topic-form > div:first-child > p:last-child { display: none; }
+}
+
+/* Community details use the main topic list on mobile; information from the
+   sidebar remains available in the community header and settings links. */
+@media (max-width: 1023px) {
+  .converge-app-page .converge-community-info-aside { display: none !important; }
+}
+@media (min-width: 1024px) {
+  .converge-app-page .converge-community-info-aside > section:first-child {
+    background: transparent !important;
+    border-color: var(--converge-rule) !important;
+  }
+}

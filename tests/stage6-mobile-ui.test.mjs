@@ -59,7 +59,7 @@ test("messaging supports narrow viewports, retries and a message length hint", (
   assert.match(inbox, /converge-message-request-actions/);
   assert.match(conversation, /converge-chat-messages/);
   assert.match(conversation, /converge-chat-composer/);
-  assert.match(conversation, /draft\.length\.toLocaleString\(\)/);
+  assert.match(conversation, /5000 - draft\.length/);
   assert.match(css, /100dvh - 250px/);
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /focus-visible/);

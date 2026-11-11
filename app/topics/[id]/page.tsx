@@ -583,8 +583,11 @@ export default function TopicPage() {
   return (
     <main className="converge-app-page min-h-screen bg-[#07110f] text-white">
       <SiteHeader />
-      <div className="mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
-
+      <div className="converge-topic-workspace mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
+        <nav className="converge-mobile-topic-back" aria-label="Research room back navigation">
+          <Link href={`/communities/${community.slug}`} aria-label={`Back to ${community.name}`}>← <span className="truncate">{community.name}</span></Link>
+          <span>{topic.type === "RESEARCH" ? "Research room" : "Discussion"}</span>
+        </nav>
         <div className="py-7">
           <nav aria-label="Breadcrumb" className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-white/50 sm:text-sm">
             <Link href="/communities" className="transition hover:text-emerald-200">Communities</Link>
@@ -657,7 +660,7 @@ export default function TopicPage() {
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold">Discussion</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">
-                  People and invited AI specialists share replies in the same thread. Participating specialists can respond automatically when you reply.
+                  Replies from members and invited AI specialists.
                 </p>
               </div>
 
@@ -674,36 +677,11 @@ export default function TopicPage() {
               ) : null}
             </div>
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-[#0b1714] p-4 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:px-5">
-              <div className="flex items-center gap-3">
-                <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-emerald-300/15 bg-emerald-300/[0.07] text-emerald-200">
-                  <span aria-hidden="true">✳</span>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Participants in this thread</p>
-                  <p className="mt-1 text-xs text-white/40">
-                    {humanParticipantCount} {humanParticipantCount === 1 ? "member" : "members"} · {participatingAgents.length} {participatingAgents.length === 1 ? "AI specialist" : "AI specialists"}
-                  </p>
-                </div>
-              </div>
-              {participatingAgents.length > 0 ? (
-                <div className="mt-4 flex flex-wrap gap-2 sm:mt-0 sm:justify-end">
-                  {participatingAgents.map((agent) => (
-                    <span
-                      key={agent.id}
-                      title={agent.role}
-                      className="inline-flex items-center gap-2 rounded-full border border-emerald-300/15 bg-emerald-300/[0.06] px-3 py-1.5 text-xs text-emerald-100/90"
-                    >
-                      <span className="size-1.5 rounded-full bg-emerald-300" />
-                      {agent.name}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-3 text-xs text-white/35 sm:mt-0 sm:text-right">
-                  No AI specialists yet. Add one to invite automatic replies.
-                </p>
-              )}
+            <div className="converge-room-participants" aria-label="Research room participants">
+              <span>{humanParticipantCount} {humanParticipantCount === 1 ? "member" : "members"}</span>
+              <span aria-hidden="true">·</span>
+              <span>{participatingAgents.length} AI {participatingAgents.length === 1 ? "specialist" : "specialists"}</span>
+              {participatingAgents.length > 0 && <span className="converge-room-agent-label">AI participants are labelled in replies</span>}
             </div>
 
             {showAgentPicker && (
@@ -712,7 +690,7 @@ export default function TopicPage() {
                   <div>
                     <h3 className="font-semibold">Add a specialist</h3>
                     <p className="mt-1 text-sm leading-6 text-white/40">
-                      Choose a platform specialist or an AI agent created by this community's owner.
+                      Choose a specialist to contribute to this topic.
                     </p>
                   </div>
                   <button
@@ -843,7 +821,7 @@ export default function TopicPage() {
               <div>
                 <h3 className="font-semibold">Add to the discussion</h3>
                 <p className="mt-1 text-sm text-white/40">
-                  Your reply will be posted under your human profile.
+                  Posting as you.
                 </p>
               </div>
 

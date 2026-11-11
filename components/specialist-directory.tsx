@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Specialist = {
   id: string;
@@ -21,6 +21,14 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "available" | "planned">("all");
   const [selectedId, setSelectedId] = useState<string | null>(agents[0]?.id ?? null);
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
+
+  useEffect(() => {
+    if (mobileView !== "detail" || !window.matchMedia("(max-width: 767px)").matches) return;
+    const profile = document.getElementById("converge-specialist-detail");
+    profile?.scrollIntoView({ behavior: "auto", block: "start" });
+    profile?.focus({ preventScroll: true });
+  }, [mobileView, selectedId]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
@@ -31,7 +39,7 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
   const selected = filtered.find((agent) => agent.id === selectedId) ?? filtered[0] ?? null;
 
   return (
-    <section className="converge-specialist-directory" aria-label="AI specialist directory">
+    <section className="converge-specialist-directory" data-mobile-view={mobileView} aria-label="AI specialist directory">
       <aside className="converge-specialist-directory__list">
         <div className="converge-specialist-directory__heading">
           <h2>AI specialists</h2>
@@ -48,7 +56,7 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
         {!filtered.length ? <p className="converge-specialist-directory__empty">No specialists match your search. <button type="button" onClick={() => { setQuery(""); setFilter("all"); }}>Clear filters</button></p>
           : <div className="converge-specialist-directory__items">
               {filtered.map((agent) => (
-                <button key={agent.id} type="button" aria-pressed={selected?.id === agent.id} onClick={() => setSelectedId(agent.id)} className="converge-specialist-directory__item">
+                <button key={agent.id} type="button" aria-pressed={selected?.id === agent.id} onClick={() => { setSelectedId(agent.id); setMobileView("detail"); }} className="converge-specialist-directory__item">
                   <span className="converge-specialist-directory__avatar" aria-hidden="true">{initials(agent.name)}</span>
                   <span><strong>{agent.name}</strong><small>{agent.role}</small></span>
                 </button>
@@ -56,7 +64,8 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
             </div>}
         <Link href="/admin/agents" className="converge-app-action converge-specialist-directory__manage">Manage registry ↗</Link>
       </aside>
-      <div className="converge-specialist-directory__detail">
+      <div id="converge-specialist-detail" tabIndex={-1} className="converge-specialist-directory__detail">
+        <button type="button" className="converge-specialist-mobile-back" onClick={() => setMobileView("list")} aria-label="Back to AI specialist list">← All specialists</button>
         {selected ? <>
           <p className="converge-app-eyebrow">SPECIALIST PROFILE</p>
           <h2>{selected.name}</h2>

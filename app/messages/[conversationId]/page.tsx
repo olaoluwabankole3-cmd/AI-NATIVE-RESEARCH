@@ -38,7 +38,8 @@ export default function DirectConversationPage() {
   const conversationId = params.conversationId ?? "";
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const messagesViewportRef = useRef<HTMLDivElement | null>(null);
+  const workspaceRef = useRef<HTMLElement | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [member, setMember] = useState<MemberProfile | null>(null);
   const [requestStatus, setRequestStatus] = useState<ConversationRow["request_status"]>("ACCEPTED");
@@ -131,8 +132,28 @@ export default function DirectConversationPage() {
     return () => { void supabase.removeChannel(channel); };
   }, [conversationId, loadThread, supabase, viewerId]);
 
+  // iOS virtual keyboards can shrink visualViewport without resizing 100dvh.
+  // Limit the variable to this page so other screens keep their own viewport rules.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const resize = () => {
+      workspaceRef.current?.style.setProperty("--converge-chat-visible-height", `${Math.floor(viewport.height)}px`);
+    };
+    resize();
+    viewport.addEventListener("resize", resize);
+    window.addEventListener("resize", resize);
+    return () => {
+      viewport.removeEventListener("resize", resize);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  // Scroll *within the conversation*, not the whole page. scrollIntoView previously
+  // pushed the composer below the mobile viewport when a thread opened or refreshed.
+  useEffect(() => {
+    const viewport = messagesViewportRef.current;
+    if (viewport) viewport.scrollTop = viewport.scrollHeight;
   }, [messages]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -168,6 +189,7 @@ export default function DirectConversationPage() {
     setPageError("");
     try {
       if (action === "block") {
+        if (!window.confirm(`Block ${member.display_name}? They won't be able to send you new messages.`)) return;
         const { error } = await supabase.rpc("block_user", { p_blocked_user_id: member.id });
         if (error) throw error;
         router.replace("/messages");
@@ -189,6 +211,7 @@ export default function DirectConversationPage() {
 
   async function toggleBlock() {
     if (!viewerId || !member || moderatingRequest) return;
+    if (!blockedByMe && !window.confirm(`Block ${member.display_name}? You can unblock them from your inbox later.`)) return;
     setModeratingRequest(true);
     setPageError("");
     try {
@@ -209,16 +232,16 @@ export default function DirectConversationPage() {
   }
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main ref={workspaceRef} className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="converge-chat-workspace mx-auto flex min-h-[calc(100vh-72px)] max-w-[1400px] flex-col px-3 pb-6 pt-4 sm:px-7 sm:pt-7">
         <div className="converge-chat-grid">
           <ConversationRail viewerId={viewerId} activeId={conversationId} />
           <div className="converge-chat-main">
-        <div className="mb-4 flex items-center gap-3">
+        <div className="converge-chat-header mb-4 flex items-center gap-3">
           <Link href="/messages" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 text-lg text-white/65 transition hover:border-emerald-200/25 hover:text-white" aria-label="Back to inbox">←</Link>
           <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-bold uppercase tracking-[0.19em] text-emerald-200/70">Converge / Private message</p>
+            <p className="converge-chat-header__eyebrow text-[9px] font-bold uppercase tracking-[0.19em] text-emerald-200/70">Converge / Private message</p>
             <h1 className="mt-1 truncate text-lg font-semibold tracking-[-0.04em]">{member?.display_name ?? "Conversation"}</h1>
             {member?.headline && <p className="truncate text-[11px] text-white/40">{member.headline}</p>}
           </div>
@@ -238,11 +261,7 @@ export default function DirectConversationPage() {
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3 border-b border-white/[0.08] px-4 py-3 sm:px-6">
-                <div className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/10 bg-emerald-200/[0.08] text-xs font-bold text-emerald-100">{member?.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member?.display_name ?? "Converge")}</div>
-                <p className="min-w-0 break-words text-xs leading-5 text-white/50">Private conversation with this member.</p>
-              </div>
-              {isIncomingRequest && <div className="border-b border-amber-200/15 bg-amber-200/[0.04] px-4 py-4 sm:px-6">
+                            {isIncomingRequest && <div className="border-b border-amber-200/15 bg-amber-200/[0.04] px-4 py-4 sm:px-6">
                 <p className="text-sm font-semibold text-amber-100">Message request</p>
                 <p className="mt-1 text-xs leading-5 text-white/55">{member?.display_name ?? "This member"} wants to start a private conversation. Accept to allow replies, ignore to dismiss the request, or block them to stop future contact.</p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -255,7 +274,7 @@ export default function DirectConversationPage() {
               {requestStatus === "IGNORED" && requestCreatorId === viewerId && <div className="border-b border-white/10 px-4 py-3 text-xs text-white/50 sm:px-6">This message request was ignored. You can no longer send messages in this conversation.</div>}
               {blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">You have blocked this person. Unblock them above to allow contact again.</div>}
               {blockedBetween && !blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">Messaging is unavailable because one of you has blocked the other.</div>}
-              <div className="converge-chat-messages min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-5 sm:px-6 sm:py-7">
+              <div ref={messagesViewportRef} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" className="converge-chat-messages min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-5 sm:px-6 sm:py-7">
                 {messages.length ? messages.map((message) => {
                   const own = message.sender_id === viewerId;
                   return (
@@ -273,7 +292,6 @@ export default function DirectConversationPage() {
                     <p className="mt-2 max-w-sm text-sm leading-6 text-white/40">A thoughtful question, a useful resource, or a quick introduction is a good place to begin.</p>
                   </div>
                 )}
-                <div ref={bottomRef} />
               </div>
               {pageError && <p role="alert" className="mx-4 mb-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-3 py-2 text-xs leading-5 text-red-200 sm:mx-6">{pageError}</p>}
               {canSend ? <form onSubmit={sendMessage} className="converge-chat-composer border-t border-white/[0.08] p-3 sm:p-5">
@@ -282,7 +300,7 @@ export default function DirectConversationPage() {
                   <textarea id="message-body" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={5000} rows={2} placeholder={isOutgoingRequest ? "Write your introductory message…" : "Write a message…"} className="min-w-0 max-h-36 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-base leading-6 text-white outline-none placeholder:text-white/35 sm:text-sm" />
                   <button type="submit" disabled={!draft.trim() || sending || draft.trim().length > 5000} className="mb-0.5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-200 px-4 py-3 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40">{sending ? "Sending…" : "Send ↗"}</button>
                 </div>
-                <p className="mt-2 px-1 text-[9px] text-white/30">{isOutgoingRequest ? "One introductory message · replies unlock when the request is accepted" : "Private conversation"} · {draft.length.toLocaleString()} / 5,000 characters</p>
+                {(isOutgoingRequest || draft.length > 4500) && <p className="mt-2 px-1 text-[10px] text-white/45">{isOutgoingRequest ? "Send one introductory message. Replies unlock when accepted." : `${(5000 - draft.length).toLocaleString()} characters remaining`}</p>}
               </form> : <div className="border-t border-white/[0.08] px-4 py-5 text-center text-xs leading-5 text-white/40">{blockedByMe ? "You have blocked this person." : blockedBetween ? "Messaging is unavailable because one of you has blocked the other." : isIncomingRequest ? "Accept the request to reply." : "Messaging is not available for this conversation."}</div>}
             </>
           )}
@@ -295,12 +313,7 @@ export default function DirectConversationPage() {
               {member?.headline && <p>{member.headline}</p>}
               {member && <Link href={`/u/${member.username || member.id}`} className="converge-app-action">View member profile ↗</Link>}
             </div>
-            <div className="converge-chat-context__privacy">
-              <span className="converge-app-eyebrow">PRIVACY &amp; CONTROLS</span>
-              <p>Message requests, blocking, and conversation access follow Converge's existing permissions.</p>
-              {member && <button type="button" disabled={moderatingRequest} onClick={() => void toggleBlock()} className="converge-app-action converge-app-action--danger">{moderatingRequest ? "Working…" : blockedByMe ? "Unblock person" : "Block person"}</button>}
-              <Link href="/messages" className="converge-app-action">All conversations ↗</Link>
-            </div>
+
           </aside>
         </div>
       </div>
