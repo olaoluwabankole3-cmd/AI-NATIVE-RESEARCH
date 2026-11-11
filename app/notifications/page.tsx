@@ -205,7 +205,7 @@ export default function NotificationsPage() {
             : notifications.filter((item) => view === "all" || !item.is_read).length ? notifications.filter((item) => view === "all" || !item.is_read).map((item) => {
               const actor = item.actor_id ? actors[item.actor_id] : undefined;
               return (
-                <div key={item.id} className={["flex items-start gap-3 px-4 py-4 transition sm:gap-4 sm:px-6 sm:py-5", item.is_read ? "bg-transparent" : "bg-emerald-200/[0.035]", "border-b border-white/[0.06] last:border-b-0"].join(" ")}>
+                <div key={item.id} className={["flex items-start gap-3 px-4 py-4 transition sm:gap-4 sm:px-6 sm:py-5", item.is_read ? "bg-transparent" : "is-unread bg-emerald-200/[0.035]", "border-b border-white/[0.06] last:border-b-0"].join(" ")}>
                   <div className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.07] text-sm font-bold text-emerald-100">
                     {actor?.avatar_url ? <img src={actor.avatar_url} alt="" className="size-full object-cover" /> : initials(actor?.display_name ?? (item.notification_type === "topic_reply" ? "Research" : "Converge"))}
                     {!item.is_read && <span className="absolute right-0.5 top-0.5 size-2 rounded-full bg-emerald-200 ring-2 ring-[#101815]" />}
