@@ -16,7 +16,7 @@ WhatsApp-style voice calling **between Converge members** (internet calls, not c
 
 ## Integration and disabled-by-default release gate
 
-The `voice_calls` table is currently absent from the connected Supabase project. Call code is included in Converge, but with `NEXT_PUBLIC_CONVERGE_CALLS_ENABLED` unset, call links and incoming-call listeners are not mounted, and `/api/calls/ice` returns HTTP 503 with no database queries.
+The `voice_calls` table is currently absent from the connected Supabase project. Call code is included in Converge. The Calls destination and setup screen remain visible even while `NEXT_PUBLIC_CONVERGE_CALLS_ENABLED` is unset; actual call initiation, incoming-call listeners and history queries are not mounted, and `/api/calls/ice` returns HTTP 503 without database queries.
 
 Do not enable voice calls until the migration is verified in a disposable test database with adversarial RLS checks and the TURN relay and real-device testing are complete. Enabling requires a deployment. No production data or migrations were changed by merging this code.
 
@@ -53,3 +53,7 @@ The preview is interface-only. Calls require an open browser tab, and a call cur
 Next phase: ICE restart/reconnection, notification push, call quality metrics, then video and group calls using an SFU rather than large full-mesh calls.
 
 References: Supabase Realtime Postgres Changes and WebRTC API docs.
+
+## Visible setup state (13 November 2026)
+
+The Calls shortcut is accessible from Messages and the desktop/mobile More menu, including when the feature is disabled. Accepted conversations display a call setup shortcut. This is **navigation only**, not a working call: backend migration/RLS testing, TURN relay setup and device testing must pass before enabling `NEXT_PUBLIC_CONVERGE_CALLS_ENABLED` in production. No production database changes were made for this UI visibility update.

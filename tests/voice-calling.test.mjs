@@ -95,6 +95,21 @@ test("voice calling is disabled until database and relay release gates are satis
   assert.match(layout, /voiceCallsEnabled && <IncomingVoiceCall \/>/);
   assert.match(api, /if \(!voiceCallsEnabled\)/);
   assert.match(api, /status: 503/);
-  assert.match(header, /voiceCallsEnabled \?/);
-  assert.match(messages, /voiceCallsEnabled && member/);
+  assert.match(header, /\{ href: "\/calls", label: "Calls", icon: "calls" \}/);
+  assert.match(messages, /voiceCallsEnabled \?/);
+});
+
+test("Calls is discoverable without enabling unfinished WebRTC or database queries", () => {
+  const header = read("components/site-header.tsx");
+  const inbox = read("app/messages/page.tsx");
+  const thread = read("app/messages/[conversationId]/page.tsx");
+  const history = read("app/calls/page.tsx");
+  assert.match(header, /\{ href: "\/calls", label: "Calls", icon: "calls" \}/);
+  assert.match(inbox, /href="\/calls"/);
+  assert.match(inbox, /Setup/);
+  assert.match(thread, /href="\/calls"/);
+  assert.match(thread, /Voice calls — setup in progress/);
+  assert.match(history, /if \(voiceCallsEnabled\) return <CallsPageEnabled \/>/);
+  assert.match(history, /starting and receiving calls isn't available yet/);
+  assert.match(read("app/api/calls/ice/route.ts"), /status: 503/);
 });

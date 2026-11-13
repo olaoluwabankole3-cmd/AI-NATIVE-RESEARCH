@@ -29,7 +29,7 @@ for (const [route, expected] of [
   ["/reset-password", "Choose a new password"],
   ["/communities", "Communities"],
   ["/messages", "Your conversations and requests in one place."],
-  ["/calls", "Voice calls"],
+  ["/calls", "Calling · Setup in progress"],
   ["/notifications", "Your updates."],
 ]) {
   const response = await request(route);

@@ -129,10 +129,21 @@ export default function CallsPage() {
   if (voiceCallsEnabled) return <CallsPageEnabled />;
   return <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
     <SiteHeader />
-    <section className="mx-auto max-w-2xl px-5 py-16">
-      <Link href="/messages" className="text-sm text-emerald-200">← Messages</Link>
-      <h1 className="mt-7 text-3xl font-semibold">Voice calls</h1>
-      <p className="mt-3 text-sm text-white/60">Call testing is not yet enabled. The database and relay setup must be verified first.</p>
+    <section className="mx-auto max-w-3xl px-5 pb-28 pt-8 sm:px-8 sm:pt-12">
+      <nav aria-label="Messaging navigation" className="flex items-center gap-4 text-sm">
+        <Link href="/messages" className="text-white/60 transition hover:text-emerald-200">← Messages</Link>
+        <span aria-current="page" className="font-semibold text-emerald-100">Calls</span>
+      </nav>
+      <div className="mt-10 border-b border-white/10 pb-7">
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">Calling · Setup in progress</p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">Calls</h1>
+        <p className="mt-3 max-w-xl text-sm leading-7 text-white/60">Audio calling is being connected to Converge. The call interface is visible, but starting and receiving calls isn't available yet.</p>
+      </div>
+      <div className="py-8">
+        <h2 className="text-lg font-semibold">Not ready for live calls</h2>
+        <p className="mt-3 max-w-xl text-sm leading-7 text-white/55">The calling database and TURN relay still need setup and verification. Your existing messages continue to work normally.</p>
+        <Link href="/messages" className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-emerald-200 px-5 text-xs font-bold text-[#0b1710] hover:bg-emerald-100">Open messages →</Link>
+      </div>
     </section>
   </main>;
 }
