@@ -9,6 +9,7 @@ type IncomingCall = {
   caller_id: string;
   callee_id: string;
   status: string;
+  call_type: "audio" | "video";
   ring_expires_at: string;
 };
 
@@ -24,7 +25,7 @@ export function IncomingVoiceCall() {
   const checkIncoming = useCallback(async (userId: string) => {
     try {
       const { data, error: loadError } = await supabase.from("voice_calls")
-        .select("id,caller_id,callee_id,status,ring_expires_at")
+        .select("id,caller_id,callee_id,status,call_type,ring_expires_at")
         .eq("callee_id", userId).eq("status", "ringing")
         .gt("ring_expires_at", new Date().toISOString())
         .order("created_at", { ascending: false }).limit(1);
@@ -96,11 +97,11 @@ export function IncomingVoiceCall() {
   if (!viewerId || !incoming || Date.parse(incoming.ring_expires_at) <= Date.now()) return null;
 
   return (
-    <aside role="alertdialog" aria-label="Incoming voice call" aria-live="assertive"
+    <aside role="alertdialog" aria-label={incoming.call_type === "video" ? "Incoming video call" : "Incoming voice call"} aria-live="assertive"
       className="fixed bottom-[max(95px,env(safe-area-inset-bottom))] right-4 z-[220] w-[min(calc(100vw-2rem),365px)] rounded-2xl border border-emerald-200/35 bg-[#11221c] p-5 text-white shadow-[0_24px_70px_rgba(0,0,0,.65)] sm:bottom-6">
-      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-emerald-200">Incoming Converge call</p>
+      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-emerald-200">Incoming Converge {incoming.call_type === "video" ? "video" : "voice"} call</p>
       <h2 className="mt-2 break-words text-lg font-semibold">{callerName}</h2>
-      <p className="mt-1 text-xs leading-5 text-white/60">Private audio call · Internet connection required</p>
+      <p className="mt-1 text-xs leading-5 text-white/60">{incoming.call_type === "video" ? "Camera and microphone permission requested after you answer." : "Private audio call"} · Internet required</p>
       {error && <p role="alert" className="mt-3 text-xs text-amber-200">{error}</p>}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <button type="button" onClick={() => void respond("decline")} disabled={busy}

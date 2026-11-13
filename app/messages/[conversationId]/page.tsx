@@ -185,15 +185,15 @@ export default function DirectConversationPage() {
   const isOutgoingRequest = requestStatus === "PENDING" && requestCreatorId === viewerId;
   const canSend = !blockedBetween && (requestStatus === "ACCEPTED" || (isOutgoingRequest && messages.length === 0));
 
-  async function startVoiceCall() {
+  async function startCall(kind: "audio" | "video") {
     if (!voiceCallsEnabled || !viewerId || calling || blockedBetween || requestStatus !== "ACCEPTED") return;
     setCalling(true);
     setPageError("");
     try {
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error("Voice calling requires HTTPS and a compatible browser.");
-      const { data: callId, error: callError } = await supabase.rpc("start_voice_call", {
-        p_conversation_id: conversationId,
-      });
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error("Calls require HTTPS and a compatible browser.");
+      const { data: callId, error: callError } = kind === "video"
+        ? await supabase.rpc("start_video_call", { p_conversation_id: conversationId })
+        : await supabase.rpc("start_voice_call", { p_conversation_id: conversationId });
       if (callError) throw callError;
       if (typeof callId !== "string") throw new Error("The call could not be started.");
       router.push("/calls/" + callId);
@@ -267,11 +267,18 @@ export default function DirectConversationPage() {
           </div>
           {member && viewerId && requestStatus === "ACCEPTED" && !blockedBetween && (
             voiceCallsEnabled ? (
-              <button type="button" onClick={() => void startVoiceCall()} disabled={calling || moderatingRequest}
-                aria-label={`Voice call ${member.display_name}`}
-                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-emerald-200/30 bg-emerald-200/[.08] px-3 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.15] disabled:opacity-40">
-                <span aria-hidden="true">☎</span><span className="hidden sm:inline">{calling ? "Calling…" : "Call"}</span>
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button type="button" onClick={() => void startCall("audio")} disabled={calling || moderatingRequest}
+                  aria-label={`Voice call ${member.display_name}`}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/30 bg-emerald-200/[.08] px-3 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.15] disabled:opacity-40">
+                  <span aria-hidden="true">☎</span><span className="hidden sm:inline">{calling ? "Starting…" : "Voice"}</span>
+                </button>
+                <button type="button" onClick={() => void startCall("video")} disabled={calling || moderatingRequest}
+                  aria-label={`Video call ${member.display_name}`}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-200 px-3 text-xs font-bold text-[#0d2016] transition hover:bg-emerald-100 disabled:opacity-40">
+                  <span aria-hidden="true">▣</span><span className="hidden sm:inline">{calling ? "Starting…" : "Video"}</span>
+                </button>
+              </div>
             ) : (
               <Link href="/calls" aria-label="Voice calls — setup in progress"
                 className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-white/15 px-3 text-xs font-semibold text-white/65 hover:border-emerald-200/30 hover:text-emerald-100">
