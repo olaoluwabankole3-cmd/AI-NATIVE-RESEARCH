@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
-import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
 type TopNavIconName = "home" | "communities" | "activity" | "people" | "organizations" | "network" | "messages" | "calls" | "agents" | "notifications" | "workspaces" | "more" | "profile" | "settings" | "signout" | "help";
 
@@ -16,7 +15,7 @@ const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/organizations", label: "Organisations", icon: "organizations" },
   { href: "/network", label: "Network", icon: "network" },
   { href: "/messages", label: "Messages", icon: "messages" },
-  ...(voiceCallsEnabled ? [{ href: "/calls", label: "Voice calls", icon: "calls" as const }] : []),
+  { href: "/calls", label: "Calls", icon: "calls" },
   { href: "/agents", label: "AI registry", icon: "agents" },
   { href: "/workspaces", label: "Workspaces", icon: "workspaces" },
 ];
