@@ -14,6 +14,7 @@ type Call = {
   caller_id: string;
   callee_id: string;
   status: CallStatus;
+  call_type: "audio" | "video";
   ring_expires_at: string;
   created_at: string;
   answered_at: string | null;
@@ -58,6 +59,9 @@ function VoiceCallPageEnabled() {
   const [busy, setBusy] = useState(false);
   const [mediaState, setMediaState] = useState<"idle" | "starting" | "connecting" | "connected" | "ended">("idle");
   const [muted, setMuted] = useState(false);
+  const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
+  const [switchingCamera, setSwitchingCamera] = useState(false);
   const [requiresPlayback, setRequiresPlayback] = useState(false);
   const [relayWarning, setRelayWarning] = useState("");
   const [elapsed, setElapsed] = useState(0);
@@ -67,6 +71,8 @@ function VoiceCallPageEnabled() {
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerPromiseRef = useRef<Promise<RTCPeerConnection> | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const offerStarted = useRef(false);
   const answerStarted = useRef(false);
   const remoteApplied = useRef(false);
@@ -79,13 +85,16 @@ function VoiceCallPageEnabled() {
     localStreamRef.current = null;
     peerPromiseRef.current = null;
     if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    setLocalMediaReady(false);
     setMediaState("ended");
   }, []);
 
   const loadCall = useCallback(async () => {
     try {
       const { data, error: loadError } = await supabase.from("voice_calls")
-        .select("id,conversation_id,caller_id,callee_id,status,ring_expires_at,created_at,answered_at,ended_at,caller_seen_at,callee_seen_at,offer_sdp,answer_sdp")
+        .select("id,conversation_id,caller_id,callee_id,status,call_type,ring_expires_at,created_at,answered_at,ended_at,caller_seen_at,callee_seen_at,offer_sdp,answer_sdp")
         .eq("id", callId).maybeSingle();
       if (loadError) throw loadError;
       if (!data) throw new Error("This call does not exist or is private.");
@@ -144,7 +153,7 @@ function VoiceCallPageEnabled() {
     setMediaState("starting");
     peerPromiseRef.current = (async () => {
       if (!navigator.mediaDevices?.getUserMedia || !window.RTCPeerConnection) {
-        throw new Error("Voice calling requires a supported browser over HTTPS.");
+        throw new Error("Calling requires a supported browser over HTTPS.");
       }
       const response = await fetch("/api/calls/ice?callId=" + encodeURIComponent(callId), { cache: "no-store" });
       const config = await response.json().catch(() => null) as {
@@ -155,29 +164,39 @@ function VoiceCallPageEnabled() {
       }
       if (config.warning) setRelayWarning(config.warning);
 
-      // Browser microphone access is consent-based. Never record or store audio.
+      // Media permission is requested only after the call is answered. Calls
+      // never record, upload or store camera frames or microphone audio.
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: false,
+        video: call?.call_type === "video"
+          ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 } }
+          : false,
       });
+      if (call?.call_type === "video" && localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+        void localVideoRef.current.play().catch(() => {});
+      }
       localStreamRef.current = stream;
       setLocalMediaReady(true);
       const peer = new RTCPeerConnection({ iceServers: config.iceServers, iceTransportPolicy: "all" });
       pcRef.current = peer;
-      for (const track of stream.getAudioTracks()) peer.addTrack(track, stream);
+      for (const track of stream.getTracks()) peer.addTrack(track, stream);
 
       peer.ontrack = (event) => {
-        const audio = remoteAudioRef.current;
-        if (!audio) return;
-        audio.srcObject = event.streams[0] || new MediaStream([event.track]);
-        void audio.play().then(() => setRequiresPlayback(false)).catch(() => setRequiresPlayback(true));
+        const media = call?.call_type === "video" ? remoteVideoRef.current : remoteAudioRef.current;
+        if (!media) return;
+        const currentStream = media.srcObject instanceof MediaStream ? media.srcObject : null;
+        const stream = event.streams[0] || currentStream || new MediaStream();
+        if (!event.streams[0] && !stream.getTracks().includes(event.track)) stream.addTrack(event.track);
+        media.srcObject = stream;
+        void media.play().then(() => setRequiresPlayback(false)).catch(() => setRequiresPlayback(true));
       };
       peer.onconnectionstatechange = () => {
         if (peer.connectionState === "connected") {
           setMediaState("connected");
           setError("");
         } else if (peer.connectionState === "failed") {
-          setError("Audio connection failed. End this call and try again.");
+          setError("Call connection failed. End this call and try again.");
         } else if (peer.connectionState === "disconnected") {
           setMediaState("connecting");
         }
@@ -189,7 +208,7 @@ function VoiceCallPageEnabled() {
       throw caught;
     });
     return peerPromiseRef.current;
-  }, [callId, closeMedia]);
+  }, [callId, call?.call_type, closeMedia]);
 
   useEffect(() => {
     if (!call || !viewerId) return;
@@ -311,6 +330,48 @@ function VoiceCallPageEnabled() {
     }
   }
 
+  function toggleCamera() {
+    const track = localStreamRef.current?.getVideoTracks()[0];
+    if (!track) return;
+    track.enabled = !track.enabled;
+    setCameraEnabled(track.enabled);
+  }
+
+  async function switchCamera() {
+    const peer = pcRef.current;
+    const stream = localStreamRef.current;
+    const currentTrack = stream?.getVideoTracks()[0];
+    if (!peer || !stream || !currentTrack || switchingCamera) return;
+    const sender = peer.getSenders().find((item) => item.track === currentTrack);
+    if (!sender) return;
+    const nextFacing = cameraFacing === "user" ? "environment" : "user";
+    setSwitchingCamera(true);
+    let fresh: MediaStream | null = null;
+    try {
+      fresh = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: nextFacing }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      const newTrack = fresh.getVideoTracks()[0];
+      if (!newTrack) throw new Error("This camera is unavailable.");
+      newTrack.enabled = cameraEnabled;
+      await sender.replaceTrack(newTrack);
+      stream.removeTrack(currentTrack);
+      stream.addTrack(newTrack);
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+        void localVideoRef.current.play().catch(() => {});
+      }
+      currentTrack.stop();
+      setCameraFacing(nextFacing);
+    } catch (caught) {
+      fresh?.getTracks().forEach((track) => track.stop());
+      setError(caught instanceof Error ? caught.message : "Could not switch cameras.");
+    } finally {
+      setSwitchingCamera(false);
+    }
+  }
+
   function toggleMute() {
     const track = localStreamRef.current?.getAudioTracks()[0];
     if (!track) return;
@@ -321,6 +382,7 @@ function VoiceCallPageEnabled() {
   const isCaller = !!call && viewerId === call.caller_id;
   const isCallee = !!call && viewerId === call.callee_id;
   const ended = !!call && !["ringing", "active"].includes(call.status);
+  const isVideoCall = call?.call_type === "video";
 
   return (
     <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
@@ -328,28 +390,44 @@ function VoiceCallPageEnabled() {
       <div className="mx-auto max-w-[720px] px-4 pb-24 pt-8 sm:px-6 sm:pt-14">
         <div className="mb-6 flex items-center justify-between gap-3">
           <Link href="/messages" className="text-sm font-semibold text-white/55 hover:text-emerald-100">← Messages</Link>
-          <span className="rounded-full border border-emerald-200/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-emerald-100/80">Converge Voice</span>
+          <span className="rounded-full border border-emerald-200/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-emerald-100/80">Converge {isVideoCall ? "Video" : "Voice"}</span>
         </div>
-        <section aria-label="Voice call" className="rounded-[2rem] border border-emerald-200/15 bg-[#101b17] p-6 text-center shadow-2xl sm:p-10">
-          <div className="mx-auto grid size-24 place-items-center rounded-full border border-emerald-200/30 bg-emerald-200/[.08] text-4xl text-emerald-100" aria-hidden="true">♫</div>
+        <section aria-label={isVideoCall ? "Video call" : "Voice call"} className="rounded-[1.5rem] border border-emerald-200/15 bg-[#101b17] p-4 text-center shadow-2xl sm:p-7">
+          {isVideoCall ? (
+            <div className="relative mx-auto aspect-[9/12] max-h-[min(56dvh,490px)] w-full overflow-hidden rounded-2xl bg-[#07100c] sm:aspect-video">
+              <video ref={remoteVideoRef} autoPlay playsInline aria-label="Remote video and call audio" className="size-full object-contain" />
+              <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/65 px-3 py-1.5 text-xs font-medium text-white">
+                {mediaState === "connected" ? remoteName : "Waiting for video…"}
+              </div>
+              <div className="absolute right-3 top-3 w-[28%] min-w-[90px] max-w-[155px] overflow-hidden rounded-xl border border-white/25 bg-[#1c2a20] shadow-lg">
+                <video ref={localVideoRef} autoPlay muted playsInline aria-label="Your camera preview" className="aspect-[3/4] w-full object-cover -scale-x-100 sm:aspect-video" />
+                {!cameraEnabled && <span className="absolute inset-0 flex items-center justify-center bg-[#17251c]/90 text-xs text-white/85">Camera off</span>}
+              </div>
+            </div>
+          ) : (
+            <div className="mx-auto grid size-24 place-items-center rounded-full border border-emerald-200/30 bg-emerald-200/[.08] text-4xl text-emerald-100" aria-hidden="true">♫</div>
+          )}
           <p className="mt-7 text-[10px] font-bold uppercase tracking-[.18em] text-emerald-100/75">Private internet call</p>
           <h1 className="mt-2 break-words text-2xl font-semibold sm:text-3xl">{remoteName}</h1>
           <p role="status" aria-live="polite" className="mt-3 text-sm text-white/60">
             {loading ? "Loading call…" :
               !call ? "Call not found" :
               ended ? ({ ended: "Call ended", declined: "Call declined", missed: "No answer", failed: "Call interrupted" }[call.status as "ended"|"declined"|"missed"|"failed"] || "Call ended") :
-              call.status === "ringing" ? isCaller ? "Ringing…" : "Incoming voice call…" :
+              call.status === "ringing" ? isCaller ? "Ringing…" : isVideoCall ? "Incoming video call…" : "Incoming voice call…" :
               mediaState === "connected" ? "Connected · " + secondsLabel(Math.max(0, elapsed)) :
-              mediaState === "starting" ? "Requesting microphone permission…" :
-              mediaState === "connecting" ? "Connecting encrypted audio…" : "Preparing secure audio…"}
+              mediaState === "starting" ? isVideoCall ? "Requesting camera and microphone permission…" : "Requesting microphone permission…" :
+              mediaState === "connecting" ? "Connecting encrypted media…" : "Preparing secure call…"}
           </p>
           {relayWarning && <p className="mt-4 rounded-xl border border-amber-200/20 bg-amber-200/[.05] px-3 py-2 text-xs leading-5 text-amber-100">{relayWarning}</p>}
           {error && <p role="alert" className="mt-4 rounded-xl border border-red-300/25 bg-red-300/[.06] px-3 py-2 text-sm leading-6 text-red-100">{error}</p>}
 
           <audio ref={remoteAudioRef} autoPlay playsInline aria-label="Remote call audio" />
           {requiresPlayback && <button type="button" onClick={() => {
-            void remoteAudioRef.current?.play().then(() => setRequiresPlayback(false)).catch(() => setError("Tap again to enable speaker audio."));
-          }} className="mt-4 min-h-12 rounded-xl border border-emerald-200/25 px-4 text-sm font-semibold text-emerald-100">Tap to hear audio</button>}
+            const media = isVideoCall ? remoteVideoRef.current : remoteAudioRef.current;
+            void media?.play().then(() => setRequiresPlayback(false)).catch(() => setError("Tap again to enable playback."));
+          }} className="mt-4 min-h-12 rounded-xl border border-emerald-200/25 px-4 text-sm font-semibold text-emerald-100">
+            Tap to hear {isVideoCall ? "and see" : ""} the other person
+          </button>}
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             {call?.status === "ringing" && isCallee && (
@@ -361,6 +439,20 @@ function VoiceCallPageEnabled() {
                 aria-pressed={muted}
                 className="min-h-12 min-w-28 rounded-full border border-white/20 bg-white/[.04] px-5 text-sm font-semibold text-white disabled:opacity-40">{muted ? "Unmute" : "Mute"}</button>
             )}
+            {isVideoCall && call?.status === "active" && (
+              <>
+                <button type="button" disabled={!localMediaReady || ended} onClick={toggleCamera}
+                  aria-pressed={!cameraEnabled} aria-label={cameraEnabled ? "Turn camera off" : "Turn camera on"}
+                  className="min-h-12 rounded-full border border-white/20 bg-white/[.04] px-5 text-sm font-semibold text-white disabled:opacity-40">
+                  {cameraEnabled ? "Camera off" : "Camera on"}
+                </button>
+                <button type="button" disabled={!localMediaReady || ended || switchingCamera} onClick={() => void switchCamera()}
+                  aria-label="Switch front and rear camera"
+                  className="min-h-12 rounded-full border border-white/20 bg-white/[.04] px-5 text-sm font-semibold text-white disabled:opacity-40">
+                  {switchingCamera ? "Switching…" : "Flip camera"}
+                </button>
+              </>
+            )}
             {call && !ended && (
               <button type="button" onClick={() => void finish("ended")} disabled={busy}
                 className="min-h-12 min-w-32 rounded-full bg-red-400 px-6 text-sm font-bold text-[#23100e] disabled:opacity-40">{busy ? "Ending…" : isCaller && call.status === "ringing" ? "Cancel call" : "End call"}</button>
@@ -369,7 +461,7 @@ function VoiceCallPageEnabled() {
               <Link href={"/messages/" + call.conversation_id} className="inline-flex min-h-12 items-center rounded-full bg-emerald-200 px-6 text-sm font-bold text-[#11221c]">Return to messages</Link>
             )}
           </div>
-          <p className="mt-6 text-xs leading-6 text-white/35">Microphone access is required. Converge does not record audio. Leave the call using End call.</p>
+          <p className="mt-6 text-xs leading-6 text-white/35">Allow camera and microphone access for video calls. Converge does not record or upload call media. Select End call to disconnect.</p>
         </section>
       </div>
     </main>

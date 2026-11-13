@@ -73,7 +73,7 @@ test("incoming call UI validates identity server-side before accepting or declin
   assert.match(alert, /"answer_voice_call"/);
   assert.match(alert, /"finish_voice_call"/);
   assert.match(alert, /callee_id/);
-  assert.match(alert, /aria-label="Incoming voice call"/);
+  assert.match(alert, /"Incoming voice call"/);
 });
 
 test("temporary TURN credentials never expose secret via a client environment variable", () => {
@@ -112,4 +112,44 @@ test("Calls is discoverable without enabling unfinished WebRTC or database queri
   assert.match(history, /if \(voiceCallsEnabled\) return <CallsPageEnabled \/>/);
   assert.match(history, /starting and receiving calls isn't available yet/);
   assert.match(read("app/api/calls/ice/route.ts"), /status: 503/);
+});
+
+test("video calls reuse secure audio call creation and preserve audio defaults", () => {
+  const videoSql = read("supabase/migrations/20261113193500_add_video_call_type.sql");
+  assert.match(videoSql, /add column call_type text not null default 'audio'/);
+  assert.match(videoSql, /check \(call_type in \('audio', 'video'\)\)/);
+  assert.match(videoSql, /public\.start_video_call\(p_conversation_id uuid\)/);
+  assert.match(videoSql, /v_call_id := public\.start_voice_call\(p_conversation_id\)/);
+  assert.match(videoSql, /revoke execute on function public\.start_video_call\(uuid\) from public, anon/);
+  assert.match(videoSql, /grant execute on function public\.start_video_call\(uuid\) to authenticated/);
+  assert.doesNotMatch(videoSql, /drop table|truncate table|delete from public\./i);
+});
+test("video button is independent of voice and both require accepted, unblocked messages", () => {
+  const chat = read("app/messages/[conversationId]/page.tsx");
+  assert.match(chat, /startCall\("audio"\)/);
+  assert.match(chat, /startCall\("video"\)/);
+  assert.match(chat, /"start_video_call"/);
+  assert.match(chat, /"start_voice_call"/);
+  assert.match(chat, /requestStatus === "ACCEPTED" && !blockedBetween/);
+});
+test("remote and local video render with browser permissions, camera controls and media cleanup", () => {
+  const room = read("app/calls/[callId]/page.tsx");
+  assert.match(room, /video: call\?\.call_type === "video"/);
+  assert.match(room, /stream\.getTracks\(\)/);
+  assert.match(room, /ref=\{remoteVideoRef\}/);
+  assert.match(room, /ref=\{localVideoRef\}/);
+  assert.match(room, /autoPlay muted playsInline/);
+  assert.match(room, /toggleCamera/);
+  assert.match(room, /switchCamera/);
+  assert.match(room, /replaceTrack\(newTrack\)/);
+  assert.match(room, /getTracks\(\)\.forEach\(\(track\) => track\.stop\(\)/);
+  assert.doesNotMatch(room, /MediaRecorder|\.upload\(|recordedBlob/);
+});
+test("incoming call and history carry video type without exposing private media", () => {
+  const incoming = read("components/incoming-voice-call.tsx");
+  const history = read("app/calls/page.tsx");
+  assert.match(incoming, /"Incoming video call"/);
+  assert.match(incoming, /call_type/);
+  assert.match(history, /call\.call_type === "video"/);
+  assert.match(history, /Recent calls/);
 });

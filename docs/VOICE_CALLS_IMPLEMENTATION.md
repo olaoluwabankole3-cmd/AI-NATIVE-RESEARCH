@@ -57,3 +57,7 @@ References: Supabase Realtime Postgres Changes and WebRTC API docs.
 ## Visible setup state (13 November 2026)
 
 The Calls shortcut is accessible from Messages and the desktop/mobile More menu, including when the feature is disabled. Accepted conversations display a call setup shortcut. This is **navigation only**, not a working call: backend migration/RLS testing, TURN relay setup and device testing must pass before enabling `NEXT_PUBLIC_CONVERGE_CALLS_ENABLED` in production. No production database changes were made for this UI visibility update.
+
+## Video calling addition (13 November 2026)
+
+Video calls reuse the same existing WebRTC signaling and access-controlled `voice_calls` table. The new `call_type` column defaults to `audio` so every previous voice call remains unchanged. `start_video_call(uuid)` delegates to the existing verified `start_voice_call(uuid)` to preserve message-acceptance, blocking, rate-limit and concurrent-call checks. When a video call is accepted, each browser requests camera and microphone permission, then exchanges audio and video tracks via WebRTC. The in-call UI offers mute, camera off/on, and camera flip. Browser media is not recorded or uploaded by Converge. Testing requires two signed-in accounts, camera permissions, and a reachable network path. TURN relay is still unconfigured, so direct calls can fail on restrictive mobile networks. Production release requires successful CI, migration verification and browser smoke; real two-device video remains a user-validation step.
