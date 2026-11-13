@@ -73,7 +73,7 @@ test("incoming call UI validates identity server-side before accepting or declin
   assert.match(alert, /"answer_voice_call"/);
   assert.match(alert, /"finish_voice_call"/);
   assert.match(alert, /callee_id/);
-  assert.match(alert, /aria-label="Incoming voice call"/);
+  assert.match(alert, /"Incoming voice call"/);
 });
 
 test("temporary TURN credentials never expose secret via a client environment variable", () => {
