@@ -190,7 +190,7 @@ export default function MessagesInboxPage() {
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Your conversations and requests in one place.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            {voiceCallsEnabled && <Link href="/calls" className="inline-flex min-h-11 items-center rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.08]">☎ Calls</Link>}
+            <Link href="/calls" aria-label={voiceCallsEnabled ? "Voice calls" : "Voice calls — setup in progress"} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.08]"><span aria-hidden="true">☎</span><span>Calls</span>{!voiceCallsEnabled && <span className="text-[10px] font-normal text-white/45">Setup</span>}</Link>
             <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
           </div>
         </section>
