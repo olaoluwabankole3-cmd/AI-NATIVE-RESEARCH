@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { voiceCallsEnabled } from "@/lib/voice-calls-config";
+import { generateCloudflareTurnCredentials } from "@/lib/cloudflare-turn";
 
 export const dynamic = "force-dynamic";
 
@@ -41,20 +42,47 @@ export async function GET(request: Request) {
   const servers: Array<{ urls: string[]; username?: string; credential?: string }> = [];
   if (stunUrls.length) servers.push({ urls: stunUrls });
 
-  const turnUrls = listUrls(process.env.TURN_URLS || "", ["turn:", "turns:"]);
-  const secret = process.env.TURN_SHARED_SECRET;
-  const turnConfigured = turnUrls.length > 0 && Boolean(secret);
+  const cloudflareKeyId = process.env.CLOUDFLARE_TURN_KEY_ID;
+  const cloudflareApiToken = process.env.CLOUDFLARE_TURN_API_TOKEN;
+  let turnConfigured = false;
+  let relayProvider: "cloudflare" | "coturn" | null = null;
+  let warning: string | undefined;
 
-  if (turnConfigured && secret) {
-    // Standard coturn use-auth-secret credential format: expiry:identity / HMAC-SHA1.
-    const username = Math.floor(Date.now() / 1000 + 7200) + ":" + user.id;
-    const credential = createHmac("sha1", secret).update(username).digest("base64");
-    servers.push({ urls: turnUrls, username, credential });
+  if (cloudflareKeyId && cloudflareApiToken) {
+    try {
+      // Generate expiring credentials server-side and only for active-call participants.
+      // The long-lived API token never enters browser JavaScript or the response.
+      const managed = await generateCloudflareTurnCredentials(cloudflareKeyId, cloudflareApiToken);
+      servers.push(...managed);
+      turnConfigured = true;
+      relayProvider = "cloudflare";
+    } catch {
+      // Retain existing direct STUN calling if the relay provider is unreachable.
+      warning = "TURN relay is temporarily unavailable; this call may still connect directly.";
+    }
+  } else if (cloudflareKeyId || cloudflareApiToken) {
+    warning = "TURN relay configuration is incomplete; direct calling is still available.";
+  }
+
+  // Existing self-hosted coturn remains available as an alternative / fallback.
+  if (!turnConfigured) {
+    const turnUrls = listUrls(process.env.TURN_URLS || "", ["turn:", "turns:"]);
+    const secret = process.env.TURN_SHARED_SECRET;
+    if (turnUrls.length > 0 && secret) {
+      // Standard coturn use-auth-secret credential format: expiry:identity / HMAC-SHA1.
+      const username = Math.floor(Date.now() / 1000 + 7200) + ":" + user.id;
+      const credential = createHmac("sha1", secret).update(username).digest("base64");
+      servers.push({ urls: turnUrls, username, credential });
+      turnConfigured = true;
+      relayProvider = "coturn";
+      warning = undefined;
+    }
   }
 
   return NextResponse.json({
     iceServers: servers,
     turnConfigured,
-    ...(turnConfigured ? {} : { warning: "Relay service is not configured; some networks cannot connect." }),
+    ...(relayProvider ? { relayProvider } : {}),
+    ...(!turnConfigured ? { warning: warning || "Relay service is not configured; some networks cannot connect." } : {}),
   }, { status: 200, headers });
 }

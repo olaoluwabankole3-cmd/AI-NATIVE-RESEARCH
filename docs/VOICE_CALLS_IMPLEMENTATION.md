@@ -61,3 +61,20 @@ The Calls shortcut is accessible from Messages and the desktop/mobile More menu,
 ## Video calling addition (13 November 2026)
 
 Video calls reuse the same existing WebRTC signaling and access-controlled `voice_calls` table. The new `call_type` column defaults to `audio` so every previous voice call remains unchanged. `start_video_call(uuid)` delegates to the existing verified `start_voice_call(uuid)` to preserve message-acceptance, blocking, rate-limit and concurrent-call checks. When a video call is accepted, each browser requests camera and microphone permission, then exchanges audio and video tracks via WebRTC. The in-call UI offers mute, camera off/on, and camera flip. Browser media is not recorded or uploaded by Converge. Testing requires two signed-in accounts, camera permissions, and a reachable network path. TURN relay is still unconfigured, so direct calls can fail on restrictive mobile networks. Production release requires successful CI, migration verification and browser smoke; real two-device video remains a user-validation step.
+
+## Managed Cloudflare TURN integration (13 November 2026)
+
+Converge now supports **Cloudflare Realtime TURN** via the same active-call participant-authenticated `GET /api/calls/ice?callId=...` endpoint that audio and video already use. The endpoint calls Cloudflare server-to-server for expiring TURN credentials (four-hour TTL), validates returned STUN/TURN URLs and returns ICE servers to the authenticated call participant. It does **not** expose the long-lived Cloudflare API token. Direct STUN calls and legacy self-hosted coturn are preserved as fallback when managed TURN is not configured or its API is unavailable.
+
+**Manual Cloudflare setup required (not provisioned by GitHub/Vercel integration):**
+1. In your Cloudflare account, create a **Realtime TURN key** under Realtime > TURN. Review pricing and account billing controls (Cloudflare documents a free 1,000 GB tier and usage-based egress beyond it).
+2. In **Vercel > Converge project > Settings > Environment Variables > Production**, set two *server-only* encrypted variables:
+   - `CLOUDFLARE_TURN_KEY_ID`: the TURN key ID (not the account ID).
+   - `CLOUDFLARE_TURN_API_TOKEN`: the TURN key's long-lived secret for generating temporary credentials (not a browser/public environment variable).
+3. Trigger a new Vercel production deployment so the runtime picks up those keys.
+4. Test calls from **different networks** (Wi-Fi ⇄ 4G/5G), verifying both audio and video, and run a controlled relay-only WebRTC diagnostic in the browser to confirm a relay candidate is allocated. The fact the endpoint returns `turnConfigured: true` alone does not prove media actually traverses TURN.
+5. Monitor Cloudflare TURN egress and rate limits, revoke/rotate the key if exposed. Remember that participant-authenticated calls can still consume bandwidth.
+
+Official API: `POST https://rtc.live.cloudflare.com/v1/turn/keys/<key-id>/credentials/generate-ice-servers` with `Authorization: Bearer <secret>` and `{"ttl":14400}`. Source: https://developers.cloudflare.com/realtime/turn/generate-credentials/.
+
+**Status:** Application-side integration is complete. Managed relay cannot become active until the Cloudflare TURN key and API token are created and added to Vercel. Do not paste secrets into GitHub issues, frontend code or chat messages. Calls continue to work directly before provisioning.
