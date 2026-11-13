@@ -153,3 +153,17 @@ test("incoming call and history carry video type without exposing private media"
   assert.match(history, /call\.call_type === "video"/);
   assert.match(history, /Recent calls/);
 });
+
+test("Cloudflare TURN credentials are gated behind active call identity and are never public", () => {
+  const route = read("app/api/calls/ice/route.ts");
+  const provider = read("lib/cloudflare-turn.ts");
+  assert.match(route, /auth\.getUser\(\)/);
+  assert.match(route, /call\.status !== "active"/);
+  assert.match(route, /generateCloudflareTurnCredentials/);
+  assert.match(route, /CLOUDFLARE_TURN_KEY_ID/);
+  assert.match(route, /CLOUDFLARE_TURN_API_TOKEN/);
+  assert.doesNotMatch(route, /NEXT_PUBLIC_CLOUDFLARE_TURN/);
+  assert.match(provider, /credentials\/generate-ice-servers/);
+  assert.match(provider, /ttl: 14400/);
+  assert.match(route, /warning: warning \|\|/);
+});
