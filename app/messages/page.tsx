@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { voiceCallsEnabled } from "@/lib/voice-calls-config";
+import { CommunicationIcon } from "@/components/communication-icon";
 
 type ConversationRow = {
   id: string;
@@ -58,8 +59,8 @@ export default function MessagesInboxPage() {
   const [search, setSearch] = useState("");
   const [inboxView, setInboxView] = useState<"all" | "requests">("all");
 
-  const loadInbox = useCallback(async (knownUserId?: string) => {
-    setLoading(true);
+  const loadInbox = useCallback(async (knownUserId?: string, silent = false) => {
+    if (!silent) setLoading(true);
     setLoadError("");
     const currentUserId = knownUserId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
     if (!currentUserId) {
@@ -179,6 +180,18 @@ export default function MessagesInboxPage() {
     return () => { active = false; };
   }, [loadInbox, router, supabase]);
 
+  // Realtime preview updates without a full-page loading flash.
+  useEffect(() => {
+    if (!viewerId) return;
+    const channel = supabase.channel("converge-inbox-updates-" + viewerId)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" },
+        () => { void loadInbox(viewerId, true); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "direct_conversations" },
+        () => { void loadInbox(viewerId, true); })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [loadInbox, supabase, viewerId]);
+
   return (
     <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
@@ -190,19 +203,33 @@ export default function MessagesInboxPage() {
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Your conversations and requests in one place.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/calls" aria-label={voiceCallsEnabled ? "Voice calls" : "Voice calls — setup in progress"} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.08]"><span aria-hidden="true">☎</span><span>Calls</span>{!voiceCallsEnabled && <span className="text-[10px] font-normal text-white/45">Setup</span>}</Link>
-            <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100">Find people ↗</Link>
+            <Link href="/calls" aria-label={voiceCallsEnabled ? "Voice calls" : "Voice calls — setup in progress"} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.08]"><CommunicationIcon name="phone" className="size-4" /><span>Calls</span>{!voiceCallsEnabled && <span className="text-[10px] font-normal text-white/45">Setup</span>}</Link>
+            <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100"><CommunicationIcon name="people" className="size-4" />New conversation</Link>
           </div>
         </section>
 
         <section className="converge-inbox-controls" aria-label="Find conversations">
-          <label htmlFor="converge-inbox-search" className="sr-only">Search conversations</label>
-          <input id="converge-inbox-search" value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Search people or messages…" />
+          <div className="converge-inbox-search-field">
+            <CommunicationIcon name="search" className="size-4 shrink-0 text-emerald-100/65" />
+            <label htmlFor="converge-inbox-search" className="sr-only">Search conversations</label>
+            <input id="converge-inbox-search" value={search} onChange={(event) => setSearch(event.target.value)}
+              type="search" placeholder="Search people or messages…" />
+            {search && <button type="button" onClick={() => setSearch("")} aria-label="Clear conversation search"
+              className="shrink-0 rounded-lg px-2 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-100/10">Clear</button>}
+          </div>
           <div role="tablist" aria-label="Message view" className="converge-inbox-controls__tabs">
             <button type="button" role="tab" aria-selected={inboxView === "all"} onClick={() => setInboxView("all")}>All conversations</button>
             <button type="button" role="tab" aria-selected={inboxView === "requests"} onClick={() => setInboxView("requests")}>Requests{incomingRequests.length ? ` · ${incomingRequests.length}` : ""}</button>
           </div>
         </section>
+
+        {!loading && !loadError && <div className="converge-inbox-counts mt-4 flex flex-wrap items-center gap-2 text-xs text-white/45">
+          <span>{regularConversations.length} {regularConversations.length === 1 ? "conversation" : "conversations"}</span>
+          <span aria-hidden="true">·</span>
+          <span>{incomingRequests.length} {incomingRequests.length === 1 ? "request" : "requests"} to review</span>
+          <button type="button" onClick={() => viewerId && void loadInbox(viewerId)}
+            className="ml-auto min-h-9 rounded-lg px-3 font-semibold text-emerald-100 transition hover:bg-emerald-200/[.07]">Refresh</button>
+        </div>}
 
         {loadError && <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-4 py-3 text-sm leading-6 text-red-200">
            <p>{loadError}</p>
