@@ -690,3 +690,42 @@
     min-height: 16px;
   }
 }
+
+
+/* Navigation clarity and an evidence-led research journey. */
+.converge-more-destination-copy { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; gap: 3px; text-align: left; }
+.converge-more-destination-copy > strong { font-size: inherit; font-weight: 650; color: inherit; }
+.converge-more-destination-copy > small { font-size: 10px; font-weight: 400; line-height: 1.4; color: #91ad99; }
+.converge-app-page .converge-research-start__link {
+  display: flex;
+  min-width: 0;
+  min-height: 125px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  border: 1px solid rgba(170,231,190,.12);
+  border-radius: 14px;
+  background: rgba(166,230,189,.025);
+  padding: 15px 17px;
+  transition: border-color .2s ease, background-color .2s ease;
+}
+.converge-app-page .converge-research-start__link:hover,
+.converge-app-page .converge-research-start__link:focus-visible {
+  border-color: rgba(166,230,189,.45);
+  background: rgba(166,230,189,.07);
+}
+.converge-app-page .converge-research-start__number {
+  color: #a6e6bd;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+.converge-app-page .converge-research-start__link > strong { font-size: 15px; line-height: 1.35; color: #eef9ef; }
+.converge-app-page .converge-research-start__link > span:last-child:not(.converge-research-start__number) {
+  color: #a6b9a7; font-size: 12px; line-height: 1.55;
+}
+.converge-app-page .converge-research-record-tools { border-top: 1px solid rgba(170,231,190,.12); padding-top: 16px; }
+@media (max-width: 639px) {
+  .converge-app-page .converge-research-start__links { gap: 8px; }
+  .converge-app-page .converge-research-start__link { min-height: 0; padding: 13px 15px; }
+}
