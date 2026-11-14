@@ -296,18 +296,26 @@ export default function ProfilePage() {
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/80">Visibility</p>
               <h2 className="mt-2 text-lg font-semibold tracking-[-0.03em]">Choose who can see your profile.</h2>
               <p className="mt-1.5 text-xs leading-5 text-white/45">Your email address is never displayed on your public profile.</p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <fieldset className="converge-profile-visibility mt-4">
+                <legend className="sr-only">Who can view your profile</legend>
                 {([
                   { value: "public", title: "Public", detail: "Anyone can view your profile." },
-                  { value: "members", title: "Members", detail: "Signed-in Converge members." },
+                  { value: "members", title: "Members", detail: "Only signed-in Converge members." },
                   { value: "private", title: "Private", detail: "Only you can view your profile." },
                 ] as const).map((option) => (
-                  <label key={option.value} className={["cursor-pointer rounded-xl border p-3.5 transition", form.profile_visibility === option.value ? "border-emerald-200/40 bg-emerald-200/[0.07]" : "border-white/[0.09] bg-black/10 hover:border-white/20"].join(" ")}>
-                    <span className="flex items-center gap-2"><input type="radio" name="profile_visibility" value={option.value} checked={form.profile_visibility === option.value} onChange={() => update("profile_visibility", option.value)} className="accent-emerald-200" /><span className="text-sm font-semibold">{option.title}</span></span>
-                    <span className="mt-2 block text-[11px] leading-5 text-white/45">{option.detail}</span>
+                  <label key={option.value}
+                    className={["converge-profile-visibility__option flex min-w-0 cursor-pointer items-start gap-3 px-3 py-3.5 transition", form.profile_visibility === option.value ? "is-selected" : ""].join(" ")}>
+                    <input type="radio" name="profile_visibility" value={option.value}
+                      checked={form.profile_visibility === option.value}
+                      onChange={() => update("profile_visibility", option.value)}
+                      className="mt-0.5 size-4 shrink-0 accent-emerald-200" />
+                    <span className="min-w-0 flex-1">
+                      <strong className="block text-sm font-semibold text-white">{option.title}</strong>
+                      <span className="mt-0.5 block text-xs leading-5 text-white/50">{option.detail}</span>
+                    </span>
                   </label>
                 ))}
-              </div>
+              </fieldset>
             </section>
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -336,11 +344,7 @@ export default function ProfilePage() {
                 <p className="mt-5 flex items-center gap-2 text-[10px] text-white/35"><span className="size-1.5 rounded-full bg-emerald-200/80" /> {form.profile_visibility === "public" ? "Visible to everyone" : form.profile_visibility === "members" ? "Visible to signed-in members" : "Private profile"}</p>
               </div>
             </section>
-            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
-              <p className="text-xs font-semibold text-white/75">Building your presence on Converge</p>
-              <p className="mt-2 text-[11px] leading-5 text-white/40">Your profile will become the foundation for following researchers, connecting with people, and participating in organisation spaces.</p>
-              <Link href="/communities" className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-200 hover:text-emerald-100">Return to communities <span>↗</span></Link>
-            </div>
+
           </aside>
         </div>
       </div>
