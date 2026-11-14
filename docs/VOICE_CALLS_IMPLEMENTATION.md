@@ -78,3 +78,10 @@ Converge now supports **Cloudflare Realtime TURN** via the same active-call part
 Official API: `POST https://rtc.live.cloudflare.com/v1/turn/keys/<key-id>/credentials/generate-ice-servers` with `Authorization: Bearer <secret>` and `{"ttl":14400}`. Source: https://developers.cloudflare.com/realtime/turn/generate-credentials/.
 
 **Status:** Application-side integration is complete. Managed relay cannot become active until the Cloudflare TURN key and API token are created and added to Vercel. Do not paste secrets into GitHub issues, frontend code or chat messages. Calls continue to work directly before provisioning.
+
+
+## TURN verification after Vercel secrets are configured (14 November 2026)
+
+The Calls room now offers **Test TURN relay** after a call connects. It uses the already-authenticated, call-scoped ICE response and creates a temporary **separate** RTCPeerConnection with `iceTransportPolicy: "relay"` and an empty data channel. It never changes the existing audio/video peer, requests additional camera permission, logs IP addresses, or exposes the Cloudflare API token. When the browser gathers a relay candidate, the UI reports **TURN relay candidate allocated**. This verifies the browser could allocate a TURN path, not that the ongoing call necessarily routed through it (a direct connection is preferable when available). If allocation fails, check Vercel Production variables, Cloudflare credential validity and network restrictions.
+
+Test during a live call between two accepted-conversation members, from Wi-Fi and mobile data, and observe voice and video quality. A four-hour TURN credential may expire on unusually long calls; reconnection and automatic ICE restart remain future work.
