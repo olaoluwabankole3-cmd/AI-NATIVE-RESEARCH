@@ -64,10 +64,13 @@ function VoiceCallPageEnabled() {
   const [switchingCamera, setSwitchingCamera] = useState(false);
   const [requiresPlayback, setRequiresPlayback] = useState(false);
   const [relayWarning, setRelayWarning] = useState("");
+  const [turnReady, setTurnReady] = useState(false);
+  const [turnCheck, setTurnCheck] = useState<"idle" | "checking" | "passed" | "failed">("idle");
   const [elapsed, setElapsed] = useState(0);
   const [localMediaReady, setLocalMediaReady] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
+  const iceServersRef = useRef<RTCIceServer[]>([]);
   const localStreamRef = useRef<MediaStream | null>(null);
   const peerPromiseRef = useRef<Promise<RTCPeerConnection> | null>(null);
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -81,6 +84,7 @@ function VoiceCallPageEnabled() {
   const closeMedia = useCallback(() => {
     pcRef.current?.close();
     pcRef.current = null;
+    iceServersRef.current = [];
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
     peerPromiseRef.current = null;
@@ -157,12 +161,14 @@ function VoiceCallPageEnabled() {
       }
       const response = await fetch("/api/calls/ice?callId=" + encodeURIComponent(callId), { cache: "no-store" });
       const config = await response.json().catch(() => null) as {
-        iceServers?: RTCIceServer[]; warning?: string; error?: string;
+        iceServers?: RTCIceServer[]; warning?: string; error?: string; turnConfigured?: boolean;
       } | null;
       if (!response.ok || !config?.iceServers) {
         throw new Error(config?.error || "Could not load secure call connectivity settings.");
       }
       if (config.warning) setRelayWarning(config.warning);
+      setTurnReady(config.turnConfigured === true);
+      iceServersRef.current = config.iceServers;
 
       // Media permission is requested only after the call is answered. Calls
       // never record, upload or store camera frames or microphone audio.
@@ -330,6 +336,48 @@ function VoiceCallPageEnabled() {
     }
   }
 
+  async function verifyTurnConnection() {
+    if (!turnReady || turnCheck === "checking" || call?.status !== "active") return;
+    setTurnCheck("checking");
+    const servers = iceServersRef.current.filter((server) => {
+      const urls = typeof server.urls === "string" ? [server.urls] : server.urls;
+      return urls.some((url) => url.startsWith("turn:") || url.startsWith("turns:"));
+    });
+    if (!servers.length) { setTurnCheck("failed"); return; }
+    let probe: RTCPeerConnection | null = null;
+    try {
+      probe = new RTCPeerConnection({ iceServers: servers, iceTransportPolicy: "relay" });
+      probe.createDataChannel("converge-turn-probe");
+      const peer = probe;
+      const result = new Promise<boolean>((resolve) => {
+        let settled = false;
+        const finish = (success: boolean) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          peer.onicecandidate = null;
+          peer.onicegatheringstatechange = null;
+          resolve(success);
+        };
+        const timer = setTimeout(() => finish(false), 12000);
+        peer.onicecandidate = (event) => {
+          if (event.candidate && (event.candidate.type === "relay" ||
+              event.candidate.candidate.includes(" typ relay "))) finish(true);
+          else if (!event.candidate) finish(false);
+        };
+        peer.onicegatheringstatechange = () => {
+          if (peer.iceGatheringState === "complete") finish(false);
+        };
+      });
+      await peer.setLocalDescription(await peer.createOffer());
+      setTurnCheck(await result ? "passed" : "failed");
+    } catch {
+      setTurnCheck("failed");
+    } finally {
+      probe?.close();
+    }
+  }
+
   function toggleCamera() {
     const track = localStreamRef.current?.getVideoTracks()[0];
     if (!track) return;
@@ -419,6 +467,17 @@ function VoiceCallPageEnabled() {
               mediaState === "connecting" ? "Connecting encrypted media…" : "Preparing secure call…"}
           </p>
           {relayWarning && <p className="mt-4 rounded-xl border border-amber-200/20 bg-amber-200/[.05] px-3 py-2 text-xs leading-5 text-amber-100">{relayWarning}</p>}
+          {call?.status === "active" && mediaState === "connected" && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 rounded-xl border border-emerald-200/15 px-3 py-3 text-xs text-white/65">
+              <span>{turnReady ? "TURN configured" : "Direct calling only"}</span>
+              {turnReady && <button type="button" onClick={() => void verifyTurnConnection()} disabled={turnCheck === "checking"}
+                className="min-h-9 rounded-lg border border-emerald-200/30 px-3 font-semibold text-emerald-100 disabled:opacity-50">
+                {turnCheck === "checking" ? "Checking relay…" : "Test TURN relay"}
+              </button>}
+              {turnCheck === "passed" && <span role="status" className="text-emerald-200">TURN relay candidate allocated</span>}
+              {turnCheck === "failed" && <span role="alert" className="text-amber-200">No TURN relay candidate — direct calls may still work</span>}
+            </div>
+          )}
           {error && <p role="alert" className="mt-4 rounded-xl border border-red-300/25 bg-red-300/[.06] px-3 py-2 text-sm leading-6 text-red-100">{error}</p>}
 
           <audio ref={remoteAudioRef} autoPlay playsInline aria-label="Remote call audio" />

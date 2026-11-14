@@ -167,3 +167,15 @@ test("Cloudflare TURN credentials are gated behind active call identity and are 
   assert.match(provider, /ttl: 14400/);
   assert.match(route, /warning: warning \|\|/);
 });
+
+test("TURN-only relay self-test uses separate data-channel peer and cannot disrupt call media", () => {
+  const room = read("app/calls/[callId]/page.tsx");
+  assert.match(room, /verifyTurnConnection/);
+  assert.match(room, /iceTransportPolicy: "relay"/);
+  assert.match(room, /createDataChannel\("converge-turn-probe"\)/);
+  assert.match(room, /event\.candidate\.type === "relay"/);
+  assert.match(room, /TURN relay candidate allocated/);
+  assert.match(room, /probe\?\.close\(\)/);
+  assert.match(room, /turnConfigured\?: boolean/);
+  assert.doesNotMatch(room, /NEXT_PUBLIC_CLOUDFLARE_TURN_API_TOKEN/);
+});
