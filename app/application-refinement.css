@@ -600,3 +600,93 @@
     border-color: var(--converge-rule) !important;
   }
 }
+
+
+/* Communication polish: clear navigation, useful feedback, and calm call controls. */
+.converge-app-page .converge-inbox-search-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 300px;
+  width: min(100%, 440px);
+  max-width: 440px;
+  min-height: 49px;
+  padding: 0 12px;
+  border: 1px solid rgba(166,230,189,.16);
+  border-radius: 14px;
+  background: #14241b;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.converge-app-page .converge-inbox-search-field:focus-within {
+  border-color: rgba(166,230,189,.66);
+  box-shadow: 0 0 0 3px rgba(166,230,189,.09);
+}
+.converge-app-page .converge-inbox-search-field input[type="search"] {
+  flex: 1 1 auto;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 4px !important;
+  font-size: 14px;
+}
+.converge-app-page .converge-thread-options > summary,
+.converge-app-page .converge-call-network-details > summary {
+  list-style: none;
+}
+.converge-app-page .converge-thread-options > summary::-webkit-details-marker,
+.converge-app-page .converge-call-network-details > summary::-webkit-details-marker {
+  display: none;
+}
+.converge-app-page .converge-thread-options[open] > summary {
+  color: #baf2d0;
+  background: rgba(166,230,189,.08);
+  border-color: rgba(166,230,189,.36);
+}
+.converge-app-page .converge-chat-header {
+  position: relative;
+  isolation: isolate;
+  z-index: 5;
+}
+.converge-app-page .converge-chat-composer button[type="submit"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.converge-app-page .converge-call-network-details[open] > summary {
+  color: #baf2d0;
+}
+.converge-app-page .converge-call-action-bar > button {
+  min-height: 48px;
+  transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .converge-app-page .converge-call-action-bar > button:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+}
+@media (max-width: 600px) {
+  .converge-app-page .converge-inbox-search-field {
+    width: 100%;
+    max-width: none;
+    flex-basis: auto;
+  }
+  .converge-app-page .converge-inbox-counts {
+    margin-top: 10px;
+  }
+  .converge-app-page .converge-chat-header {
+    gap: 8px !important;
+  }
+  .converge-app-page .converge-thread-options > div {
+    right: 0;
+    min-width: 192px;
+  }
+  .converge-app-page .converge-chat-composer > div[role="status"] {
+    min-height: 16px;
+  }
+}
