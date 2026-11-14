@@ -16,19 +16,27 @@ const links: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/network", label: "Network", icon: "network" },
   { href: "/messages", label: "Messages", icon: "messages" },
   { href: "/calls", label: "Calls", icon: "calls" },
-  { href: "/agents", label: "AI registry", icon: "agents" },
+  { href: "/agents", label: "AI specialists", icon: "agents" },
   { href: "/workspaces", label: "Workspaces", icon: "workspaces" },
 ];
 
 const desktopLinks: { href: string; label: string; icon: TopNavIconName }[] = [
   { href: "/communities", label: "Research", icon: "communities" },
-  { href: "/people", label: "Discover", icon: "people" },
+  { href: "/people", label: "People", icon: "people" },
   { href: "/messages", label: "Messages", icon: "messages" },
-  { href: "/agents", label: "AI", icon: "agents" },
+  { href: "/agents", label: "AI experts", icon: "agents" },
   { href: "/notifications", label: "Alerts", icon: "notifications" },
 ];
 
-const moreLinks = links.filter((link) => ["/organizations", "/network", "/workspaces", "/calls"].includes(link.href));
+const moreLinks = ["/workspaces", "/calls", "/organizations", "/network"].flatMap((href) =>
+  links.filter((link) => link.href === href)
+);
+const moreDescriptions: Record<string, string> = {
+  "/workspaces": "Choose a focused environment",
+  "/calls": "Voice and video call history",
+  "/organizations": "Find groups and research labs",
+  "/network": "Connections and follows",
+};
 
 function TopNavGlyph({ name }: { name: TopNavIconName }) {
   const common = {
@@ -98,7 +106,7 @@ function MobileGlyph({ name }: { name: (typeof mobileLinksPrimary)[number]["kind
 
 function isActiveDestination(pathname: string, href: string) {
   if (href === "/communities") return pathname.startsWith("/communities") || pathname.startsWith("/topics/");
-  if (href === "/people") return pathname.startsWith("/people") || pathname.startsWith("/u/") || pathname.startsWith("/organizations") || pathname.startsWith("/network");
+  if (href === "/people") return pathname.startsWith("/people") || pathname.startsWith("/u/");
   return pathname === href || pathname.startsWith(href + "/");
 }
 
@@ -341,7 +349,7 @@ export function SiteHeader() {
                     className={["converge-mobile-more-link", active ? "is-active" : ""].join(" ")}
                   >
                     <TopNavGlyph name={link.icon} />
-                    <span>{link.label}</span>
+                    <span className="converge-more-destination-copy"><strong>{link.label}</strong><small>{moreDescriptions[link.href]}</small></span>
                     <span className="converge-mobile-more-link__arrow" aria-hidden="true">↗</span>
                   </Link>
                 );
@@ -420,7 +428,7 @@ export function SiteHeader() {
                   return (
                     <Link key={link.href} href={link.href} role="menuitem" onClick={() => setMoreOpen(false)} className={["converge-more-menu__link", active ? "is-active" : ""].join(" ")}>
                       <TopNavGlyph name={link.icon} />
-                      <span>{link.label}</span>
+                      <span className="converge-more-destination-copy"><strong>{link.label}</strong><small>{moreDescriptions[link.href]}</small></span>
                       <span className="converge-more-menu__arrow" aria-hidden="true">↗</span>
                     </Link>
                   );
