@@ -52,7 +52,7 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
             <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}</button>
           ))}
         </div>
-        <p className="converge-app-eyebrow">SPECIALIST DIRECTORY</p>
+        
         {!filtered.length ? <p className="converge-specialist-directory__empty">No specialists match your search. <button type="button" onClick={() => { setQuery(""); setFilter("all"); }}>Clear filters</button></p>
           : <div className="converge-specialist-directory__items">
               {filtered.map((agent) => (
@@ -62,7 +62,7 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
                 </button>
               ))}
             </div>}
-        <Link href="/admin/agents" className="converge-app-action converge-specialist-directory__manage">Manage registry ↗</Link>
+        <div className="converge-directory-management"><Link href="/admin/agents" className="converge-specialist-directory__manage">Manage registry ↗</Link></div>
       </aside>
       <div id="converge-specialist-detail" tabIndex={-1} className="converge-specialist-directory__detail">
         <button type="button" className="converge-specialist-mobile-back" onClick={() => setMobileView("list")} aria-label="Back to AI specialist list">← All specialists</button>

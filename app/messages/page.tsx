@@ -203,7 +203,7 @@ export default function MessagesInboxPage() {
             <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">Your conversations and requests in one place.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/calls" aria-label={voiceCallsEnabled ? "Voice calls" : "Voice calls — setup in progress"} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.08]"><CommunicationIcon name="phone" className="size-4" /><span>Calls</span>{!voiceCallsEnabled && <span className="text-[10px] font-normal text-white/45">Setup</span>}</Link>
+            <Link href="/calls" aria-label={voiceCallsEnabled ? "Voice calls" : "Voice calls — setup in progress"} className="converge-messages-secondary-action inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.08]"><CommunicationIcon name="phone" className="size-4" /><span>Calls</span>{!voiceCallsEnabled && <span className="text-[10px] font-normal text-white/45">Setup</span>}</Link>
             <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100"><CommunicationIcon name="people" className="size-4" />New conversation</Link>
           </div>
         </section>
@@ -213,9 +213,13 @@ export default function MessagesInboxPage() {
             <CommunicationIcon name="search" className="size-4 shrink-0 text-emerald-100/65" />
             <label htmlFor="converge-inbox-search" className="sr-only">Search conversations</label>
             <input id="converge-inbox-search" value={search} onChange={(event) => setSearch(event.target.value)}
-              type="search" placeholder="Search people or messages…" />
+              type="search" placeholder="Search conversations" />
             {search && <button type="button" onClick={() => setSearch("")} aria-label="Clear conversation search"
               className="shrink-0 rounded-lg px-2 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-100/10">Clear</button>}
+            <button type="button" onClick={() => viewerId && void loadInbox(viewerId)} aria-label="Refresh conversations"
+              title="Refresh conversations" disabled={!viewerId} className="converge-inbox-refresh shrink-0 rounded-lg p-2 text-emerald-100/70 transition hover:text-emerald-100 disabled:opacity-40">
+              <CommunicationIcon name="refresh" className="size-4" />
+            </button>
           </div>
           <div role="tablist" aria-label="Message view" className="converge-inbox-controls__tabs">
             <button type="button" role="tab" aria-selected={inboxView === "all"} onClick={() => setInboxView("all")}>All conversations</button>
@@ -227,8 +231,7 @@ export default function MessagesInboxPage() {
           <span>{regularConversations.length} {regularConversations.length === 1 ? "conversation" : "conversations"}</span>
           <span aria-hidden="true">·</span>
           <span>{incomingRequests.length} {incomingRequests.length === 1 ? "request" : "requests"} to review</span>
-          <button type="button" onClick={() => viewerId && void loadInbox(viewerId)}
-            className="ml-auto min-h-9 rounded-lg px-3 font-semibold text-emerald-100 transition hover:bg-emerald-200/[.07]">Refresh</button>
+
         </div>}
 
         {loadError && <div role="alert" className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-4 py-3 text-sm leading-6 text-red-200">
@@ -273,7 +276,7 @@ export default function MessagesInboxPage() {
                   <Link href={`/messages/${conversation.id}`} className="flex min-w-0 flex-1 items-center gap-4 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
                     <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-[16px] border border-emerald-200/15 bg-emerald-200/[0.08] text-sm font-bold text-emerald-100">{member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}</div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center justify-between gap-2"><p className="truncate text-sm font-semibold text-white/90">{member.display_name}</p><span className="shrink-0 text-[10px] text-white/35">{timeLabel(preview?.created_at ?? conversation.last_message_at)}</span></div>
+                      <div className="flex min-w-0 items-center justify-between gap-2"><p className="min-w-0 flex-1 truncate text-sm font-semibold text-white/90">{member.display_name}</p><span className="shrink-0 text-[10px] text-white/35">{timeLabel(preview?.created_at ?? conversation.last_message_at)}</span></div>
                       {member.headline && <p className="mt-1 truncate text-[11px] text-white/35">{member.headline}</p>}
                       <p className="mt-2 truncate text-xs text-white/50">{isBlocked ? "You blocked this person · open to unblock" : conversation.request_status === "PENDING" && conversation.created_by === viewerId ? "Message request sent · awaiting response" : conversation.request_status === "IGNORED" ? "Message request ignored" : preview ? `${preview.sender_id === viewerId ? "You: " : ""}${preview.body}` : "No messages yet — say hello."}</p>
                     </div>

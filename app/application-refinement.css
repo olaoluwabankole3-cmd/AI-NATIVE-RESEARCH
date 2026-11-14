@@ -692,40 +692,118 @@
 }
 
 
-/* Navigation clarity and an evidence-led research journey. */
-.converge-more-destination-copy { display: flex; flex: 1 1 auto; min-width: 0; flex-direction: column; gap: 3px; text-align: left; }
-.converge-more-destination-copy > strong { font-size: inherit; font-weight: 650; color: inherit; }
-.converge-more-destination-copy > small { font-size: 10px; font-weight: 400; line-height: 1.4; color: #91ad99; }
-.converge-app-page .converge-research-start__link {
-  display: flex;
-  min-width: 0;
-  min-height: 125px;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 7px;
-  border: 1px solid rgba(170,231,190,.12);
-  border-radius: 14px;
-  background: rgba(166,230,189,.025);
-  padding: 15px 17px;
-  transition: border-color .2s ease, background-color .2s ease;
+/* Presentation QA — fix crowded mobile compositions without touching behaviour. */
+.converge-more-destination-copy { display:flex; flex:1 1 auto; min-width:0; flex-direction:column; gap:3px; text-align:left; }
+.converge-more-destination-copy > strong { font-size:inherit; font-weight:650; color:inherit; }
+.converge-more-destination-copy > small { color:#91ad99; font-size:10px; font-weight:400; line-height:1.4; }
+.converge-app-page .converge-research-record-tools { border-top:1px solid var(--converge-rule); padding-top:16px; }
+
+/* Research shortcuts are navigation, not three independent tiny cards. */
+.converge-app-page .converge-research-quick-nav {
+  display:flex; flex-wrap:wrap; align-items:center; gap:4px 18px;
+  padding:14px 0; border-bottom:1px solid var(--converge-rule);
 }
-.converge-app-page .converge-research-start__link:hover,
-.converge-app-page .converge-research-start__link:focus-visible {
-  border-color: rgba(166,230,189,.45);
-  background: rgba(166,230,189,.07);
+.converge-app-page .converge-research-quick-nav__label {
+  color:#8fa797; font-size:10px; font-weight:700;
+  letter-spacing:.13em; text-transform:uppercase;
 }
-.converge-app-page .converge-research-start__number {
-  color: #a6e6bd;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .1em;
+.converge-app-page .converge-research-quick-nav a {
+  display:inline-flex; align-items:center; min-height:36px; gap:5px;
+  color:#b3dfc1; font-size:13px; font-weight:600; white-space:nowrap;
 }
-.converge-app-page .converge-research-start__link > strong { font-size: 15px; line-height: 1.35; color: #eef9ef; }
-.converge-app-page .converge-research-start__link > span:last-child:not(.converge-research-start__number) {
-  color: #a6b9a7; font-size: 12px; line-height: 1.55;
+.converge-app-page .converge-research-quick-nav a:hover { color:#f5fff6; }
+.converge-app-page .converge-research-quick-nav a span { color:#709c7e; }
+
+/* Single privacy-choice list; no broken labels on mid-sized phones. */
+.converge-app-page .converge-profile-visibility {
+  overflow:hidden; border-top:1px solid rgba(166,230,189,.16);
+  border-bottom:1px solid rgba(166,230,189,.16);
 }
-.converge-app-page .converge-research-record-tools { border-top: 1px solid rgba(170,231,190,.12); padding-top: 16px; }
-@media (max-width: 639px) {
-  .converge-app-page .converge-research-start__links { gap: 8px; }
-  .converge-app-page .converge-research-start__link { min-height: 0; padding: 13px 15px; }
+.converge-app-page .converge-profile-visibility__option + .converge-profile-visibility__option {
+  border-top:1px solid rgba(166,230,189,.09);
+}
+.converge-app-page .converge-profile-visibility__option.is-selected { background:rgba(166,230,189,.065); }
+.converge-app-page .converge-profile-visibility__option:hover { background:rgba(166,230,189,.045); }
+.converge-app-page .converge-profile-visibility__option :is(strong,span) {
+  overflow-wrap:normal; word-break:normal; hyphens:none;
+}
+
+/* Messages should read like an inbox; avoid container-within-container borders. */
+.converge-app-page .converge-inbox-controls {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end;
+  gap:16px; border:0; background:transparent; padding:19px 0 12px;
+}
+.converge-app-page .converge-inbox-search-field {
+  display:flex; align-items:center; flex:1 1 auto; width:100%; max-width:none; min-width:0;
+  min-height:48px; border:1px solid rgba(166,230,189,.19);
+  border-radius:12px; background:#14241b; padding:0 11px; box-shadow:none;
+}
+.converge-app-page .converge-inbox-search-field input[type="search"] {
+  min-width:0; width:100%; min-height:46px; border:0 !important;
+  border-radius:0 !important; outline:0 !important; box-shadow:none !important;
+  background:transparent !important; padding:0 4px !important;
+  -webkit-appearance:none; appearance:none;
+}
+.converge-app-page .converge-inbox-refresh { border:0; background:transparent; }
+.converge-app-page .converge-inbox-counts { margin:6px 0 12px; }
+.converge-app-page .converge-inbox-list {
+  overflow:visible; border:0; border-radius:0; background:transparent;
+}
+.converge-app-page .converge-inbox-list > div {
+  border:0 !important; border-bottom:1px solid var(--converge-rule) !important;
+  border-radius:0 !important; background:transparent !important;
+  padding:15px 0 !important; margin:0 !important; box-shadow:none !important;
+}
+.converge-app-page .converge-messages-secondary-action {
+  background:transparent !important; color:#bce9cc !important;
+  border:1px solid rgba(166,230,189,.25) !important;
+}
+
+/* Specialist registry: simple directory rows, secondary admin link. */
+.converge-app-page .converge-specialist-directory__manage {
+  display:inline-flex; align-items:center; align-self:flex-start; min-height:40px;
+  border:0 !important; background:transparent !important;
+  padding:8px 0 !important; color:#94bd9f !important; box-shadow:none !important;
+  font-size:12px; font-weight:600; text-decoration:none;
+}
+.converge-app-page .converge-directory-management {
+  margin-top:17px; border-top:1px solid var(--converge-rule); padding:6px 12px;
+}
+.converge-app-page .converge-specialist-directory__heading h2 { font-size:21px; letter-spacing:-.04em; }
+.converge-app-page .converge-specialist-directory__list > input[type="search"] {
+  border-radius:12px; border:1px solid rgba(166,230,189,.2); background:#14241b;
+}
+
+/* Within mobile and small tablets, reply form belongs in flow, never over the discussion. */
+@media (max-width:900px) {
+  .converge-app-page .converge-room-discussion form:has(#topic-reply) {
+    position:static !important; bottom:auto !important; z-index:auto !important;
+    margin:22px 0 0 !important; padding:17px 0 4px !important;
+    border:0 !important; border-top:1px solid var(--converge-rule) !important;
+    border-radius:0 !important; background:transparent !important; box-shadow:none !important;
+  }
+  .converge-app-page .converge-room-discussion form:has(#topic-reply) h3 {
+    display:block !important; font-size:14px; color:#e9f8ed;
+  }
+  .converge-app-page .converge-room-discussion form:has(#topic-reply) textarea {
+    min-height:74px; max-height:176px; margin-top:10px !important;
+    font-size:16px !important; line-height:1.5 !important;
+  }
+  .converge-app-page .converge-inbox-controls {
+    grid-template-columns:minmax(0,1fr); gap:12px;
+  }
+  .converge-app-page .converge-inbox-controls__tabs { width:max-content; max-width:100%; }
+  .converge-app-page .converge-specialist-directory {
+    border:0; border-radius:0; background:transparent;
+  }
+  .converge-app-page .converge-specialist-directory__list {
+    border:0 !important; background:transparent !important; box-shadow:none !important; padding:0 !important;
+  }
+  .converge-app-page .converge-specialist-directory__items { border:0; background:transparent; }
+  .converge-app-page .converge-directory-management { padding:6px 0; }
+}
+@media (max-width:600px) {
+  .converge-app-page .converge-research-quick-nav { gap:4px 14px; }
+  .converge-app-page .converge-inbox-search-field { min-height:49px; }
+  .converge-app-page .converge-inbox-counts { gap:6px; }
 }

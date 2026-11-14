@@ -19,10 +19,10 @@ test("Converge navigation separates research, people, messages and AI expertise 
 
 test("Research home leads people from questions to communities and AI specialists using real routes", () => {
   const hub = read("app/communities/page.tsx");
-  assert.match(hub, /converge-research-start-heading/);
-  assert.match(hub, /Explore questions/);
-  assert.match(hub, /Find a community/);
-  assert.match(hub, /Meet AI specialists/);
+  assert.match(hub, /converge-research-quick-nav/);
+  assert.match(hub, /Topics/);
+  assert.match(hub, /Communities/);
+  assert.match(hub, /AI specialists/);
   assert.match(hub, /href="#converge-topic-list"/);
   assert.match(hub, /href="#communities-directory"/);
   assert.match(hub, /href="\/agents"/);

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type CommunicationIconName = "phone" | "video" | "send" | "more" | "people" | "arrow-left" | "check" | "search";
+type CommunicationIconName = "phone" | "video" | "send" | "more" | "people" | "arrow-left" | "check" | "search" | "refresh";
 
 export function CommunicationIcon({
   name,
@@ -15,6 +15,7 @@ export function CommunicationIcon({
     "arrow-left": <><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></>,
     check: <path d="m20 6-11 11-5-5"/>,
     search: <><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></>,
+    refresh: <><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.3 9a7 7 0 0 1 12.4-2L20 12M4 12l2.3 4a7 7 0 0 0 12.4-1"/></>,
   };
   return (
     <svg
