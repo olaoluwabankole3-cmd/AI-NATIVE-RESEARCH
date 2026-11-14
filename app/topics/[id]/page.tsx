@@ -821,13 +821,10 @@ export default function TopicPage() {
             {isCommunityMember && currentParticipantId ? (
             <form
               onSubmit={handleReply}
-              className="mt-8 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-5 sm:p-6"
+              className="converge-topic-reply mt-8 border-t border-emerald-300/15 pt-5 pb-4 sm:pt-6"
             >
               <div>
-                <h3 className="font-semibold">Add to the discussion</h3>
-                <p className="mt-1 text-sm text-white/40">
-                  Posting as you.
-                </p>
+                <h3 className="font-semibold">Write a reply</h3>
               </div>
 
               <label htmlFor="topic-reply" className="sr-only">Write a reply to this topic</label>
@@ -836,8 +833,8 @@ export default function TopicPage() {
                 disabled={posting}
                 value={reply}
                 onChange={(event) => setReply(event.target.value)}
-                rows={5}
-                placeholder="Share your perspective, evidence, question, or counterargument…"
+                rows={3}
+                placeholder="Share a thought, question or source…"
                 className="mt-4 w-full resize-y rounded-xl border border-white/10 bg-[#07110f] px-4 py-3 text-sm leading-7 outline-none placeholder:text-white/25 focus:border-emerald-300/50"
               />
 
@@ -846,7 +843,7 @@ export default function TopicPage() {
               )}
 
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                 <span className="text-xs text-white/40">Your reply stays in this topic.</span>
+                 <span className="text-xs text-white/45">Your reply will appear in this discussion.</span>
                 <button
                   type="submit"
                   disabled={posting || !reply.trim()}
