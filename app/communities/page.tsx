@@ -159,36 +159,12 @@ export default function CommunitiesPage() {
 
         {message && <p role={messageTone === "error" ? "alert" : "status"} className={`mt-4 rounded-lg border px-4 py-3 text-sm ${messageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-100"}`}>{message}</p>}
 
-        <section aria-labelledby="converge-research-start-heading" className="converge-research-start mt-6 border-b border-white/[0.09] pb-6">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-emerald-200/70">Start here</p>
-              <h2 id="converge-research-start-heading" className="mt-1 text-lg font-semibold tracking-tight text-white/90">
-                Find a question. Build understanding together.
-              </h2>
-            </div>
-            <span className="text-xs text-white/40">
-              {loading ? "Loading research…" : `${topics.length} recent topics · ${communities.length} visible communities`}
-            </span>
-          </div>
-          <div className="converge-research-start__links mt-4 grid gap-2 sm:grid-cols-3">
-            <a href="#converge-topic-list" className="converge-research-start__link">
-              <span className="converge-research-start__number">01 / DISCOVER</span>
-              <strong>Explore questions</strong>
-              <span>Read current research and discussions</span>
-            </a>
-            <a href="#communities-directory" className="converge-research-start__link">
-              <span className="converge-research-start__number">02 / COLLABORATE</span>
-              <strong>Find a community</strong>
-              <span>Join a space and contribute to a topic</span>
-            </a>
-            <Link href="/agents" className="converge-research-start__link">
-              <span className="converge-research-start__number">03 / DEEPEN</span>
-              <strong>Meet AI specialists</strong>
-              <span>Invite a specialist inside a research topic</span>
-            </Link>
-          </div>
-        </section>
+        <nav className="converge-research-quick-nav" aria-label="Quick navigation">
+          <span className="converge-research-quick-nav__label">Explore</span>
+          <a href="#converge-topic-list">Topics <span aria-hidden="true">↓</span></a>
+          <a href="#communities-directory">Communities <span aria-hidden="true">↓</span></a>
+          <Link href="/agents">AI specialists <span aria-hidden="true">↗</span></Link>
+        </nav>
 
         <section aria-label="Find research" className="converge-research-discovery">
           <label htmlFor="converge-research-search" className="sr-only">Search research topics and communities</label>
@@ -196,10 +172,6 @@ export default function CommunitiesPage() {
           {search && <button type="button" onClick={() => setSearch("")} aria-label="Clear research search" className="converge-search-clear">Clear</button>}
         </section>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2 lg:hidden" aria-label="Quick navigation">
-          <a href="#converge-topic-list" className="inline-flex min-h-11 items-center rounded-lg border border-emerald-200/20 bg-emerald-200/[0.06] px-4 text-xs font-semibold text-emerald-100">Browse topics ↓</a>
-          <a href="#communities-directory" className="inline-flex min-h-11 items-center rounded-lg border border-white/10 px-4 text-xs font-semibold text-white/70">Community directory ↓</a>
-        </div>
         <div className="converge-research-board converge-research-board--clean grid gap-7 pt-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
           <aside className="space-y-6">
             <section className="rounded-xl border border-white/[0.09] bg-white/[0.018] p-4">
