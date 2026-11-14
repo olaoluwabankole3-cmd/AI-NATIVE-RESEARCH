@@ -435,19 +435,19 @@ function VoiceCallPageEnabled() {
   return (
     <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
-      <div className="mx-auto max-w-[720px] px-4 pb-24 pt-8 sm:px-6 sm:pt-14">
+      <div className={["mx-auto px-3 pb-24 pt-5 sm:px-6 sm:pt-9", isVideoCall ? "max-w-[1060px]" : "max-w-[660px]"].join(" ")}>
         <div className="mb-6 flex items-center justify-between gap-3">
           <Link href="/messages" className="text-sm font-semibold text-white/55 hover:text-emerald-100">← Messages</Link>
           <span className="rounded-full border border-emerald-200/20 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-emerald-100/80">Converge {isVideoCall ? "Video" : "Voice"}</span>
         </div>
-        <section aria-label={isVideoCall ? "Video call" : "Voice call"} className="rounded-[1.5rem] border border-emerald-200/15 bg-[#101b17] p-4 text-center shadow-2xl sm:p-7">
+        <section aria-label={isVideoCall ? "Video call" : "Voice call"} className="rounded-[1.5rem] border border-emerald-200/15 bg-[#101b17] p-3 text-center shadow-[0_24px_80px_rgba(0,0,0,.28)] sm:p-7">
           {isVideoCall ? (
-            <div className="relative mx-auto aspect-[9/12] max-h-[min(56dvh,490px)] w-full overflow-hidden rounded-2xl bg-[#07100c] sm:aspect-video">
+            <div className="relative mx-auto aspect-[9/12] max-h-[min(67dvh,620px)] w-full overflow-hidden rounded-[1.1rem] border border-white/[0.06] bg-[#07100c] sm:aspect-video sm:max-h-[min(68dvh,680px)]">
               <video ref={remoteVideoRef} autoPlay playsInline aria-label="Remote video and call audio" className="size-full object-contain" />
               <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/65 px-3 py-1.5 text-xs font-medium text-white">
                 {mediaState === "connected" ? remoteName : "Waiting for video…"}
               </div>
-              <div className="absolute right-3 top-3 w-[28%] min-w-[90px] max-w-[155px] overflow-hidden rounded-xl border border-white/25 bg-[#1c2a20] shadow-lg">
+              <div className="absolute right-3 top-3 w-[28%] min-w-[90px] max-w-[175px] overflow-hidden rounded-xl border border-white/30 bg-[#1c2a20] shadow-[0_12px_30px_rgba(0,0,0,.5)] sm:right-4 sm:top-4">
                 <video ref={localVideoRef} autoPlay muted playsInline aria-label="Your camera preview" className="aspect-[3/4] w-full object-cover -scale-x-100 sm:aspect-video" />
                 {!cameraEnabled && <span className="absolute inset-0 flex items-center justify-center bg-[#17251c]/90 text-xs text-white/85">Camera off</span>}
               </div>
@@ -466,17 +466,28 @@ function VoiceCallPageEnabled() {
               mediaState === "starting" ? isVideoCall ? "Requesting camera and microphone permission…" : "Requesting microphone permission…" :
               mediaState === "connecting" ? "Connecting encrypted media…" : "Preparing secure call…"}
           </p>
-          {relayWarning && <p className="mt-4 rounded-xl border border-amber-200/20 bg-amber-200/[.05] px-3 py-2 text-xs leading-5 text-amber-100">{relayWarning}</p>}
-          {call?.status === "active" && mediaState === "connected" && (
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 rounded-xl border border-emerald-200/15 px-3 py-3 text-xs text-white/65">
-              <span>{turnReady ? "TURN configured" : "Direct calling only"}</span>
-              {turnReady && <button type="button" onClick={() => void verifyTurnConnection()} disabled={turnCheck === "checking"}
-                className="min-h-9 rounded-lg border border-emerald-200/30 px-3 font-semibold text-emerald-100 disabled:opacity-50">
-                {turnCheck === "checking" ? "Checking relay…" : "Test TURN relay"}
-              </button>}
-              {turnCheck === "passed" && <span role="status" className="text-emerald-200">TURN relay candidate allocated</span>}
-              {turnCheck === "failed" && <span role="alert" className="text-amber-200">No TURN relay candidate — direct calls may still work</span>}
-            </div>
+          {(relayWarning || call?.status === "active") && (
+            <details className="converge-call-network-details mx-auto mt-5 max-w-xl rounded-xl border border-white/[0.08] bg-white/[0.025] text-left">
+              <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 text-xs font-semibold text-white/60 hover:text-emerald-100">
+                Connection details
+                <span aria-hidden="true" className="text-emerald-100/70">⌄</span>
+              </summary>
+              <div className="border-t border-white/[0.07] px-4 py-3 text-xs leading-6 text-white/60">
+                <p>Calls use encrypted WebRTC. A direct connection is preferred when available; TURN is used when needed.</p>
+                {relayWarning && <p className="mt-2 rounded-lg bg-amber-200/[0.06] px-3 py-2 text-amber-100">{relayWarning}</p>}
+                {call?.status === "active" && mediaState === "connected" && (
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <span>{turnReady ? "TURN configured" : "Direct calling only"}</span>
+                    {turnReady && <button type="button" onClick={() => void verifyTurnConnection()} disabled={turnCheck === "checking"}
+                      className="min-h-9 rounded-lg border border-emerald-200/30 px-3 font-semibold text-emerald-100 disabled:opacity-50">
+                      {turnCheck === "checking" ? "Checking relay…" : "Test TURN relay"}
+                    </button>}
+                    {turnCheck === "passed" && <span role="status" className="text-emerald-100">TURN relay candidate allocated</span>}
+                    {turnCheck === "failed" && <span role="alert" className="text-amber-200">No TURN relay candidate — direct calls may still work</span>}
+                  </div>
+                )}
+              </div>
+            </details>
           )}
           {error && <p role="alert" className="mt-4 rounded-xl border border-red-300/25 bg-red-300/[.06] px-3 py-2 text-sm leading-6 text-red-100">{error}</p>}
 
@@ -488,7 +499,7 @@ function VoiceCallPageEnabled() {
             Tap to hear {isVideoCall ? "and see" : ""} the other person
           </button>}
 
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <div className="converge-call-action-bar mt-7 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {call?.status === "ringing" && isCallee && (
               <button type="button" disabled={busy} onClick={() => void answer()}
                 className="min-h-12 rounded-full bg-emerald-200 px-6 text-sm font-bold text-[#11221c] disabled:opacity-50">Answer</button>
@@ -520,7 +531,7 @@ function VoiceCallPageEnabled() {
               <Link href={"/messages/" + call.conversation_id} className="inline-flex min-h-12 items-center rounded-full bg-emerald-200 px-6 text-sm font-bold text-[#11221c]">Return to messages</Link>
             )}
           </div>
-          <p className="mt-6 text-xs leading-6 text-white/35">Allow camera and microphone access for video calls. Converge does not record or upload call media. Select End call to disconnect.</p>
+          <p className="mt-5 px-2 pb-2 text-xs leading-6 text-white/40">Your camera and microphone are only shared during the call. Converge does not record call media.</p>
         </section>
       </div>
     </main>
