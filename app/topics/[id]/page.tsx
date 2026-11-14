@@ -645,6 +645,11 @@ export default function TopicPage() {
           </nav>
 
           {topic.type === "RESEARCH" && currentParticipantId && (
+            <p className="converge-research-topic-guidance mt-4 text-xs leading-6 text-white/50">
+              <strong className="font-semibold text-emerald-100/85">Research workflow:</strong> Discuss and challenge ideas, save sources in Evidence, and preserve a synthesis or decision.
+            </p>
+          )}
+          {topic.type === "RESEARCH" && currentParticipantId && (
             <div className="converge-room-tabbar" role="tablist" aria-label="Research room views">
               <button type="button" role="tab" id="converge-discussion-tab" aria-controls="topic-discussion" aria-selected={mobileSection === "discussion"} onClick={() => setMobileSection("discussion")}>Discussion · {posts.length}</button>
               <button type="button" role="tab" id="converge-evidence-tab" aria-controls="converge-room-evidence-panel" aria-selected={mobileSection === "evidence"} onClick={() => setMobileSection("evidence")}>Evidence &amp; synthesis</button>
