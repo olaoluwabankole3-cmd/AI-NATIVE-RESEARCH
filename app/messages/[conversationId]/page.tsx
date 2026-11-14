@@ -180,7 +180,12 @@ export default function DirectConversationPage() {
       if (error) throw error;
       setDraft("");
       setSendFeedback("sent");
-      await loadThread(viewerId);
+      try {
+        await loadThread(viewerId);
+      } catch {
+        // The insert succeeded. Never incorrectly tell the user their message failed.
+        setPageError("Message sent, but the conversation could not refresh. Please reload to see the latest messages.");
+      }
     } catch (caught) {
       setSendFeedback("failed");
       setPageError(caught instanceof Error ? caught.message : "Could not send your message. Try again.");
@@ -375,7 +380,10 @@ export default function DirectConversationPage() {
                   <button type="submit" disabled={!draft.trim() || sending || draft.trim().length > 5000} className="mb-0.5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-200 px-4 py-3 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"><CommunicationIcon name="send" className="size-4" /><span>{sending ? "Sending…" : "Send"}</span></button>
                 </div>
                 <div id="converge-message-composer-help" className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-white/45">
-                  <span>{isOutgoingRequest ? "Send one introduction. Replies unlock when accepted." : "Enter to send · Shift + Enter for a new line"}</span>
+                  <span>{isOutgoingRequest ? "Send one introduction. Replies unlock when accepted." : <>
+                    <span className="hidden sm:inline">Enter to send · Shift + Enter for a new line</span>
+                    <span className="sm:hidden">Private conversation</span>
+                  </>}</span>
                   <span className={draft.length > 4500 ? "text-amber-100" : ""}>{draft.length.toLocaleString()} / 5,000</span>
                 </div>
                 <div role="status" aria-live="polite" className="min-h-4 px-1 text-[11px]">
