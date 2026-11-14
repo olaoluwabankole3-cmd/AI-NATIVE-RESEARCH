@@ -58,6 +58,16 @@ export function ResearchRoom({
   const [sourceUrl, setSourceUrl] = useState("");
   const [message, setMessage] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [artifactFilter, setArtifactFilter] = useState<"ALL" | ArtifactType>("ALL");
+  const [artifactSearch, setArtifactSearch] = useState("");
+  const filteredArtifacts = useMemo(() => {
+    const query = artifactSearch.trim().toLowerCase();
+    return artifacts.filter((artifact) =>
+      (artifactFilter === "ALL" || artifact.artifact_type === artifactFilter) &&
+      (!query || [artifact.title, artifact.content, artifact.provenance?.source_url || ""]
+        .some((value) => value.toLowerCase().includes(query)))
+    );
+  }, [artifacts, artifactFilter, artifactSearch]);
   const [generating, setGenerating] = useState(false);
 
   async function loadArtifacts() {
@@ -166,7 +176,7 @@ export function ResearchRoom({
           <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Research room</p>
           <h2 id="research-room-heading" className="mt-2 text-2xl font-semibold">Evidence & provenance</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">
-            Preserve important claims, evidence, sources, syntheses, and decisions separately from the conversation stream.
+            Keep claims, sources, evidence, syntheses and decisions connected to this topic, separate from the discussion.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -263,6 +273,37 @@ export function ResearchRoom({
         </div>
       )}
 
+      {!loading && !loadError && artifacts.length > 0 && (
+        <div className="converge-research-record-tools mt-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="flex min-w-0 flex-1 flex-col gap-1.5 text-xs font-semibold text-white/70">
+              Search the research record
+              <input type="search" value={artifactSearch} onChange={(event) => setArtifactSearch(event.target.value)}
+                placeholder="Search titles, notes or source links…"
+                className="min-h-11 w-full rounded-xl border border-white/15 bg-[#14241b] px-3.5 text-sm font-normal text-white outline-none focus:border-emerald-200/50" />
+            </label>
+            <label className="flex flex-col gap-1.5 text-xs font-semibold text-white/70">
+              Material type
+              <select aria-label="Filter research artifacts by type" value={artifactFilter}
+                onChange={(event) => setArtifactFilter(event.target.value as "ALL" | ArtifactType)}
+                className="min-h-11 rounded-xl border border-white/15 bg-[#14241b] px-3.5 text-sm font-normal text-white outline-none focus:border-emerald-200/50">
+                <option value="ALL">All materials</option>
+                {artifactTypes.map((kind) => <option key={kind.value} value={kind.value}>{kind.label}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-3 text-xs text-white/45" role="status" aria-live="polite">
+            <span>Showing {filteredArtifacts.length} of {artifacts.length} saved {artifacts.length === 1 ? "item" : "items"}</span>
+            {(artifactFilter !== "ALL" || artifactSearch) && (
+              <button type="button" onClick={() => { setArtifactFilter("ALL"); setArtifactSearch(""); }}
+                className="min-h-9 rounded-lg px-3 font-semibold text-emerald-200 hover:bg-emerald-200/[.07]">
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div role="status" aria-label="Loading research artifacts" className="mt-6 space-y-3">
           {[0, 1].map((item) => <div key={item} className="animate-pulse rounded-xl border border-white/[0.07] p-5">
@@ -283,9 +324,18 @@ export function ResearchRoom({
           <p className="mt-2 text-xs text-white/45">Start with a claim, source, or synthesis from the current discussion.</p>
           <button type="button" onClick={() => setShowForm(true)} className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[0.08]">Add your first artifact</button>
         </div>
-      ) : artifacts.length > 0 ? (
+      ) : filteredArtifacts.length === 0 ? (
+        <div className="mt-6 rounded-2xl border border-dashed border-white/15 px-5 py-10 text-center">
+          <h3 className="text-base font-semibold">No matching research material</h3>
+          <p className="mt-2 text-sm text-white/45">Try another search or material type.</p>
+          <button type="button" onClick={() => { setArtifactSearch(""); setArtifactFilter("ALL"); }}
+            className="mt-4 min-h-11 rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-200">
+            Show all research
+          </button>
+        </div>
+      ) : filteredArtifacts.length > 0 ? (
         <div className="mt-6 space-y-3">
-          {artifacts.map((artifact) => (
+          {filteredArtifacts.map((artifact) => (
             <article key={artifact.id} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.025] p-4 sm:p-5">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-emerald-200">
