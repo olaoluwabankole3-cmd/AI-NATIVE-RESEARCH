@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, KeyboardEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 import { ConversationRail } from "@/components/conversation-rail";
+import { CommunicationIcon } from "@/components/communication-icon";
 
 type ConversationRow = { id: string; user_low_id: string; user_high_id: string; created_by: string; request_status: "PENDING" | "ACCEPTED" | "IGNORED" };
 type MemberProfile = {
@@ -52,6 +53,7 @@ export default function DirectConversationPage() {
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [sendFeedback, setSendFeedback] = useState<"idle" | "sent" | "failed">("idle");
   const [calling, setCalling] = useState(false);
   const [pageError, setPageError] = useState("");
 
@@ -164,6 +166,7 @@ export default function DirectConversationPage() {
     if (!body || !viewerId || sending || body.length > 5000) return;
 
     setSending(true);
+    setSendFeedback("idle");
     setPageError("");
     try {
       const { error } = await supabase.from("direct_messages").insert({
@@ -173,12 +176,23 @@ export default function DirectConversationPage() {
       });
       if (error) throw error;
       setDraft("");
+      setSendFeedback("sent");
       await loadThread(viewerId);
     } catch (caught) {
+      setSendFeedback("failed");
       setPageError(caught instanceof Error ? caught.message : "Could not send your message. Try again.");
     } finally {
       setSending(false);
     }
+  }
+
+  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.altKey ||
+        event.ctrlKey || event.metaKey || event.nativeEvent.isComposing || sending) return;
+    // Preserve the normal keyboard return/newline behavior on phones.
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
   }
 
   const isIncomingRequest = requestStatus === "PENDING" && requestCreatorId !== viewerId;
@@ -259,7 +273,7 @@ export default function DirectConversationPage() {
           <ConversationRail viewerId={viewerId} activeId={conversationId} />
           <div className="converge-chat-main">
         <div className="converge-chat-header mb-4 flex items-center gap-3">
-          <Link href="/messages" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 text-lg text-white/65 transition hover:border-emerald-200/25 hover:text-white" aria-label="Back to inbox">←</Link>
+          <Link href="/messages" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 text-white/65 transition hover:border-emerald-200/25 hover:text-white" aria-label="Back to inbox"><CommunicationIcon name="arrow-left" className="size-5" /></Link>
           <div className="min-w-0 flex-1">
             <p className="converge-chat-header__eyebrow text-[9px] font-bold uppercase tracking-[0.19em] text-emerald-200/70">Converge / Private message</p>
             <h1 className="mt-1 truncate text-lg font-semibold tracking-[-0.04em]">{member?.display_name ?? "Conversation"}</h1>
@@ -271,12 +285,12 @@ export default function DirectConversationPage() {
                 <button type="button" onClick={() => void startCall("audio")} disabled={calling || moderatingRequest}
                   aria-label={`Voice call ${member.display_name}`}
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/30 bg-emerald-200/[.08] px-3 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.15] disabled:opacity-40">
-                  <span aria-hidden="true">☎</span><span className="hidden sm:inline">{calling ? "Starting…" : "Voice"}</span>
+                  <CommunicationIcon name="phone" className="size-4" /><span className="hidden sm:inline">{calling ? "Starting…" : "Voice"}</span>
                 </button>
                 <button type="button" onClick={() => void startCall("video")} disabled={calling || moderatingRequest}
                   aria-label={`Video call ${member.display_name}`}
                   className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-emerald-200 px-3 text-xs font-bold text-[#0d2016] transition hover:bg-emerald-100 disabled:opacity-40">
-                  <span aria-hidden="true">▣</span><span className="hidden sm:inline">{calling ? "Starting…" : "Video"}</span>
+                  <CommunicationIcon name="video" className="size-4" /><span className="hidden sm:inline">{calling ? "Starting…" : "Video"}</span>
                 </button>
               </div>
             ) : (
@@ -286,8 +300,20 @@ export default function DirectConversationPage() {
               </Link>
             )
           )}
-          {member && <Link href={`/u/${member.username || member.id}`} className="hidden rounded-full border border-white/12 px-3.5 py-2 text-[11px] font-semibold text-white/60 hover:border-emerald-200/25 hover:text-white sm:inline-flex">View profile ↗</Link>}
-          {member && <button type="button" onClick={() => void toggleBlock()} disabled={moderatingRequest} className="rounded-full border border-red-300/20 px-3 py-2 text-[10px] font-semibold text-red-100/80 transition hover:bg-red-300/[0.06] disabled:opacity-40">{moderatingRequest ? "…" : blockedByMe ? "Unblock" : "Block"}</button>}
+          {member && (
+             <details className="converge-thread-options relative shrink-0">
+               <summary aria-label="Conversation options" className="grid size-11 cursor-pointer place-items-center rounded-xl border border-white/10 text-white/75 transition hover:border-emerald-200/30 hover:bg-emerald-200/[.05] hover:text-emerald-100">
+                 <CommunicationIcon name="more" className="size-5" />
+               </summary>
+               <div className="absolute right-0 top-[calc(100%+8px)] z-30 grid min-w-[208px] gap-1 rounded-2xl border border-white/15 bg-[#14241b] p-2 text-left shadow-[0_16px_48px_rgba(0,0,0,.45)]">
+                 <Link href={`/u/${member.username || member.id}`} className="rounded-xl px-3 py-3 text-xs font-semibold text-white/85 transition hover:bg-white/[0.06]">View member profile</Link>
+                 <button type="button" onClick={() => void toggleBlock()} disabled={moderatingRequest}
+                   className="rounded-xl px-3 py-3 text-left text-xs font-semibold text-red-200 transition hover:bg-red-200/[.07] disabled:opacity-40">
+                   {moderatingRequest ? "Working…" : blockedByMe ? "Unblock this member" : "Block this member"}
+                 </button>
+               </div>
+             </details>
+           )}
         </div>
 
         <section className="converge-chat-thread flex min-h-[65vh] min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/75">
@@ -313,7 +339,7 @@ export default function DirectConversationPage() {
               </div>}
               {isOutgoingRequest && <div className="border-b border-amber-200/15 bg-amber-200/[0.035] px-4 py-3 text-xs leading-5 text-amber-100/75 sm:px-6">{messages.length ? "Your message request has been sent. You can send no further messages until it is accepted." : "This member is not connected with you yet. Send one introductory message; they can accept or ignore the request."}</div>}
               {requestStatus === "IGNORED" && requestCreatorId === viewerId && <div className="border-b border-white/10 px-4 py-3 text-xs text-white/50 sm:px-6">This message request was ignored. You can no longer send messages in this conversation.</div>}
-              {blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">You have blocked this person. Unblock them above to allow contact again.</div>}
+              {blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">You have blocked this person. Open conversation options above to unblock them.</div>}
               {blockedBetween && !blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">Messaging is unavailable because one of you has blocked the other.</div>}
               <div ref={messagesViewportRef} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" className="converge-chat-messages min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-5 sm:px-6 sm:py-7">
                 {messages.length ? messages.map((message) => {
@@ -335,13 +361,24 @@ export default function DirectConversationPage() {
                 )}
               </div>
               {pageError && <p role="alert" className="mx-4 mb-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-3 py-2 text-xs leading-5 text-red-200 sm:mx-6">{pageError}</p>}
-              {canSend ? <form onSubmit={sendMessage} className="converge-chat-composer border-t border-white/[0.08] p-3 sm:p-5">
+              {canSend ? <form onSubmit={sendMessage} className="converge-chat-composer border-t border-white/[0.08] p-3 sm:p-5" aria-label="Send a direct message">
                 <label htmlFor="message-body" className="sr-only">Write a message</label>
                 <div className="flex items-end gap-2 rounded-2xl border border-white/[0.1] bg-[#0b1110] p-2 focus-within:border-emerald-200/25">
-                  <textarea id="message-body" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={5000} rows={2} placeholder={isOutgoingRequest ? "Write your introductory message…" : "Write a message…"} className="min-w-0 max-h-36 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-base leading-6 text-white outline-none placeholder:text-white/35 sm:text-sm" />
-                  <button type="submit" disabled={!draft.trim() || sending || draft.trim().length > 5000} className="mb-0.5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-200 px-4 py-3 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40">{sending ? "Sending…" : "Send ↗"}</button>
+                  <textarea id="message-body" value={draft} onChange={(event) => { setDraft(event.target.value); setSendFeedback("idle"); }}
+                     onKeyDown={handleComposerKeyDown} maxLength={5000} rows={2}
+                     aria-describedby="converge-message-composer-help"
+                     placeholder={isOutgoingRequest ? "Write your introductory message…" : "Write a message…"}
+                     className="min-w-0 max-h-36 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-base leading-6 text-white outline-none placeholder:text-white/35 sm:text-sm" />
+                  <button type="submit" disabled={!draft.trim() || sending || draft.trim().length > 5000} className="mb-0.5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-200 px-4 py-3 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"><CommunicationIcon name="send" className="size-4" /><span>{sending ? "Sending…" : "Send"}</span></button>
                 </div>
-                {(isOutgoingRequest || draft.length > 4500) && <p className="mt-2 px-1 text-[10px] text-white/45">{isOutgoingRequest ? "Send one introductory message. Replies unlock when accepted." : `${(5000 - draft.length).toLocaleString()} characters remaining`}</p>}
+                <div id="converge-message-composer-help" className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-white/45">
+                  <span>{isOutgoingRequest ? "Send one introduction. Replies unlock when accepted." : "Enter to send · Shift + Enter for a new line"}</span>
+                  <span className={draft.length > 4500 ? "text-amber-100" : ""}>{draft.length.toLocaleString()} / 5,000</span>
+                </div>
+                <div role="status" aria-live="polite" className="min-h-4 px-1 text-[11px]">
+                  {sendFeedback === "sent" && !draft && <span className="inline-flex items-center gap-1.5 text-emerald-100"><CommunicationIcon name="check" className="size-3.5" />Message sent</span>}
+                  {sendFeedback === "failed" && <span className="text-red-200">Not sent — your draft is preserved. Try again.</span>}
+                </div>
               </form> : <div className="border-t border-white/[0.08] px-4 py-5 text-center text-xs leading-5 text-white/40">{blockedByMe ? "You have blocked this person." : blockedBetween ? "Messaging is unavailable because one of you has blocked the other." : isIncomingRequest ? "Accept the request to reply." : "Messaging is not available for this conversation."}</div>}
             </>
           )}
