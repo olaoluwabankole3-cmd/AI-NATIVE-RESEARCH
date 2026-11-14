@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { getRegisteredAgents } from "@/lib/agent-registry";
 import { SpecialistDirectory } from "@/components/specialist-directory";
