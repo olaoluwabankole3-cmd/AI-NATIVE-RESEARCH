@@ -56,6 +56,7 @@ export default function DirectConversationPage() {
   const [sendFeedback, setSendFeedback] = useState<"idle" | "sent" | "failed">("idle");
   const [calling, setCalling] = useState(false);
   const [pageError, setPageError] = useState("");
+  const [threadUnavailable, setThreadUnavailable] = useState(false);
 
   const loadThread = useCallback(async (knownUserId?: string) => {
     const currentUserId = knownUserId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
@@ -72,11 +73,13 @@ export default function DirectConversationPage() {
       .maybeSingle();
 
     if (conversationError || !conversationData) {
+      setThreadUnavailable(true);
       setPageError(conversationError?.message ?? "This conversation isn’t available to your account.");
       setLoading(false);
       return;
     }
 
+    setThreadUnavailable(false);
     const conversation = conversationData as ConversationRow;
     const otherId = conversation.user_low_id === currentUserId ? conversation.user_high_id : conversation.user_low_id;
     const [{ data: profileData }, { data: messageData, error: messageError }, { data: blockData }, { data: blockedPair, error: blockedPairError }] = await Promise.all([
@@ -163,7 +166,7 @@ export default function DirectConversationPage() {
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const body = draft.trim();
-    if (!body || !viewerId || sending || body.length > 5000) return;
+    if (!body || !viewerId || threadUnavailable || sending || body.length > 5000) return;
 
     setSending(true);
     setSendFeedback("idle");
@@ -319,7 +322,7 @@ export default function DirectConversationPage() {
         <section className="converge-chat-thread flex min-h-[65vh] min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/75">
           {loading ? (
             <div className="flex-1 space-y-4 p-6">{[0, 1, 2, 3].map((item) => <div key={item} className={["h-16 animate-pulse rounded-2xl bg-white/[0.04]", item % 2 ? "ml-auto w-2/3" : "w-3/4"].join(" ")} />)}</div>
-          ) : pageError && !messages.length ? (
+          ) : threadUnavailable && !messages.length ? (
             <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
               <div className="grid size-12 place-items-center rounded-2xl border border-red-200/15 bg-red-200/[0.05] text-xl text-red-100">!</div>
               <h2 className="mt-4 text-xl font-semibold">Conversation unavailable</h2>
