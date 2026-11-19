@@ -30,7 +30,7 @@ for (const [route, expected] of [
   ["/communities", "Communities"],
   ["/messages", "Your conversations and requests in one place."],
   ["/calls", "Calling · Setup in progress"],
-  ["/notifications", "Your updates."],
+  ["/notifications", "Stay in the loop."],
 ]) {
   const response = await request(route);
   assert.equal(response.status, 200, route + " should render successfully");
