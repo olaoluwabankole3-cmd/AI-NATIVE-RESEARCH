@@ -23,6 +23,7 @@ type Topic = {
 };
 type TopicWithCommunity = Topic & { community: Community | undefined };
 type FeedFilter = "LATEST" | "ACTIVE" | "RESEARCH" | "DISCUSSION";
+type CommunityView = "ALL" | "JOINED" | "EXPLORE";
 
 function relativeDate(value: string) {
   const elapsed = Math.max(0, Date.now() - new Date(value).getTime());
@@ -48,6 +49,8 @@ export default function CommunitiesPage() {
   const [visibility, setVisibility] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FeedFilter>("LATEST");
+  const [communityView, setCommunityView] = useState<CommunityView>("ALL");
+  const [joinedCommunityIds, setJoinedCommunityIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
 
@@ -61,6 +64,15 @@ export default function CommunitiesPage() {
       if (communityError) throw communityError;
       if (topicError) throw topicError;
       const communityList = communityData ?? [];
+      // The Figma "Joined" filter is backed by real membership data, not a fake tab.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: memberships, error: membershipsError } = await supabase
+          .from("community_members").select("community_id").eq("user_id", user.id);
+        setJoinedCommunityIds(membershipsError ? [] : (memberships ?? []).map((m) => m.community_id));
+      } else {
+        setJoinedCommunityIds([]);
+      }
       const communityMap = new Map(communityList.map((community) => [community.id, community]));
       setCommunities(communityList);
       setTopics((topicData ?? []).map((topic) => ({ ...topic, type: topic.type as Topic["type"], community: communityMap.get(topic.community_id) })));
@@ -77,17 +89,24 @@ export default function CommunitiesPage() {
 
   const filteredCommunities = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return communities.filter((community) => !query || [community.name, community.description ?? ""].some((value) => value.toLowerCase().includes(query)));
-  }, [communities, search]);
+    return communities.filter((community) =>
+      (communityView === "ALL" || (communityView === "JOINED"
+        ? joinedCommunityIds.includes(community.id) : !joinedCommunityIds.includes(community.id))) &&
+      (!query || [community.name, community.description ?? ""].some((value) => value.toLowerCase().includes(query)))
+    );
+  }, [communities, search, communityView, joinedCommunityIds]);
 
   const filteredTopics = useMemo(() => {
     const query = search.trim().toLowerCase();
     return topics.filter((topic) => {
       const matchesFilter = filter === "LATEST" || (filter === "RESEARCH" ? topic.type === "RESEARCH" : filter === "DISCUSSION" ? topic.type === "DISCUSSION" : true);
       const matchesSearch = !query || [topic.title, topic.body, topic.community?.name ?? ""].some((value) => value.toLowerCase().includes(query));
-      return matchesFilter && matchesSearch;
+      const matchesCommunity = communityView === "ALL" ||
+        (communityView === "JOINED" ? joinedCommunityIds.includes(topic.community_id) :
+          !joinedCommunityIds.includes(topic.community_id));
+      return matchesFilter && matchesSearch && matchesCommunity;
     });
-  }, [topics, search, filter]);
+  }, [topics, search, filter, communityView, joinedCommunityIds]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -126,22 +145,23 @@ export default function CommunitiesPage() {
   ];
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]" data-mobile-creating={showForm ? "true" : "false"}>
+    <main className="converge-app-page converge-figma figma-research min-h-screen bg-[#0b1110] text-[#edf5ee]" data-mobile-creating={showForm ? "true" : "false"}>
       <SiteHeader />
       {showForm && <nav className="converge-create-mobile-back" aria-label="Create community navigation">
         <button type="button" onClick={() => setShowForm(false)}>← Research</button>
         <strong>New community</strong>
       </nav>}
-      <div className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
+      <div className="figma-research-container mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
         <div className="converge-page-intro flex flex-col gap-2 border-b border-white/[0.09] py-7 sm:py-9">
+          <Link href="/communities" className="figma-research-desktop-logo" aria-label="Converge research home"><img src="/converge-header-lockup.svg" alt="Converge" width={175} height={41} /></Link>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">CONVERGE / RESEARCH</p>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Research</h1>
+              <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl"><span className="figma-research-title-mobile">Research</span><span className="figma-research-title-desktop">Research spaces</span></h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">Explore live questions, enter a research space, and turn discussion into evidence you can revisit.</p>
             </div>
             <button type="button" aria-expanded={showForm} aria-controls="create-community-form" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100">
-              <span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Close form" : "New community"}
+              <span className="text-lg leading-none">{showForm ? "×" : "+"}</span><span className="figma-research-action-long">{showForm ? "Close form" : "New community"}</span><span className="figma-research-action-short">{showForm ? "Close" : "New"}</span>
             </button>
           </div>
         </div>
@@ -172,12 +192,19 @@ export default function CommunitiesPage() {
           {search && <button type="button" onClick={() => setSearch("")} aria-label="Clear research search" className="converge-search-clear">Clear</button>}
         </section>
 
+        <div className="figma-research-mobile-tabs" role="group" aria-label="Filter communities">
+          {([{ value: "ALL", label: "All" }, { value: "JOINED", label: "Joined" },
+            { value: "EXPLORE", label: "Explore" }] as const).map((tab) => (
+            <button key={tab.value} type="button" aria-pressed={communityView === tab.value}
+              onClick={() => setCommunityView(tab.value)}>{tab.label}</button>
+          ))}
+        </div>
         <div className="converge-research-board converge-research-board--clean grid gap-7 pt-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
-          <aside className="space-y-6">
+          <aside className="figma-research-spaces space-y-6">
             <section className="rounded-xl border border-white/[0.09] bg-white/[0.018] p-4">
-              <div className="flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[0.13em] text-white/65">Explore spaces</h2><span className="text-xs tabular-nums text-white/35">{communities.length}</span></div>
+              <div className="flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[0.13em] text-white/65">{communityView === "JOINED" ? "Your spaces" : "Research spaces"}</h2><span className="text-xs tabular-nums text-white/35">{communities.length}</span></div>
               <div className="mt-3 space-y-1">
-                {loading ? <p className="px-2 py-3 text-xs text-white/35">Loading spaces…</p> : filteredCommunities.slice(0, 8).map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="flex items-center gap-2 rounded-md px-2 py-2 text-sm text-white/65 transition hover:bg-white/[0.045] hover:text-emerald-100"><span className="grid size-6 shrink-0 place-items-center rounded-md bg-emerald-200/10 text-[10px] font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><span className="min-w-0 flex-1 truncate">{community.name}</span><span title={community.visibility === "PRIVATE" ? "Private community" : "Public community"} className="text-[10px] text-white/30">{community.visibility === "PRIVATE" ? "▣" : "◉"}</span></Link>)}
+                {loading ? <p className="px-2 py-3 text-xs text-white/35">Loading spaces…</p> : filteredCommunities.slice(0, 8).map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="figma-research-space-row flex items-center gap-2 rounded-md px-2 py-2 text-sm text-white/65 transition hover:bg-white/[0.045] hover:text-emerald-100"><span className="figma-research-space-avatar grid size-6 shrink-0 place-items-center rounded-md bg-emerald-200/10 text-[10px] font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><span className="figma-research-space-info min-w-0 flex-1"><strong>{community.name}</strong><small>{community.description || (community.visibility === "PRIVATE" ? "Private community" : "Research community")}</small></span><span title={community.visibility === "PRIVATE" ? "Private community" : "Public community"} className="text-[10px] text-white/30">{community.visibility === "PRIVATE" ? "▣" : "◉"}</span></Link>)}
                 {!loading && filteredCommunities.length === 0 && <p className="px-2 py-3 text-xs text-white/35">{search ? "No spaces match this search." : "No communities yet."}</p>}
                 {communities.length > 8 && <Link href="#communities-directory" className="mt-1 block px-2 py-2 text-xs font-medium text-emerald-200 hover:text-white">Browse all communities →</Link>}
               </div>
@@ -185,7 +212,13 @@ export default function CommunitiesPage() {
 
           </aside>
 
-          <section id="converge-topic-list" className="min-w-0 scroll-mt-24">
+          <section id="converge-topic-list" className="figma-research-topics min-w-0 scroll-mt-24">
+            <div className="figma-research-desktop-intro">
+              <p>RESEARCH / EXPLORE</p>
+              <h2>Where ideas become evidence.</h2>
+              <span>Follow meaningful questions. Think with people and AI. Keep the findings.</span>
+            </div>
+            <h2 className="figma-research-mobile-section-title">ACTIVE TOPICS</h2>
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.09] pb-4">
               <div><h2 className="text-lg font-semibold tracking-tight">Explore topics</h2><p className="mt-1 text-xs text-white/45">{loading ? "Loading topics…" : `${filteredTopics.length} of ${topics.length} recent topics`}</p></div>
               <div role="group" aria-label="Filter topics" className="flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border border-white/[0.08] bg-white/[0.02] p-1">{filters.map((item) => <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)} className={`min-h-10 shrink-0 rounded-md px-3 py-2 text-xs font-medium transition ${filter === item.id ? "bg-emerald-200 text-[#0b1710]" : "text-white/50 hover:text-white"}`}>{item.label}</button>)}</div>
@@ -193,11 +226,11 @@ export default function CommunitiesPage() {
 
             {loading ? <div className="divide-y divide-white/[0.07]">{[0,1,2,3].map((item) => <div key={item} className="animate-pulse py-6"><div className="h-4 w-2/3 rounded bg-white/[0.06]" /><div className="mt-3 h-3 w-full rounded bg-white/[0.035]" /><div className="mt-2 h-3 w-1/3 rounded bg-white/[0.035]" /></div>)}</div>
             : filteredTopics.length === 0 ? <div className="my-5 rounded-xl border border-dashed border-white/15 px-5 py-12 text-center"><span className="text-2xl text-emerald-200">↗</span><h3 className="mt-3 text-base font-semibold">{search ? "No matching topics" : filter === "RESEARCH" ? "No research topics yet" : filter === "DISCUSSION" ? "No discussions yet" : "The next good question starts here"}</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/40">{search ? "Try another search term or clear your search." : "Open a community to start a topic or join an existing discussion."}</p>{search ? <button onClick={() => setSearch("")} className="mt-4 text-xs font-semibold text-emerald-200">Clear search</button> : <Link href={communities[0] ? `/communities/${communities[0].slug}` : "#communities-directory"} className="mt-4 inline-block text-xs font-semibold text-emerald-200 hover:text-white">{communities[0] ? "Start a topic in a community →" : "Create a community above →"}</Link>}</div>
-            : <div className="converge-topic-card-list">{filteredTopics.map((topic) => <article key={topic.id} className="converge-topic-card group">
+            : <div className="converge-topic-card-list">{filteredTopics.map((topic) => <article key={topic.id} className="converge-topic-card figma-research-topic group">
               <div className="flex items-start gap-3 sm:gap-4">
                 <span className={`mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border text-xs font-bold ${topic.type === "RESEARCH" ? "border-emerald-200/25 bg-emerald-200/[0.08] text-emerald-100" : "border-white/15 bg-white/[0.06] text-white/70"}`}>{topic.type === "RESEARCH" ? "R" : "D"}</span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]"><span className={topic.type === "RESEARCH" ? "text-emerald-100" : "text-white/70"}>{topic.type === "RESEARCH" ? "Research" : "Discussion"}</span>{topic.community && <><span className="text-white/20">/</span><Link href={`/communities/${topic.community.slug}`} className="max-w-[200px] truncate text-white/45 hover:text-emerald-100">{topic.community.name}</Link></>}<span className="text-white/25">· {relativeDate(topic.created_at)}</span></div>
+                  <div className="figma-topic-meta flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]"><span className={topic.type === "RESEARCH" ? "text-emerald-100" : "text-white/70"}>{topic.type === "RESEARCH" ? "Research" : "Discussion"}</span>{topic.community && <><span className="text-white/20">/</span><Link href={`/communities/${topic.community.slug}`} className="max-w-[200px] truncate text-white/45 hover:text-emerald-100">{topic.community.name}</Link></>}<span className="text-white/25">· {relativeDate(topic.created_at)}</span></div>
                   <Link href={`/topics/${topic.id}`} className="mt-2 block text-base font-semibold leading-6 tracking-[-0.015em] text-white/90 transition group-hover:text-emerald-100 sm:text-lg">{topic.title}</Link>
                   <p className="mt-2 line-clamp-2 whitespace-pre-line text-sm leading-6 text-white/45">{topic.body}</p>
                 </div>
@@ -206,6 +239,23 @@ export default function CommunitiesPage() {
           </section>
 
         </div>
+        <aside className="figma-research-workspace" aria-label="Research quick actions">
+          <p className="figma-eyebrow">MY WORKSPACE</p>
+          <h2>Keep your ideas moving.</h2>
+          <section>
+            <h3>Continue researching</h3>
+            <p>Return to a recent research topic or conversation.</p>
+            {topics[0] ? <Link href={`/topics/${topics[0].id}`}>View active rooms ↗</Link> :
+              <Link href="#converge-topic-list">Explore research ↗</Link>}
+          </section>
+          <p className="figma-eyebrow">QUICK ACTIONS</p>
+          <button type="button" onClick={() => { setShowForm(true); setMessage(""); }}>+ New community</button>
+          <Link href="/agents">Browse AI specialists</Link>
+          <div className="figma-research-workspace-note">
+            <h3>Evidence stays connected</h3>
+            <p>Claims, sources and decisions belong beside the discussion—not lost in the chat history.</p>
+          </div>
+        </aside>
 
         <section id="communities-directory" className="mt-12 scroll-mt-24 border-t border-white/[0.09] pt-7">
           <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/70">Explore</p><h2 className="mt-2 text-xl font-semibold">Community directory</h2></div><span className="text-xs text-white/35">{filteredCommunities.length} spaces</span></div>

@@ -274,7 +274,7 @@ export default function DirectConversationPage() {
   }
 
   return (
-    <main ref={workspaceRef} className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main ref={workspaceRef} className="converge-app-page converge-figma figma-conversation min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
       <div className="converge-chat-workspace mx-auto flex min-h-[calc(100vh-72px)] max-w-[1400px] flex-col px-3 pb-6 pt-4 sm:px-7 sm:pt-7">
         <div className="converge-chat-grid">
@@ -282,10 +282,12 @@ export default function DirectConversationPage() {
           <div className="converge-chat-main">
         <div className="converge-chat-header mb-4 flex items-center gap-3">
           <Link href="/messages" className="grid size-10 shrink-0 place-items-center rounded-xl border border-white/10 text-white/65 transition hover:border-emerald-200/25 hover:text-white" aria-label="Back to inbox"><CommunicationIcon name="arrow-left" className="size-5" /></Link>
+          <div className="figma-chat-avatar" aria-hidden="true">{member?.avatar_url ? <img src={member.avatar_url} alt="" /> : initials(member?.display_name ?? "Converge")}</div>
           <div className="min-w-0 flex-1">
             <p className="converge-chat-header__eyebrow text-[9px] font-bold uppercase tracking-[0.19em] text-emerald-200/70">Converge / Private message</p>
             <h1 className="mt-1 truncate text-lg font-semibold tracking-[-0.04em]">{member?.display_name ?? "Conversation"}</h1>
-            {member?.headline && <p className="truncate text-[11px] text-white/40">{member.headline}</p>}
+            <p className="figma-chat-private-subtitle">Private conversation</p>
+            {member?.headline && <p className="figma-chat-member-headline truncate text-[11px] text-white/40">{member.headline}</p>}
           </div>
           {member && viewerId && requestStatus === "ACCEPTED" && !blockedBetween && (
             voiceCallsEnabled ? (
@@ -315,6 +317,10 @@ export default function DirectConversationPage() {
                </summary>
                <div className="absolute right-0 top-[calc(100%+8px)] z-30 grid min-w-[208px] gap-1 rounded-2xl border border-white/15 bg-[#14241b] p-2 text-left shadow-[0_16px_48px_rgba(0,0,0,.45)]">
                  <Link href={`/u/${member.username || member.id}`} className="rounded-xl px-3 py-3 text-xs font-semibold text-white/85 transition hover:bg-white/[0.06]">View member profile</Link>
+                 {voiceCallsEnabled && requestStatus === "ACCEPTED" && !blockedBetween && <div className="figma-chat-mobile-call-actions">
+                   <button type="button" onClick={() => void startCall("audio")} disabled={calling || moderatingRequest}>Start voice call</button>
+                   <button type="button" onClick={() => void startCall("video")} disabled={calling || moderatingRequest}>Start video call</button>
+                 </div>}
                  <button type="button" onClick={() => void toggleBlock()} disabled={moderatingRequest}
                    className="rounded-xl px-3 py-3 text-left text-xs font-semibold text-red-200 transition hover:bg-red-200/[.07] disabled:opacity-40">
                    {moderatingRequest ? "Working…" : blockedByMe ? "Unblock this member" : "Block this member"}
@@ -350,6 +356,7 @@ export default function DirectConversationPage() {
               {blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">You have blocked this person. Open conversation options above to unblock them.</div>}
               {blockedBetween && !blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">Messaging is unavailable because one of you has blocked the other.</div>}
               <div ref={messagesViewportRef} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" className="converge-chat-messages min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-5 sm:px-6 sm:py-7">
+                {member && <p className="figma-chat-privacy">Only you and {member.display_name} can see this chat.</p>}
                 {messages.length ? messages.map((message) => {
                   const own = message.sender_id === viewerId;
                   return (

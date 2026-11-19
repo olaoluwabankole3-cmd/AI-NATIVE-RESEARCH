@@ -581,13 +581,37 @@ export default function TopicPage() {
   }
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#07110f] text-white">
+    <main className="converge-app-page converge-figma figma-topic min-h-screen bg-[#07110f] text-white">
       <SiteHeader />
       <div className="converge-topic-workspace mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
         <nav className="converge-mobile-topic-back" aria-label="Research room back navigation">
-          <Link href={`/communities/${community.slug}`} aria-label={`Back to ${community.name}`}>← <span className="truncate">{community.name}</span></Link>
-          <span>{topic.type === "RESEARCH" ? "Research room" : "Discussion"}</span>
+          <Link href={`/communities/${community.slug}`} aria-label={`Back to ${community.name}`} className="figma-topic-mobile-back">‹</Link>
+          <strong className="figma-topic-mobile-heading">{topic.title}</strong>
+          <details className="figma-topic-mobile-menu">
+            <summary aria-label="Research room options">⋯</summary>
+            <div className="figma-topic-mobile-menu-panel">
+              <Link href={`/communities/${community.slug}`}>View {community.name}</Link>
+              {topic.type === "RESEARCH" && currentParticipantId && <button type="button" onClick={() => setMobileSection("evidence")}>Open evidence record</button>}
+              {isCommunityMember && <button type="button" onClick={() => setShowAgentPicker(true)}>Add AI specialist</button>}
+              {(community.created_by === currentUserId || currentCommunityRole === "OWNER" || currentCommunityRole === "MODERATOR" || (isCommunityMember && topic.created_by === currentUserId)) && (
+                <button type="button" onClick={() => void handleDeleteTopic()} disabled={deletingTopic} className="figma-topic-delete">
+                  {deletingTopic ? "Deleting…" : "Delete topic"}
+                </button>
+              )}
+            </div>
+          </details>
         </nav>
+        <aside className="figma-topic-desktop-navigation" aria-label="Research topics">
+          <Link href="/communities" className="figma-topic-sidebar-brand">converge</Link>
+          <h2>{community.name}</h2>
+          <Link className="figma-topic-sidebar-return" href={`/communities/${community.slug}`}>⌕ &nbsp; Browse community topics</Link>
+          <p>ACTIVE TOPIC</p>
+          <Link href={`/topics/${topic.id}`} aria-current="page" className="figma-topic-sidebar-active">
+            <span>{topic.title}</span>
+            <small>{posts.length} replies · {participatingAgents.length} specialists</small>
+          </Link>
+          <Link href={`/communities/${community.slug}`} className="figma-topic-sidebar-new">+ Browse questions</Link>
+        </aside>
         <div className="py-7">
           <nav aria-label="Breadcrumb" className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-white/50 sm:text-sm">
             <Link href="/communities" className="transition hover:text-emerald-200">Communities</Link>
@@ -604,6 +628,7 @@ export default function TopicPage() {
           </nav>
 
           <article className="converge-topic-hero mt-5 rounded-2xl border border-white/10 bg-[#0b1714] p-6 sm:p-8">
+            <p className="figma-topic-eyebrow">{topic.type === "RESEARCH" ? "RESEARCH ROOM" : "DISCUSSION"} · {community.name}</p>
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-medium text-emerald-200">
                 {topic.type === "RESEARCH" ? "Research" : "Discussion"}
@@ -622,9 +647,10 @@ export default function TopicPage() {
               {topic.title}
             </h1>
 
-            <div className="mt-6 whitespace-pre-wrap break-words text-base leading-8 text-white/70">
+            <div className="figma-topic-body mt-6 whitespace-pre-wrap break-words text-base leading-8 text-white/70">
               {topic.body}
             </div>
+            {topic.body && <details className="figma-topic-mobile-body"><summary>About this topic</summary><p>{topic.body}</p></details>}
 
             
             <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/10 pt-5 text-sm text-white/45">
@@ -633,7 +659,8 @@ export default function TopicPage() {
                 {posts.length} {posts.length === 1 ? "reply" : "replies"}
               </span>
               <span>{participantCount} {participantCount === 1 ? "participant" : "participants"}</span>
-              <span className="text-white/25">Started {formatDate(topic.created_at)}</span>
+              <span className="figma-topic-specialists">{participatingAgents.length} {participatingAgents.length === 1 ? "specialist" : "specialists"}</span>
+              <span className="figma-topic-started text-white/25">Started {formatDate(topic.created_at)}</span>
             </div>
           </article>
 
@@ -651,8 +678,8 @@ export default function TopicPage() {
           )}
           {topic.type === "RESEARCH" && currentParticipantId && (
             <div className="converge-room-tabbar" role="tablist" aria-label="Research room views">
-              <button type="button" role="tab" id="converge-discussion-tab" aria-controls="topic-discussion" aria-selected={mobileSection === "discussion"} onClick={() => setMobileSection("discussion")}>Discussion · {posts.length}</button>
-              <button type="button" role="tab" id="converge-evidence-tab" aria-controls="converge-room-evidence-panel" aria-selected={mobileSection === "evidence"} onClick={() => setMobileSection("evidence")}>Evidence &amp; synthesis</button>
+              <button type="button" role="tab" id="converge-discussion-tab" aria-controls="topic-discussion" aria-selected={mobileSection === "discussion"} onClick={() => setMobileSection("discussion")} aria-label={`Discussion, ${posts.length} replies`}>Discussion</button>
+              <button type="button" role="tab" id="converge-evidence-tab" aria-controls="converge-room-evidence-panel" aria-selected={mobileSection === "evidence"} onClick={() => setMobileSection("evidence")} aria-label="Evidence and synthesis">Evidence</button>
             </div>
           )}
           <div className={["converge-room-layout", topic.type !== "RESEARCH" || !currentParticipantId ? "converge-room-layout--discussion-only" : ""].join(" ")} data-mobile-tab={mobileSection}>
@@ -818,6 +845,9 @@ export default function TopicPage() {
               )}
             </div>
 
+            {topic.type === "RESEARCH" && currentParticipantId && <button type="button" className="figma-topic-evidence-peek" onClick={() => setMobileSection("evidence")}>
+              <strong>✦ &nbsp; EVIDENCE RECORD</strong><span>Review saved research sources ↗</span>
+            </button>}
             {isCommunityMember && currentParticipantId ? (
             <form
               onSubmit={handleReply}
@@ -849,7 +879,7 @@ export default function TopicPage() {
                   disabled={posting || !reply.trim()}
                   className="rounded-xl bg-emerald-300 px-5 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {posting ? "Posting & getting AI replies…" : "Post reply"}
+                  <span className="figma-topic-send-mobile">{posting ? "Posting…" : "Send"}</span><span className="figma-topic-send-desktop">{posting ? "Posting & getting AI replies…" : "Post reply"}</span>
                 </button>
               </div>
             </form>

@@ -20,6 +20,7 @@ function initials(value: string) {
 export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "available" | "planned">("all");
+  const [specialty, setSpecialty] = useState<"all" | "research" | "review">("all");
   const [selectedId, setSelectedId] = useState<string | null>(agents[0]?.id ?? null);
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
 
@@ -32,21 +33,35 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
-    return agents.filter((agent) => (filter === "all" || agent.status.toLowerCase() === filter)
-      && (!needle || [agent.name, agent.role, agent.handle, agent.description, ...agent.capabilities].join(" ").toLocaleLowerCase().includes(needle)));
-  }, [agents, filter, query]);
+    return agents.filter((agent) => {
+      const expertise = [agent.name, agent.role, agent.description, ...agent.capabilities].join(" ").toLowerCase();
+      const matchesSpecialty = specialty === "all" || (specialty === "review"
+        ? /review|critic|audit|validation|verification/.test(expertise)
+        : /research|analyst|evidence|source|synthesis/.test(expertise));
+      return (filter === "all" || agent.status.toLowerCase() === filter) && matchesSpecialty &&
+        (!needle || [agent.name, agent.role, agent.handle, agent.description, ...agent.capabilities].join(" ").toLowerCase().includes(needle));
+    });
+  }, [agents, filter, query, specialty]);
 
   const selected = filtered.find((agent) => agent.id === selectedId) ?? filtered[0] ?? null;
 
   return (
     <section className="converge-specialist-directory" data-mobile-view={mobileView} aria-label="AI specialist directory">
       <aside className="converge-specialist-directory__list">
+        <p className="figma-agent-section-label">AVAILABLE IN TOPIC ROOMS</p>
         <div className="converge-specialist-directory__heading">
           <h2>AI specialists</h2>
           <span>{agents.length} registered</span>
         </div>
         <label htmlFor="converge-specialist-search" className="sr-only">Find an AI specialist</label>
         <input id="converge-specialist-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a specialist…" />
+        <div className="figma-specialty-filters" role="group" aria-label="Filter specialists by expertise">
+          {([{ id: "all", label: "All agents" }, { id: "research", label: "Research" },
+            { id: "review", label: "Review" }] as const).map((item) => (
+            <button key={item.id} type="button" aria-pressed={specialty === item.id}
+              onClick={() => setSpecialty(item.id)}>{item.label}</button>
+          ))}
+        </div>
         <div className="converge-specialist-directory__filters" role="group" aria-label="Filter specialists">
           {([{ id: "all", label: "All" }, { id: "available", label: "Available" }, { id: "planned", label: "Planned" }] as const).map((item) => (
             <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}</button>
@@ -58,7 +73,11 @@ export function SpecialistDirectory({ agents }: { agents: Specialist[] }) {
               {filtered.map((agent) => (
                 <button key={agent.id} type="button" aria-pressed={selected?.id === agent.id} onClick={() => { setSelectedId(agent.id); setMobileView("detail"); }} className="converge-specialist-directory__item">
                   <span className="converge-specialist-directory__avatar" aria-hidden="true">{initials(agent.name)}</span>
-                  <span><strong>{agent.name}</strong><small>{agent.role}</small></span>
+                  <span className="figma-agent-row-copy"><strong>{agent.name}</strong>
+                    <small>AI AGENT · {agent.role}</small>
+                    <span className="figma-agent-row-description">{agent.description || agent.role}</span>
+                    <span className="figma-agent-row-view">View profile ↗</span>
+                  </span>
                 </button>
               ))}
             </div>}

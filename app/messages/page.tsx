@@ -193,9 +193,9 @@ export default function MessagesInboxPage() {
   }, [loadInbox, supabase, viewerId]);
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page converge-figma figma-messages min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
-      <div className="mx-auto max-w-[1120px] px-4 pb-16 sm:px-7 lg:px-10">
+      <div className="figma-messages-container mx-auto max-w-[1120px] px-4 pb-16 sm:px-7 lg:px-10">
         <section className="converge-page-intro flex flex-col justify-between gap-5 border-b border-white/[0.09] py-9 sm:flex-row sm:items-end sm:py-12">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Converge / Messages</p>
@@ -204,7 +204,7 @@ export default function MessagesInboxPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link href="/calls" aria-label={voiceCallsEnabled ? "Voice calls" : "Voice calls — setup in progress"} className="converge-messages-secondary-action inline-flex min-h-11 items-center gap-2 rounded-xl border border-emerald-200/25 px-4 text-xs font-semibold text-emerald-100 hover:bg-emerald-200/[.08]"><CommunicationIcon name="phone" className="size-4" /><span>Calls</span>{!voiceCallsEnabled && <span className="text-[10px] font-normal text-white/45">Setup</span>}</Link>
-            <Link href="/people" className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100"><CommunicationIcon name="people" className="size-4" />New conversation</Link>
+            <Link href="/people" className="figma-messages-new inline-flex w-fit items-center gap-2 rounded-full bg-emerald-200 px-4 py-2.5 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100"><CommunicationIcon name="people" className="size-4" /><span className="figma-messages-new-long">New conversation</span><span className="figma-messages-new-short">+ New</span></Link>
           </div>
         </section>
 
@@ -222,7 +222,7 @@ export default function MessagesInboxPage() {
             </button>
           </div>
           <div role="tablist" aria-label="Message view" className="converge-inbox-controls__tabs">
-            <button type="button" role="tab" aria-selected={inboxView === "all"} onClick={() => setInboxView("all")}>All conversations</button>
+            <button type="button" role="tab" aria-selected={inboxView === "all"} onClick={() => setInboxView("all")}><span className="figma-messages-tab-long">All conversations</span><span className="figma-messages-tab-short">All</span></button>
             <button type="button" role="tab" aria-selected={inboxView === "requests"} onClick={() => setInboxView("requests")}>Requests{incomingRequests.length ? ` · ${incomingRequests.length}` : ""}</button>
           </div>
         </section>
@@ -266,19 +266,19 @@ export default function MessagesInboxPage() {
                 })}
               </div>
             </section>}
-            {inboxView === "all" && filteredRegularConversations.length ? <section className="converge-inbox-list mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70">
+            {inboxView === "all" && filteredRegularConversations.length ? <section className="converge-inbox-list mt-6 overflow-hidden rounded-3xl border border-white/[0.09] bg-[#101815]/70"><h2 className="figma-messages-recent">RECENT</h2>
               {filteredRegularConversations.map((conversation, index) => {
                 const otherId = conversation.user_low_id === viewerId ? conversation.user_high_id : conversation.user_low_id;
                 const member = profiles[otherId] ?? { id: otherId, username: null, display_name: `Converge member · ${otherId.slice(0, 6)}`, avatar_url: null, headline: null };
                 const preview = previews[conversation.id];
                 const isBlocked = blockedUserIds.includes(otherId);
-                return <div key={conversation.id} className={["flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.035] sm:px-6", index > 0 ? "border-t border-white/[0.07]" : ""].join(" ")}>
+                return <div key={conversation.id} className={["figma-message-row flex items-center gap-4 px-4 py-4 transition hover:bg-white/[0.035] sm:px-6", index > 0 ? "border-t border-white/[0.07]" : ""].join(" ")}>
                   <Link href={`/messages/${conversation.id}`} className="flex min-w-0 flex-1 items-center gap-4 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-emerald-200">
-                    <div className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-[16px] border border-emerald-200/15 bg-emerald-200/[0.08] text-sm font-bold text-emerald-100">{member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}</div>
+                    <div className="figma-message-avatar grid size-12 shrink-0 place-items-center overflow-hidden rounded-[16px] border border-emerald-200/15 bg-emerald-200/[0.08] text-sm font-bold text-emerald-100">{member.avatar_url ? <img src={member.avatar_url} alt="" className="size-full object-cover" /> : initials(member.display_name)}</div>
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-center justify-between gap-2"><p className="min-w-0 flex-1 truncate text-sm font-semibold text-white/90">{member.display_name}</p><span className="shrink-0 text-[10px] text-white/35">{timeLabel(preview?.created_at ?? conversation.last_message_at)}</span></div>
                       {member.headline && <p className="mt-1 truncate text-[11px] text-white/35">{member.headline}</p>}
-                      <p className="mt-2 truncate text-xs text-white/50">{isBlocked ? "You blocked this person · open to unblock" : conversation.request_status === "PENDING" && conversation.created_by === viewerId ? "Message request sent · awaiting response" : conversation.request_status === "IGNORED" ? "Message request ignored" : preview ? `${preview.sender_id === viewerId ? "You: " : ""}${preview.body}` : "No messages yet — say hello."}</p>
+                      <p className="figma-message-preview mt-2 truncate text-xs text-white/50">{isBlocked ? "You blocked this person · open to unblock" : conversation.request_status === "PENDING" && conversation.created_by === viewerId ? "Message request sent · awaiting response" : conversation.request_status === "IGNORED" ? "Message request ignored" : preview ? `${preview.sender_id === viewerId ? "You: " : ""}${preview.body}` : "No messages yet — say hello."}</p>
                     </div>
                   </Link>
                   {isBlocked && <button type="button" disabled={busyRequestId === otherId} onClick={() => void unblockPerson(otherId)} className="shrink-0 rounded-full border border-emerald-200/20 px-3 py-2 text-[10px] font-semibold text-emerald-100 disabled:opacity-40">{busyRequestId === otherId ? "…" : "Unblock"}</button>}
@@ -286,6 +286,12 @@ export default function MessagesInboxPage() {
                 </div>;
               })}
             </section> : null}
+            {!loading && !loadError && inboxView === "all" && (
+              <aside className="figma-messages-privacy">
+                <strong>Private by design</strong>
+                <span>Requests let you choose who can reach you.</span>
+              </aside>
+            )}
             {!loadError && !loading && inboxView === "requests" && !filteredIncomingRequests.length && <div className="converge-inbox-empty" role="status"><h2>No message requests to review</h2><p>{search ? "Try another search." : "New requests will appear here. You choose whether to accept, ignore or block them."}</p></div>}
             {!loadError && !loading && search.trim() && inboxView === "all" && !filteredRegularConversations.length && !filteredIncomingRequests.length && <div className="converge-inbox-empty" role="status"><h2>No matching conversations</h2><p>Try a different name or message search.</p><button type="button" onClick={() => setSearch("")}>Clear search</button></div>}
             {!loadError && !loading && inboxView === "all" && !search.trim() && !incomingRequests.length && !regularConversations.length && <section className="mt-6 rounded-3xl border border-dashed border-white/[0.12] px-6 py-16 text-center sm:px-12">
