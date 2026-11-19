@@ -1,0 +1,433 @@
+/* Original Converge approval draft, Phase 2. References:
+ * DESKTOP 02 / Research room, DESKTOP 03 / Messages conversation;
+ * MOBILE 02 / Topic discussion, MOBILE 04 / Private conversation.
+ * 390x844, 1440x900 Figma export. No stock/sample data is used here.
+ * Scoped to the exact signed-in routes; auth and public pages unaffected.
+ */
+main.converge-app-page.figma-topic,
+main.converge-app-page.figma-conversation {
+  --fig-bg:#0b1110;
+  --fig-nav:#0e1914;
+  --fig-panel:#14231b;
+  --fig-raised:#1a2a22;
+  --fig-hover:#213c2a;
+  --fig-mint:#a6e6bd;
+  --fig-teal:#40bca0;
+  --fig-text:#f5fbf6;
+  --fig-muted:#9cb3a4;
+  --fig-line:#294334;
+  background:var(--fig-bg) !important;
+  color:var(--fig-text);
+}
+main.figma-topic .figma-topic-desktop-navigation,
+main.figma-topic .figma-topic-eyebrow,
+main.figma-topic .figma-topic-mobile-body,
+main.figma-topic .figma-topic-evidence-peek,
+main.figma-topic .figma-topic-send-mobile,
+main.figma-conversation .figma-chat-private-subtitle,
+main.figma-conversation .figma-chat-privacy,
+main.figma-conversation .figma-chat-mobile-call-actions {display:none}
+main.figma-conversation .figma-chat-avatar {
+  display:grid; place-items:center;flex:0 0 39px;width:39px;height:39px;
+  border-radius:50%;overflow:hidden;background:#21432f;color:var(--fig-mint);
+  font-size:12px;font-weight:700;
+}
+main.figma-conversation .figma-chat-avatar img {width:100%;height:100%;object-fit:cover}
+main.figma-topic :is(button,a,summary):focus-visible,
+main.figma-conversation :is(button,a,summary):focus-visible {
+  outline:2px solid var(--fig-mint);outline-offset:2px;
+}
+@media (min-width:1280px) {
+  /* Figma desktop canvas: 82px shared rail | 368px list | 690px focus | 300px context. */
+  main.converge-app-page.figma-topic .converge-topic-workspace {
+    position:relative;display:block;max-width:none !important;width:100% !important;
+    margin:0 !important;padding:0 !important;min-height:100dvh;
+  }
+  main.figma-topic .figma-topic-desktop-navigation {
+    position:fixed;display:flex;flex-direction:column;
+    left:82px;top:0;bottom:0;width:368px;overflow-y:auto;
+    background:var(--fig-nav);border-right:1px solid var(--fig-line);
+    padding:23px 26px;gap:0;
+  }
+  main.figma-topic .figma-topic-sidebar-brand {
+    font-size:17px;font-weight:800;letter-spacing:-.04em;color:var(--fig-text);
+    margin:0 0 58px;
+  }
+  main.figma-topic .figma-topic-desktop-navigation h2 {
+    color:var(--fig-text);font-size:25px;font-weight:700;line-height:1.25;
+    margin:0 0 17px;
+  }
+  main.figma-topic .figma-topic-sidebar-return {
+    display:flex;align-items:center;min-height:40px;margin:0 0 28px;
+    padding:0 14px;border-radius:10px;background:var(--fig-hover);
+    color:var(--fig-muted);font-size:12px;
+  }
+  main.figma-topic .figma-topic-desktop-navigation > p {
+    color:var(--fig-teal);font-size:10px;font-weight:800;
+    margin:0 0 11px;letter-spacing:.07em;
+  }
+  main.figma-topic .figma-topic-sidebar-active {
+    display:flex;flex-direction:column;gap:9px;min-height:85px;
+    padding:17px 15px;background:#21402d;border:1px solid #2c694c;
+    border-radius:11px;color:var(--fig-text);
+  }
+  main.figma-topic .figma-topic-sidebar-active span {font-size:13px;font-weight:700;line-height:1.4}
+  main.figma-topic .figma-topic-sidebar-active small {color:var(--fig-muted);font-size:11px}
+  main.figma-topic .figma-topic-sidebar-new {
+    display:inline-flex;align-items:center;justify-content:center;
+    width:max-content;margin-top:22px;min-height:37px;padding:0 16px;
+    background:var(--fig-mint);border-radius:10px;color:#0b1710;
+    font-size:12px;font-weight:700;
+  }
+  main.converge-app-page.figma-topic .converge-topic-workspace > .py-7 {
+    width:auto;max-width:none;margin:0 300px 0 368px;
+    padding:24px 25px 40px !important;
+  }
+  main.figma-topic .converge-topic-workspace nav[aria-label="Breadcrumb"] {display:none}
+  main.figma-topic .converge-topic-hero {
+    margin:0 !important;border:0 !important;background:transparent !important;
+    border-radius:0 !important;padding:0 !important;
+  }
+  main.figma-topic .figma-topic-eyebrow {
+    display:block;color:var(--fig-teal);text-transform:uppercase;
+    font-size:11px;font-weight:800;letter-spacing:.07em;
+  }
+  main.figma-topic .converge-topic-hero > div.flex:first-of-type {display:none}
+  main.figma-topic .converge-topic-hero h1 {
+    font-size:25px !important;line-height:1.3 !important;margin:17px 0 0 !important;
+    font-weight:700;letter-spacing:-.035em;
+  }
+  main.figma-topic .converge-topic-hero .figma-topic-body {
+    margin:11px 0 0 !important;font-size:13px;line-height:1.65;
+  }
+  main.figma-topic .converge-topic-hero >div:last-child {
+    margin:12px 0 0 !important;padding:0 !important;border:0 !important;
+    font-size:12px;color:var(--fig-muted);
+  }
+  main.figma-topic .converge-room-layout {display:block !important;margin:0}
+  main.figma-topic .converge-room-discussion > section {margin-top:20px}
+  main.figma-topic .converge-room-evidence {
+    display:block;position:fixed;right:0;top:0;bottom:0;overflow:auto;
+    width:300px;background:var(--fig-nav);border-left:1px solid var(--fig-line);
+    padding:20px 19px;
+  }
+  main.figma-topic .converge-room-evidence .converge-research-room {
+    background:transparent !important;border:0 !important;padding:0 !important;
+    border-radius:0 !important;
+  }
+  main.converge-app-page.figma-conversation .converge-chat-workspace {
+    width:100% !important;max-width:none !important;min-height:100dvh !important;
+    margin:0 !important;padding:0 !important;
+  }
+  main.figma-conversation .converge-chat-grid {
+    display:grid !important;grid-template-columns:368px minmax(0,1fr) 300px !important;
+    height:100dvh !important;min-height:0 !important;
+    width:100% !important;border:0 !important;border-radius:0 !important;
+    background:var(--fig-bg) !important;
+  }
+  main.figma-conversation .converge-conversation-rail {
+    border-right:1px solid var(--fig-line);background:var(--fig-nav);
+  }
+  main.figma-conversation .converge-chat-main {
+    display:flex;flex-direction:column;min-width:0;min-height:0;
+  }
+  main.figma-conversation .converge-chat-main > .converge-chat-header {
+    flex:0 0 92px;margin:0 !important;padding:20px 24px !important;
+    border-bottom:1px solid var(--fig-line) !important;
+  }
+  main.figma-conversation .converge-chat-main > .converge-chat-thread {
+    display:flex;flex:1;min-height:0 !important;height:0 !important;
+    max-height:none !important;background:var(--fig-bg) !important;
+    border:0 !important;border-radius:0 !important;
+  }
+  main.figma-conversation .converge-chat-context {
+    width:300px;border-left:1px solid var(--fig-line);
+    background:var(--fig-nav);
+  }
+}
+@media (max-width:767px) {
+  /* The Figma screenshots include 24px simulated OS status. Do not draw a fake clock.
+   * Content header is 82px; real devices provide their own status/safe areas. */
+  main.converge-app-page.figma-topic,
+  main.converge-app-page.figma-conversation {
+    padding:0 !important;min-height:100dvh !important;
+  }
+  main.figma-topic > .converge-app-header,
+  main.figma-topic > .converge-mobile-dock,
+  main.figma-conversation > .converge-app-header,
+  main.figma-conversation > .converge-mobile-dock {display:none !important}
+
+  /* MOBILE 02 / Topic discussion */
+  main.figma-topic .figma-topic-desktop-navigation {display:none !important}
+  main.converge-app-page.figma-topic .converge-topic-workspace {
+    display:block;width:100% !important;max-width:none !important;
+    padding:0 !important;margin:0 !important;
+  }
+  main.figma-topic .converge-mobile-topic-back {
+    display:grid !important;grid-template-columns:30px minmax(0,1fr) 30px;
+    align-items:center;gap:14px;
+    height:82px !important;min-height:82px !important;
+    margin:0 !important;padding:0 20px !important;
+    border-bottom:1px solid var(--fig-line) !important;
+    background:var(--fig-bg) !important;
+  }
+  main.figma-topic .converge-mobile-topic-back .figma-topic-mobile-back {
+    display:flex;align-items:center;justify-content:flex-start;
+    min-width:0;max-width:none;min-height:44px;
+    color:var(--fig-text) !important;font-size:32px !important;font-weight:400;
+  }
+  main.figma-topic .figma-topic-mobile-heading {
+    display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    color:var(--fig-text);font-size:18px;line-height:24px;font-weight:700;
+  }
+  main.figma-topic .figma-topic-mobile-menu {position:relative}
+  main.figma-topic .figma-topic-mobile-menu summary {
+    display:grid;place-items:center;width:36px;height:44px;
+    cursor:pointer;list-style:none;color:var(--fig-muted);font-size:26px;
+  }
+  main.figma-topic .figma-topic-mobile-menu summary::-webkit-details-marker {display:none}
+  main.figma-topic .figma-topic-mobile-menu-panel {
+    position:absolute;right:0;top:44px;z-index:60;display:grid;gap:2px;
+    width:min(274px,calc(100vw - 40px));padding:8px;
+    border:1px solid var(--fig-line);border-radius:12px;
+    background:var(--fig-panel);box-shadow:0 18px 36px #0009;
+  }
+  main.figma-topic .figma-topic-mobile-menu-panel :is(a,button) {
+    text-align:left;width:100%;min-height:42px;padding:10px 12px;
+    border:0;border-radius:8px;background:transparent;color:var(--fig-text);
+    font-size:13px;line-height:19px;
+  }
+  main.figma-topic .figma-topic-mobile-menu-panel :is(a,button):hover {background:var(--fig-hover)}
+  main.figma-topic .figma-topic-mobile-menu-panel .figma-topic-delete {color:#f9b7ac}
+  main.converge-app-page.figma-topic .converge-topic-workspace > .py-7 {
+    margin:0 !important;padding:0 20px 155px !important;
+  }
+  main.figma-topic .converge-topic-hero {
+    margin:0 !important;padding:17px 0 0 !important;
+    border:0 !important;border-radius:0 !important;
+    background:transparent !important;
+  }
+  main.figma-topic .figma-topic-eyebrow {
+    display:block;text-transform:uppercase;color:var(--fig-teal);
+    font-size:10px;line-height:14px;letter-spacing:.025em;font-weight:800;
+  }
+  main.figma-topic .converge-topic-hero > div.flex:first-of-type {display:none !important}
+  main.figma-topic .converge-topic-hero h1 {
+    margin:17px 0 0 !important;font-size:23px !important;
+    font-weight:750;line-height:26px !important;letter-spacing:-.035em;
+    color:var(--fig-text);
+  }
+  main.figma-topic .converge-topic-hero .figma-topic-body {display:none !important}
+  main.figma-topic .figma-topic-mobile-body {
+    display:block;margin-top:10px;color:var(--fig-muted);font-size:12px;
+  }
+  main.figma-topic .figma-topic-mobile-body summary {
+    cursor:pointer;color:var(--fig-teal);font-weight:600;
+  }
+  main.figma-topic .figma-topic-mobile-body p {
+    white-space:pre-wrap;line-height:1.5;margin-top:8px;
+  }
+  main.figma-topic .converge-topic-hero > div:last-child {
+    border:0 !important;margin:4px 0 0 !important;padding:0 !important;
+    display:flex;gap:9px;flex-wrap:wrap;
+    color:var(--fig-muted) !important;font-size:12px !important;line-height:16px;
+  }
+  main.figma-topic .converge-topic-hero >div:last-child > span {
+    color:var(--fig-muted) !important;
+  }
+  main.figma-topic .converge-topic-hero >div:last-child span.size-1\.5,
+  main.figma-topic .figma-topic-started {display:none !important}
+  main.figma-topic .converge-room-desktop-links,
+  main.figma-topic .converge-research-topic-guidance {display:none !important}
+  main.figma-topic .converge-room-tabbar {
+    position:static !important;z-index:auto;display:flex !important;gap:11px;
+    margin:23px 0 0 !important;padding:0 0 16px !important;
+    border-bottom:1px solid var(--fig-line) !important;background:transparent !important;
+  }
+  main.figma-topic .converge-room-tabbar button {
+    flex:0 0 auto;height:32px !important;min-height:32px !important;
+    padding:0 12px !important;border:0 !important;
+    border-radius:11px !important;background:var(--fig-raised) !important;
+    color:var(--fig-muted) !important;font-size:11px !important;font-weight:700;
+  }
+  main.figma-topic .converge-room-tabbar button[aria-selected="true"] {
+    background:var(--fig-mint) !important;color:#0b1710 !important;
+  }
+  main.figma-topic .converge-room-layout {display:block !important}
+  main.figma-topic .converge-room-discussion > section {
+    margin:0 !important;padding:0 !important;
+  }
+  main.figma-topic .converge-room-discussion > section > div.flex:first-child,
+  main.figma-topic .converge-room-participants {display:none !important}
+  main.figma-topic .converge-room-discussion > section > div.mt-6.overflow-hidden {
+    display:block;margin:10px 0 0 !important;
+    border:0 !important;border-radius:0 !important;background:transparent !important;
+    overflow:visible !important;
+  }
+  main.figma-topic .converge-room-discussion > section > div.mt-6.overflow-hidden > article {
+    margin:0 !important;padding:17px 0 24px !important;
+    min-height:105px;border:0 !important;background:transparent !important;
+  }
+  main.figma-topic .converge-room-discussion > section > div.mt-6.overflow-hidden > article:not(:last-child) {
+    border-bottom:1px solid var(--fig-line) !important;
+  }
+  main.figma-topic .converge-room-discussion article .size-10.rounded-full {
+    width:38px;height:38px;flex:0 0 38px;
+    background:#204532 !important;color:var(--fig-mint) !important;
+    font-size:12px;
+  }
+  main.figma-topic .converge-room-discussion article .flex.items-start {gap:14px !important}
+  main.figma-topic .converge-room-discussion article .flex.flex-wrap > span:not(:first-child) {display:none !important}
+  main.figma-topic .converge-room-discussion article .flex.flex-wrap > span:first-child {
+    font-size:13px;line-height:17px;font-weight:600;color:var(--fig-text);
+  }
+  main.figma-topic .converge-room-discussion article:has(span[class*="AI"]) .flex.flex-wrap > span:first-child {color:var(--fig-mint)}
+  main.figma-topic .converge-room-discussion article p.mt-3 {
+    margin-top:8px !important;color:var(--fig-muted) !important;
+    font-size:13px !important;line-height:17px !important;
+  }
+  main.figma-topic .figma-topic-evidence-peek {
+    display:flex;flex-direction:column;gap:8px;width:100%;
+    min-height:70px;margin:24px 0 0;padding:11px 13px;
+    border:1px solid var(--fig-line);border-radius:14px;
+    text-align:left;background:var(--fig-panel);color:var(--fig-text);
+  }
+  main.figma-topic .figma-topic-evidence-peek strong {
+    color:var(--fig-teal);font-size:11px;line-height:14px;font-weight:800;
+  }
+  main.figma-topic .figma-topic-evidence-peek span {font-size:13px;line-height:17px}
+  main.figma-topic .converge-room-evidence .converge-research-room {
+    border:0 !important;border-radius:0 !important;
+    background:transparent !important;padding:16px 0 100px !important;
+  }
+  main.figma-topic .converge-room-discussion form.converge-topic-reply {
+    position:fixed !important;left:17px;right:17px;bottom:max(17px,env(safe-area-inset-bottom));
+    z-index:40;display:block;width:auto;min-height:85px;
+    margin:0 !important;padding:0 !important;
+    border:1px solid var(--fig-line) !important;border-radius:16px !important;
+    background:var(--fig-raised) !important;box-shadow:0 10px 35px #0006;
+  }
+  main.figma-topic .converge-topic-reply textarea {
+    min-height:83px !important;max-height:83px !important;height:83px !important;
+    resize:none !important;width:100%;margin:0 !important;
+    border:0 !important;border-radius:16px !important;
+    background:transparent !important;padding:17px 92px 17px 14px !important;
+    font-size:14px !important;line-height:19px !important;
+  }
+  main.figma-topic .converge-topic-reply >div:last-child {margin:0 !important}
+  main.figma-topic .converge-topic-reply >div:last-child >span {display:none !important}
+  main.figma-topic .converge-topic-reply button[type="submit"] {
+    position:absolute;right:13px;bottom:19px;
+    min-width:69px;min-height:39px;height:39px;padding:0 12px !important;
+    border:0 !important;border-radius:12px !important;
+    background:var(--fig-mint) !important;color:#0b1710 !important;
+    font-size:13px !important;font-weight:700;
+  }
+  main.figma-topic .figma-topic-send-mobile {display:inline}
+  main.figma-topic .figma-topic-send-desktop {display:none}
+
+  /* MOBILE 04 / Private conversation */
+  main.converge-app-page.figma-conversation {
+    height:var(--converge-chat-visible-height,100dvh) !important;
+    min-height:0 !important;display:flex !important;flex-direction:column;overflow:hidden !important;
+  }
+  main.converge-app-page.figma-conversation .converge-chat-workspace {
+    flex:1 !important;width:100% !important;min-height:0 !important;
+    height:100% !important;max-height:100% !important;margin:0 !important;padding:0 !important;
+  }
+  main.figma-conversation .converge-chat-grid,
+  main.figma-conversation .converge-chat-main {
+    height:100% !important;min-height:0 !important;max-height:100%;
+  }
+  main.figma-conversation .converge-chat-main > .converge-chat-header {
+    height:82px !important;min-height:82px !important;flex:0 0 82px !important;
+    padding:0 18px !important;margin:0 !important;gap:11px;
+    background:var(--fig-bg) !important;border-bottom:1px solid var(--fig-line) !important;
+  }
+  main.figma-conversation .converge-chat-header >a:first-child {
+    display:grid;place-items:center;width:30px;height:44px;min-width:30px;
+    min-height:44px;border:0 !important;border-radius:0 !important;
+    background:transparent;color:var(--fig-text) !important;
+  }
+  main.figma-conversation .figma-chat-private-subtitle {
+    display:block;color:var(--fig-muted);font-size:11px;line-height:16px;
+    margin-top:3px;
+  }
+  main.figma-conversation .figma-chat-member-headline,
+  main.figma-conversation .converge-chat-header__eyebrow {display:none !important}
+  main.figma-conversation .converge-chat-header h1 {
+    margin:0 !important;font-size:18px !important;line-height:24px !important;
+    font-weight:700;letter-spacing:-.02em;
+  }
+  main.figma-conversation .converge-chat-header >.flex.shrink-0,
+  main.figma-conversation .converge-chat-header >a[aria-label^="Voice calls"] {display:none !important}
+  main.figma-conversation .converge-thread-options summary {
+    display:grid;place-items:center;width:35px;height:44px;
+    min-height:44px;border:0 !important;border-radius:0 !important;
+    background:transparent !important;color:var(--fig-muted) !important;
+  }
+  main.figma-conversation .figma-chat-mobile-call-actions {display:grid;gap:2px}
+  main.figma-conversation .figma-chat-mobile-call-actions button {
+    min-height:42px;padding:9px 12px;border:0;border-radius:8px;
+    text-align:left;color:var(--fig-text);font-size:12px;
+  }
+  main.figma-conversation .converge-chat-thread {
+    flex:1 1 auto !important;height:0 !important;min-height:0 !important;
+    max-height:none !important;overflow:hidden !important;
+    border:0 !important;border-radius:0 !important;background:var(--fig-bg) !important;
+  }
+  main.figma-conversation .converge-chat-messages {
+    padding:20px 18px 26px !important;gap:24px !important;
+    background:var(--fig-bg);overflow-y:auto !important;
+  }
+  main.figma-conversation .figma-chat-privacy {
+    display:block;width:max-content;max-width:90%;
+    margin:0 auto 45px !important;padding:11px 14px;
+    border-radius:10px;background:#13251b;color:var(--fig-muted);
+    font-size:11px;line-height:15px;text-align:center;
+  }
+  main.figma-conversation .converge-chat-messages > div.flex > div {
+    max-width:86% !important;padding:15px !important;
+    border:0 !important;border-radius:12px !important;background:#1b2d22 !important;
+  }
+  main.figma-conversation .converge-chat-messages > div.flex.justify-end >div {
+    background:#203d2c !important;
+  }
+  main.figma-conversation .converge-chat-messages > div.flex >div p:first-child {
+    color:var(--fig-text) !important;font-size:13px !important;line-height:18px !important;
+  }
+  main.figma-conversation .converge-chat-messages > div.flex >div p:last-child {
+    font-size:10px !important;margin-top:12px !important;color:var(--fig-muted) !important;
+  }
+  main.figma-conversation .converge-chat-composer {
+    position:relative;flex:0 0 auto !important;width:auto;
+    min-height:68px;margin:0 17px max(16px,env(safe-area-inset-bottom)) !important;
+    padding:0 !important;background:transparent !important;border:0 !important;
+  }
+  main.figma-conversation .converge-chat-composer >div:first-of-type {
+    display:flex;align-items:center;min-height:68px;height:68px;
+    border:1px solid var(--fig-line) !important;border-radius:16px !important;
+    background:var(--fig-raised) !important;padding:8px 10px 8px 15px !important;
+  }
+  main.figma-conversation .converge-chat-composer textarea {
+    min-height:44px !important;max-height:44px !important;
+    padding:10px 0 !important;margin:0 !important;
+    background:transparent !important;border:0 !important;resize:none !important;
+    font-size:14px !important;line-height:23px !important;
+  }
+  main.figma-conversation .converge-chat-composer button[type="submit"] {
+    display:inline-flex;min-height:39px !important;height:39px !important;
+    border:0 !important;border-radius:11px !important;
+    background:var(--fig-mint) !important;color:#0b1710 !important;
+    padding:0 12px !important;
+  }
+  main.figma-conversation .converge-chat-composer button[type="submit"] svg {display:none}
+  main.figma-conversation .converge-chat-composer #converge-message-composer-help {
+    position:absolute !important;width:1px !important;height:1px !important;
+    padding:0 !important;overflow:hidden !important;clip:rect(0,0,0,0);
+    white-space:nowrap;border:0 !important;
+  }
+  main.figma-conversation .converge-chat-composer >div[role="status"] {
+    min-height:0 !important;
+  }
+}
