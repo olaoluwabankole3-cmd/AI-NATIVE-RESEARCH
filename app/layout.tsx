@@ -3,6 +3,7 @@ import "./globals.css";
 import "./marketing.css";
 import "./application-redesign.css";
 import "./application-refinement.css";
+import "./figma-parity.css";
 import { IncomingVoiceCall } from "@/components/incoming-voice-call";
 import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
