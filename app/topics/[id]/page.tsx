@@ -678,8 +678,8 @@ export default function TopicPage() {
           )}
           {topic.type === "RESEARCH" && currentParticipantId && (
             <div className="converge-room-tabbar" role="tablist" aria-label="Research room views">
-              <button type="button" role="tab" id="converge-discussion-tab" aria-controls="topic-discussion" aria-selected={mobileSection === "discussion"} onClick={() => setMobileSection("discussion")}>Discussion · {posts.length}</button>
-              <button type="button" role="tab" id="converge-evidence-tab" aria-controls="converge-room-evidence-panel" aria-selected={mobileSection === "evidence"} onClick={() => setMobileSection("evidence")}>Evidence &amp; synthesis</button>
+              <button type="button" role="tab" id="converge-discussion-tab" aria-controls="topic-discussion" aria-selected={mobileSection === "discussion"} onClick={() => setMobileSection("discussion")} aria-label={`Discussion, ${posts.length} replies`}>Discussion</button>
+              <button type="button" role="tab" id="converge-evidence-tab" aria-controls="converge-room-evidence-panel" aria-selected={mobileSection === "evidence"} onClick={() => setMobileSection("evidence")} aria-label="Evidence and synthesis">Evidence</button>
             </div>
           )}
           <div className={["converge-room-layout", topic.type !== "RESEARCH" || !currentParticipantId ? "converge-room-layout--discussion-only" : ""].join(" ")} data-mobile-tab={mobileSection}>
