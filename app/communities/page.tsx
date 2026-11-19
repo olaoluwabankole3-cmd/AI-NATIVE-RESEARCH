@@ -153,10 +153,11 @@ export default function CommunitiesPage() {
       </nav>}
       <div className="figma-research-container mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
         <div className="converge-page-intro flex flex-col gap-2 border-b border-white/[0.09] py-7 sm:py-9">
+          <Link href="/communities" className="figma-research-desktop-logo" aria-label="Converge research home"><img src="/converge-header-lockup.svg" alt="Converge" width={175} height={41} /></Link>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">CONVERGE / RESEARCH</p>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
-              <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl">Research</h1>
+              <h1 className="text-3xl font-semibold tracking-[-0.045em] sm:text-4xl"><span className="figma-research-title-mobile">Research</span><span className="figma-research-title-desktop">Research spaces</span></h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/50">Explore live questions, enter a research space, and turn discussion into evidence you can revisit.</p>
             </div>
             <button type="button" aria-expanded={showForm} aria-controls="create-community-form" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100">
