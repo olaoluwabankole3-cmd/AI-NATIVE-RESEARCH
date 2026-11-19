@@ -27,7 +27,9 @@ test("Research home leads people from questions to communities and AI specialist
   assert.match(hub, /href="#communities-directory"/);
   assert.match(hub, /href="\/agents"/);
   assert.match(hub, /Search communities and topics/);
-  assert.match(hub, /Explore spaces/);
+  assert.match(hub, /Research spaces/);
+  assert.match(hub, /Your spaces/);
+  assert.match(hub, /communityView/);
   assert.match(hub, /Community directory/);
   assert.match(hub, /handleCreate/);
 });
