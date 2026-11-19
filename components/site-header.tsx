@@ -546,13 +546,13 @@ export function SiteHeader() {
             const active = isActiveDestination(pathname, item.href);
             return (
               <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={() => setMobileOpen(false)} className={["converge-mobile-dock__item", active ? "is-active" : ""].join(" ")}>
-                <MobileGlyph name={item.kind} />
+                <span className="figma-dock-glyph"><MobileGlyph name={item.kind} /></span>
                 <span>{item.label}</span>
               </Link>
             );
           })}
           <button ref={mobileMenuTriggerRef} type="button" aria-haspopup="dialog" aria-controls="converge-mobile-more-panel" aria-expanded={Boolean(mobileOpen && userEmail)} aria-label={mobileOpen && userEmail ? "Close More menu" : "Open More menu"} onClick={() => setMobileOpen((open) => !open)} className={["converge-mobile-dock__item", mobileOpen || !mobileLinksPrimary.some((item) => isActiveDestination(pathname, item.href)) ? "is-active" : ""].join(" ")}>
-            <MobileGlyph name="more" />
+            <span className="figma-dock-glyph"><MobileGlyph name="more" /></span>
             <span>More</span>
             {unreadNotifications > 0 && <span className="converge-mobile-dock__badge" aria-label={`${unreadNotifications} unread notifications`}>{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
           </button>
