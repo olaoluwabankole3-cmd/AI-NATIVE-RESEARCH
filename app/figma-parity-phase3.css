@@ -1,0 +1,304 @@
+/* Figma approval draft: MOBILE 14 Notifications inbox (390x844)
+ * DESKTOP 08 Notifications & activity (1440x900).
+ * Live Supabase notification data; never substitute sample Figma content.
+ * Authenticated application route only.
+ */
+main.converge-app-page.figma-notifications {
+  --fig-bg:#0b1110;--fig-nav:#0e1914;--fig-panel:#14231b;
+  --fig-raised:#1a2a22;--fig-hover:#213c2a;--fig-mint:#a6e6bd;
+  --fig-teal:#40bca0;--fig-text:#f5fbf6;--fig-muted:#9cb3a4;
+  --fig-line:#294334;
+  background:var(--fig-bg) !important;color:var(--fig-text);
+}
+main.figma-notifications .figma-notifications-mobile-toolbar,
+main.figma-notifications .figma-notifications-navigator,
+main.figma-notifications .figma-notifications-inspector,
+main.figma-notifications .figma-notifications-date-label,
+main.figma-notifications .figma-notifications-mobile-heading,
+main.figma-notifications .figma-notifications-mobile-unread {display:none}
+main.figma-notifications .figma-notifications-row-top {
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  font-size:10px;line-height:15px;
+}
+main.figma-notifications .figma-notifications-row-top .figma-notifications-category {
+  color:var(--fig-mint);font-size:10px;font-weight:800;text-transform:uppercase;
+}
+main.figma-notifications .figma-notifications-row-top time {
+  color:var(--fig-muted);font-size:10px;font-weight:400;
+}
+main.figma-notifications .figma-notifications-row-title {
+  color:var(--fig-text);font-size:15px;line-height:20px;font-weight:700;
+  margin:11px 0 0;
+}
+main.figma-notifications .converge-notifications-list .figma-notification-card {
+  background:#1b2d22;border:1px solid var(--fig-line);border-radius:17px;
+  position:relative;
+}
+main.figma-notifications .converge-notifications-list .figma-notification-card.is-unread {
+  background:#203b2b;
+}
+main.figma-notifications .converge-notifications-list .figma-notification-card::before {
+  position:absolute;left:0;top:14px;bottom:14px;content:"";
+  width:3px;border-radius:3px;background:#496757;
+}
+main.figma-notifications .converge-notifications-list .figma-notification-card.is-unread::before {
+  background:var(--fig-teal);
+}
+main.figma-notifications .converge-notifications-list .figma-notification-card > button:first-of-type {
+  align-self:stretch;padding:0;border:0;
+}
+main.figma-notifications .converge-notifications-list .figma-notification-card > button:first-of-type > p {
+  margin-top:11px;color:var(--fig-muted);font-size:12px;line-height:17px;
+}
+main.figma-notifications .converge-notifications-list .figma-notification-card > button[aria-label="Dismiss notification"] {
+  width:32px;min-width:32px;min-height:38px;align-self:flex-end;
+  color:var(--fig-muted);font-size:19px;
+}
+main.figma-notifications .converge-notifications-controls .figma-notifications-mark-all {
+  margin-left:auto;border:0;background:var(--fig-hover);color:var(--fig-text);
+  border-radius:11px;padding:0 15px;min-height:34px;white-space:nowrap;
+  font-size:12px;font-weight:700;
+}
+main.figma-notifications :is(a,button,summary,input):focus-visible {
+  outline:2px solid var(--fig-mint);outline-offset:2px;
+}
+@media (min-width:1280px) {
+  main.converge-app-page.figma-notifications {min-height:100dvh;overflow-x:hidden}
+  main.figma-notifications .figma-notifications-navigator {
+    position:fixed;display:flex;flex-direction:column;overflow:auto;
+    left:82px;top:0;bottom:0;width:368px;z-index:6;
+    padding:23px 25px;background:var(--fig-nav);border-right:1px solid var(--fig-line);
+  }
+  main.figma-notifications .figma-notifications-brand {
+    display:flex;height:42px;align-items:center;margin:0 0 44px;
+    color:var(--fig-text);font-size:22px;font-weight:800;letter-spacing:-.05em;
+  }
+  main.figma-notifications .figma-notifications-navigator h2 {
+    color:var(--fig-text);font-size:28px;line-height:34px;font-weight:700;margin-bottom:21px;
+  }
+  main.figma-notifications .figma-notifications-navigator input {
+    width:100%;height:44px !important;padding:0 15px !important;
+    border:0 !important;border-radius:13px !important;
+    background:var(--fig-hover) !important;color:var(--fig-text) !important;
+    font-size:13px;
+  }
+  main.figma-notifications .figma-notifications-sidebar-tabs {
+    display:flex;gap:11px;margin:17px 0 32px;
+  }
+  main.figma-notifications .figma-notifications-sidebar-tabs button {
+    display:grid;place-items:center;height:32px;min-width:57px;
+    padding:0 13px;border:1px solid var(--fig-line);border-radius:11px;
+    background:var(--fig-raised);color:var(--fig-muted);
+    font-size:11px;font-weight:700;
+  }
+  main.figma-notifications .figma-notifications-sidebar-tabs button[aria-pressed="true"] {
+    background:var(--fig-mint);color:#0b1710;border-color:var(--fig-mint);
+  }
+  main.figma-notifications .figma-notifications-navigator > p {
+    margin:0 0 12px;color:var(--fig-teal);font-size:11px;font-weight:800;
+  }
+  main.figma-notifications .figma-notifications-navigator nav {
+    display:grid;gap:9px;
+  }
+  main.figma-notifications .figma-notifications-navigator nav button {
+    display:flex;width:100%;min-height:82px;align-items:center;gap:14px;
+    text-align:left;padding:12px 11px;border:1px solid transparent;
+    border-radius:13px;background:transparent;color:var(--fig-text);
+  }
+  main.figma-notifications .figma-notifications-navigator nav button[aria-pressed="true"] {
+    background:#203c2b;border-color:#40bca0;
+  }
+  main.figma-notifications .figma-notifications-category-icon {
+    display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;
+    background:#244231;border-radius:50%;color:var(--fig-mint);
+    font-size:12px;font-weight:800;
+  }
+  main.figma-notifications .figma-notifications-navigator nav button span:last-child {
+    display:flex;flex-direction:column;gap:8px;
+  }
+  main.figma-notifications .figma-notifications-navigator nav button strong {
+    font-size:13px;font-weight:700;
+  }
+  main.figma-notifications .figma-notifications-navigator nav button small {
+    font-size:12px;color:var(--fig-muted);
+  }
+  main.converge-app-page.figma-notifications .figma-notifications-container {
+    max-width:none;width:auto;margin:0 300px 0 368px;
+    padding:27px 25px 48px !important;
+  }
+  main.figma-notifications .converge-page-intro {
+    margin:0;padding:0 0 28px !important;min-height:128px;
+    border-bottom:1px solid var(--fig-line) !important;
+  }
+  main.figma-notifications .converge-page-intro p:first-child {
+    display:block;color:var(--fig-teal);font-size:11px;font-weight:800;
+    letter-spacing:0;text-transform:uppercase;
+  }
+  main.figma-notifications .converge-page-intro h1 {
+    margin:15px 0 !important;font-size:28px !important;line-height:34px !important;
+    font-weight:700;letter-spacing:-.04em;
+  }
+  main.figma-notifications .converge-page-intro p:last-child {
+    margin:0;color:var(--fig-muted);font-size:13px;line-height:18px;
+  }
+  main.figma-notifications .converge-notifications-controls {
+    display:flex;justify-content:flex-end;padding:26px 4px 21px;
+    gap:0;margin:0;border:0 !important;
+  }
+  main.figma-notifications .converge-notifications-controls >button[role="tab"] {
+    display:none !important;
+  }
+  main.figma-notifications .converge-notifications-controls .figma-notifications-mark-all {
+    height:42px;min-height:42px;padding:0 17px;background:#253e2d;
+  }
+  main.figma-notifications .converge-notifications-list {
+    display:grid;gap:10px;margin:0 !important;padding:0 !important;
+    border:0 !important;border-radius:0 !important;background:transparent !important;
+  }
+  main.figma-notifications .converge-notifications-list .figma-notification-card {
+    min-height:116px;margin:0;padding:15px 16px !important;gap:0 !important;
+  }
+  main.figma-notifications .figma-notification-card >div.relative {
+    display:none !important;
+  }
+  main.figma-notifications .figma-notification-card >button:first-of-type {
+    padding:0;align-self:auto;
+  }
+  main.figma-notifications .figma-notifications-helper {display:none}
+  main.figma-notifications .figma-notifications-inspector {
+    display:flex;position:fixed;top:0;bottom:0;right:0;width:300px;
+    padding:44px 20px;flex-direction:column;overflow-y:auto;
+    background:var(--fig-nav);border-left:1px solid var(--fig-line);
+  }
+  main.figma-notifications .figma-notifications-inspector >p {
+    color:var(--fig-teal);font-size:11px;font-weight:800;
+  }
+  main.figma-notifications .figma-notifications-inspector h2 {
+    margin:22px 0 34px;font-size:21px;font-weight:700;line-height:26px;
+  }
+  main.figma-notifications .figma-notifications-inspector section {
+    display:flex;flex-direction:column;gap:23px;margin:0 0 45px;
+    padding:21px 15px;border:1px solid var(--fig-line);
+    border-radius:17px;background:#1b2d22;
+  }
+  main.figma-notifications .figma-notifications-inspector section h3 {
+    color:var(--fig-text);font-size:16px;font-weight:700;
+  }
+  main.figma-notifications .figma-notifications-inspector section span,
+  main.figma-notifications .figma-notifications-inspector >span {
+    color:var(--fig-muted);font-size:13px;line-height:19px;
+  }
+  main.figma-notifications .figma-notifications-inspector >p:nth-of-type(2) {
+    border-top:1px solid var(--fig-line);padding-top:25px;
+  }
+  main.figma-notifications .figma-notifications-inspector >span {margin-top:22px}
+  main.figma-notifications .figma-notifications-inspector >a {
+    margin-top:62px;padding:13px;border-radius:12px;
+    background:#223b2a;color:var(--fig-text);
+    font-size:12px;font-weight:700;
+  }
+}
+@media (max-width:767px) {
+  main.converge-app-page.figma-notifications {padding:0 !important}
+  main.figma-notifications > .converge-app-header {display:none !important}
+  main.figma-notifications .figma-notifications-mobile-toolbar {
+    display:grid;grid-template-columns:29px 1fr 30px;align-items:center;
+    gap:12px;height:82px;min-height:82px;padding:0 20px;
+    border-bottom:1px solid var(--fig-line);background:var(--fig-bg);
+  }
+  main.figma-notifications .figma-notifications-mobile-toolbar >a {
+    display:flex;align-items:center;justify-content:flex-start;
+    width:29px;min-height:44px;color:var(--fig-text);font-size:29px;
+  }
+  main.figma-notifications .figma-notifications-mobile-toolbar strong {
+    color:var(--fig-text);font-size:18px;font-weight:700;
+  }
+  main.figma-notifications .figma-notifications-mobile-toolbar details {position:relative}
+  main.figma-notifications .figma-notifications-mobile-toolbar summary {
+    list-style:none;display:grid;place-items:center;cursor:pointer;
+    width:30px;min-height:44px;font-size:24px;color:var(--fig-muted);
+  }
+  main.figma-notifications .figma-notifications-mobile-toolbar summary::-webkit-details-marker {display:none}
+  main.figma-notifications .figma-notifications-mobile-toolbar details >div {
+    display:grid;position:absolute;right:0;top:42px;z-index:30;gap:0;
+    width:160px;padding:7px;border:1px solid var(--fig-line);
+    border-radius:12px;background:var(--fig-panel);box-shadow:0 8px 30px #0009;
+  }
+  main.figma-notifications .figma-notifications-mobile-toolbar details >div a {
+    min-height:41px;padding:11px;font-size:12px;
+  }
+  main.converge-app-page.figma-notifications .figma-notifications-container {
+    width:100%;max-width:none;padding:0 20px 110px !important;
+    margin:0 !important;
+  }
+  main.figma-notifications .converge-page-intro {
+    display:block !important;position:relative;min-height:78px;
+    padding:24px 0 0 !important;margin:0 !important;border:0 !important;
+  }
+  main.figma-notifications .converge-page-intro p:first-child,
+  main.figma-notifications .converge-page-intro p:last-child {display:none !important}
+  main.figma-notifications .converge-page-intro h1 {
+    margin:0 !important;max-width:250px;font-size:26px !important;
+    line-height:32px !important;letter-spacing:-.035em !important;font-weight:700;
+  }
+  main.figma-notifications .figma-notifications-mobile-heading,
+  main.figma-notifications .figma-notifications-mobile-unread {display:inline}
+  main.figma-notifications .figma-notifications-mobile-unread {
+    position:absolute;top:33px;right:0;color:var(--fig-mint);
+    font-size:12px;line-height:18px;font-weight:700;
+  }
+  main.figma-notifications .figma-notifications-desktop-heading {display:none}
+  main.figma-notifications .converge-notifications-controls {
+    display:flex !important;align-items:center;gap:11px;margin:0 !important;
+    padding:0 0 0 !important;min-height:34px;
+    background:transparent !important;border:0 !important;
+  }
+  main.figma-notifications .converge-notifications-controls button[role="tab"] {
+    display:grid;place-items:center;min-width:56px;height:34px;
+    min-height:34px;padding:0 13px;border:0 !important;
+    border-radius:11px !important;background:var(--fig-raised) !important;
+    color:var(--fig-muted) !important;font-size:12px;font-weight:700;
+  }
+  main.figma-notifications .converge-notifications-controls button[role="tab"][aria-selected="true"] {
+    background:var(--fig-mint) !important;color:#0b1710 !important;
+  }
+  main.figma-notifications .converge-notifications-controls .figma-notifications-mark-all {
+    height:34px;min-height:34px;padding:0 12px;font-size:12px !important;
+    border-radius:10px !important;background:#253e2d;
+  }
+  main.figma-notifications .figma-notifications-date-label {
+    display:block;color:var(--fig-teal);margin:30px 0 13px;
+    font-size:10px;line-height:14px;font-weight:800;letter-spacing:.035em;
+  }
+  main.figma-notifications .converge-notifications-list {
+    display:grid;gap:12px;margin:0 !important;padding:0 !important;
+    border:0 !important;border-radius:0 !important;background:transparent !important;
+    overflow:visible !important;
+  }
+  main.figma-notifications .converge-notifications-list .figma-notification-card {
+    min-height:105px;padding:13px 12px !important;gap:0 !important;
+    margin:0 !important;border:1px solid var(--fig-line) !important;
+    border-radius:16px !important;background:#1b2d22 !important;
+  }
+  main.figma-notifications .converge-notifications-list .figma-notification-card.is-unread {
+    background:#203b2b !important;
+  }
+  main.figma-notifications .figma-notification-card >div.relative {display:none !important}
+  main.figma-notifications .figma-notification-card >button:first-of-type {padding:0}
+  main.figma-notifications .figma-notification-card >button:first-of-type >p {
+    margin:11px 0 0;font-size:12px;line-height:17px;color:var(--fig-muted);
+  }
+  main.figma-notifications .figma-notification-card >button[aria-label="Dismiss notification"] {
+    display:none !important;
+  }
+  main.figma-notifications .figma-notifications-helper {
+    margin:12px 2px 0 !important;color:var(--fig-muted);font-size:11px;
+    line-height:16px;
+  }
+}
+@media (min-width:768px) and (max-width:1279px){
+  main.figma-notifications .figma-notifications-container {
+    width:100%;max-width:980px;margin:auto;
+  }
+  main.figma-notifications .figma-notifications-desktop-heading {display:inline}
+}
