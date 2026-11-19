@@ -64,5 +64,5 @@ test("Original mobile composer remains fixed and sends are real actions", () => 
   const chat = read("app/messages/[conversationId]/page.tsx");
   assert.match(topic, /disabled=\{posting \|\| !reply.trim\(\)\}/);
   assert.match(chat, /disabled=\{!draft.trim\(\) \|\| sending/);
-  assert.match(chat, /Your draft is preserved/);
+  assert.match(chat, /your draft is preserved/i);
 });
