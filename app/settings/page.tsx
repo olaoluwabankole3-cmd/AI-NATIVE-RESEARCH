@@ -72,14 +72,19 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page converge-figma figma-settings min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
-      <div className="converge-settings mx-auto max-w-4xl px-5 pb-24 pt-9 sm:px-8 sm:pt-12">
+      <nav className="figma-account-mobile-bar" aria-label="Settings navigation">
+        <Link href="/communities" aria-label="Back to Research">‹</Link>
+        <strong>Settings</strong>
+        <Link href="/profile" aria-label="Open profile">⋯</Link>
+      </nav>
+      <div className="converge-settings figma-settings-container mx-auto max-w-4xl px-5 pb-24 pt-9 sm:px-8 sm:pt-12">
         <div className="border-b border-white/[0.09] pb-8 sm:pb-10">
           <p className="mb-3 text-[9px] font-extrabold uppercase tracking-[0.2em] text-emerald-200/70">Your account</p>
-          <h1 className="text-3xl font-semibold tracking-[-0.055em] sm:text-[40px]">Settings</h1>
+          <h1 className="text-3xl font-semibold tracking-[-0.055em] sm:text-[40px]"><span className="figma-settings-mobile-title">Your account</span><span className="figma-settings-desktop-title">Settings</span></h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-white/55">
-            Manage your profile, notifications and account safely. Controls that are not yet available are clearly labelled.
+            <span className="figma-settings-mobile-copy">Only available controls are actionable.</span><span className="figma-settings-desktop-copy">Manage your profile, notifications and account safely. Controls that are not yet available are clearly labelled.</span>
           </p>
         </div>
 
@@ -93,29 +98,30 @@ export default function SettingsPage() {
           <>
             <section className="mt-8">
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#9bb5a2]">Available now</h2>
+                <h2 className="figma-settings-available-heading text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#9bb5a2]">Available now</h2>
                 <span className="text-[10px] text-white/35">Working destinations</span>
               </div>
-              <div className="divide-y divide-white/[0.08] border-y border-white/[0.08]">
+              <div className="figma-settings-rows divide-y divide-white/[0.08] border-y border-white/[0.08]">
                 {currentSettings.map((item) => (
-                  <Link key={item.href} href={item.href} className="group flex items-center gap-4 py-5 transition-colors hover:bg-white/[0.02] sm:px-3">
+                  <Link key={item.href} href={item.href} className="figma-settings-row group flex items-center gap-4 py-5 transition-colors hover:bg-white/[0.02] sm:px-3">
                     <span className="min-w-0 flex-1">
                       <strong className="block text-sm font-semibold text-white/85 transition-colors group-hover:text-emerald-100">{item.title}</strong>
                       <span className="mt-1 block max-w-2xl text-xs leading-6 text-white/45">{item.description}</span>
                     </span>
                     <span className="hidden shrink-0 items-center gap-2 text-[11px] font-semibold text-emerald-200 sm:inline-flex">{item.action}<span aria-hidden="true">↗</span></span>
-                    <span className="shrink-0 text-emerald-200 sm:hidden" aria-hidden="true">↗</span>
+                    <span className="shrink-0 text-emerald-200 sm:hidden" aria-hidden="true">›</span>
                   </Link>
                 ))}
               </div>
             </section>
 
-            <section className="mt-11">
+            <section className="figma-settings-planned mt-11">
               <div className="mb-2 flex items-center justify-between gap-3">
-                <h2 className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#9bb5a2]">Still to be configured</h2>
+                <h2 className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#9bb5a2]"><span className="figma-settings-mobile-copy">PLANNED · NOT ACTIVE</span><span className="figma-settings-desktop-copy">Still to be configured</span></h2>
                 <span className="rounded-full border border-white/[0.1] px-2.5 py-1 text-[9px] font-semibold text-white/40">Not live yet</span>
               </div>
-              <div className="divide-y divide-white/[0.07] border-y border-white/[0.08]">
+              <p className="figma-settings-planned-summary">Appearance, language, AI preferences and connected apps stay clearly labelled as planned until fully supported.</p>
+               <div className="figma-settings-planned-list divide-y divide-white/[0.07] border-y border-white/[0.08]">
                 {plannedSettings.map((item) => (
                   <div key={item.title} className="flex items-start gap-4 py-4 sm:px-3">
                     <span className="min-w-0 flex-1">
@@ -128,8 +134,8 @@ export default function SettingsPage() {
               </div>
             </section>
 
-            <section id="account-deletion" className="mt-11 scroll-mt-24 rounded-xl border border-red-300/20 bg-red-300/[0.025] p-5 sm:p-7">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-200/75">Account management</p>
+            <section id="account-deletion" className="figma-settings-danger mt-11 scroll-mt-24 rounded-xl border border-red-300/20 bg-red-300/[0.025] p-5 sm:p-7">
+              <p className="figma-settings-danger-label text-[10px] font-extrabold uppercase tracking-[0.16em] text-red-200/75">Account management</p>
               <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                 <div className="max-w-2xl">
                   <h2 className="text-lg font-semibold text-white/90">Delete your Converge account</h2>
