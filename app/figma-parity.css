@@ -665,3 +665,125 @@ main.converge-app-page.converge-figma :is(a,button,input,select,textarea):focus-
   main.converge-app-page.figma-agents .converge-specialist-directory__context {display:none !important;}
   /* All original screens use real actions, no fake static rows or sample researchers. */
 }
+
+/* Settings — measured original MOBILE 09 / Settings and account safety.
+ * Focused toolbar 82px, four 350x83px account links, transparent planning note,
+ * destructive flow collapsed until user requests account deletion. */
+main.converge-app-page.converge-figma .figma-account-mobile-bar,
+main.converge-app-page.converge-figma .figma-settings-mobile-title,
+main.converge-app-page.converge-figma .figma-settings-mobile-copy,
+main.converge-app-page.converge-figma .figma-settings-planned-summary,
+main.converge-app-page.converge-figma .figma-settings-danger-mobile {display:none;}
+@media(max-width:767px) {
+  main.converge-app-page.figma-settings {
+    padding:0 !important;min-height:100dvh !important;
+  }
+  main.converge-app-page.figma-settings > .converge-app-header,
+  main.converge-app-page.figma-settings > .converge-mobile-dock {display:none !important;}
+  main.converge-app-page.figma-settings .figma-account-mobile-bar {
+    display:grid;grid-template-columns:36px minmax(0,1fr) 36px;
+    align-items:center;height:82px;padding:0 20px;
+    border-bottom:1px solid var(--fig-line);
+  }
+  main.converge-app-page.figma-settings .figma-account-mobile-bar a {
+    display:grid;place-items:center;min-height:44px;
+    color:var(--fig-text);font-size:29px;line-height:1;text-decoration:none;
+  }
+  main.converge-app-page.figma-settings .figma-account-mobile-bar a:last-child {
+    color:var(--fig-muted);font-size:22px;
+  }
+  main.converge-app-page.figma-settings .figma-account-mobile-bar strong {
+    padding-left:9px;font-size:19px;font-weight:700;
+  }
+  main.converge-app-page.figma-settings > .figma-settings-container {
+    width:100% !important;max-width:none !important;
+    margin:0 !important;padding:22px 20px 42px !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-container >div:first-child {
+    margin:0 !important;padding:0 !important;border:0 !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-container >div:first-child > p:first-child {display:none !important;}
+  main.converge-app-page.figma-settings .figma-settings-container h1 {
+    margin:0 !important;font-size:27px !important;
+    line-height:35px !important;letter-spacing:-.04em !important;
+    font-weight:700 !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-desktop-title,
+  main.converge-app-page.figma-settings .figma-settings-desktop-copy,
+  main.converge-app-page.figma-settings .figma-settings-available-heading {display:none !important;}
+  main.converge-app-page.figma-settings .figma-settings-mobile-title,
+  main.converge-app-page.figma-settings .figma-settings-mobile-copy {display:inline !important;}
+  main.converge-app-page.figma-settings .figma-settings-container >div:first-child >p:last-child {
+    margin:5px 0 0 !important;color:var(--fig-muted) !important;
+    font-size:13px !important;line-height:20px !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-container >:not(div:first-child) >section:first-child {
+    margin:36px 0 0 !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-rows {
+    display:grid !important;gap:14px !important;
+    padding:0 !important;border:0 !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-row {
+    min-height:83px !important;margin:0 !important;
+    padding:15px 14px !important;gap:8px !important;
+    border:1px solid var(--fig-line) !important;border-radius:14px !important;
+    background:var(--fig-raised) !important;
+    text-decoration:none;
+  }
+  main.converge-app-page.figma-settings .figma-settings-row strong {
+    font-size:15px !important;font-weight:600 !important;
+    line-height:19px !important;color:var(--fig-text) !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-row span.mt-1 {
+    display:block;max-width:270px !important;
+    margin-top:9px !important;font-size:12px !important;
+    line-height:17px !important;color:var(--fig-muted) !important;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  main.converge-app-page.figma-settings .figma-settings-row >span:last-child {
+    color:var(--fig-mint) !important;font-size:21px !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-planned {
+    margin:39px 0 0 !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-planned h2 {
+    font-size:11px !important;font-weight:700;color:var(--fig-teal) !important;
+    line-height:16px !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-planned >div:first-child >span,
+  main.converge-app-page.figma-settings .figma-settings-planned-list {display:none !important;}
+  main.converge-app-page.figma-settings .figma-settings-planned-summary {
+    display:block !important;margin:16px 0 0 !important;
+    color:var(--fig-muted);font-size:13px;line-height:16px;
+  }
+  main.converge-app-page.figma-settings .figma-settings-danger:not(:has(form)) {
+    display:flex;align-items:center;
+    min-height:57px !important;margin:34px 0 0 !important;
+    padding:0 16px !important;
+    border:1px solid var(--fig-line) !important;
+    border-radius:13px !important;background:#14231b !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-danger:not(:has(form)) >p,
+  main.converge-app-page.figma-settings .figma-settings-danger:not(:has(form)) h2,
+  main.converge-app-page.figma-settings .figma-settings-danger:not(:has(form)) div.max-w-2xl {
+    display:none !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-danger:not(:has(form)) >div {
+    margin:0 !important;gap:0 !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-danger-action {
+    display:flex !important;align-items:center !important;
+    min-height:45px;padding:0 !important;border:0 !important;
+    background:transparent !important;box-shadow:none !important;
+    font-size:12px !important;color:#e7a69d !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-danger-desktop {display:none !important;}
+  main.converge-app-page.figma-settings .figma-settings-danger-mobile {display:inline !important;}
+  main.converge-app-page.figma-settings .figma-settings-danger:has(form) {
+    margin-top:28px !important;padding:20px !important;
+    border:1px solid #713a39 !important;
+    background:#1b1515 !important;
+  }
+  main.converge-app-page.figma-settings .figma-settings-container >:last-child >p:last-child {display:none !important;}
+}
