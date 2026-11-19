@@ -242,13 +242,19 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]"><SiteHeader /><div className="mx-auto max-w-5xl px-5 py-20"><div className="h-6 w-44 animate-pulse rounded bg-white/10" /><div className="mt-5 h-48 animate-pulse rounded-2xl border border-white/10 bg-white/[0.02]" /></div></main>;
+    return <main className="converge-app-page converge-figma figma-profile min-h-screen bg-[#0b1110] text-[#edf5ee]"><SiteHeader /><div className="mx-auto max-w-5xl px-5 py-20"><div className="h-6 w-44 animate-pulse rounded bg-white/10" /><div className="mt-5 h-48 animate-pulse rounded-2xl border border-white/10 bg-white/[0.02]" /></div></main>;
   }
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]">
+    <main className="converge-app-page converge-figma figma-profile min-h-screen bg-[#0b1110] text-[#edf5ee]">
       <SiteHeader />
-      <div className="mx-auto max-w-[1240px] px-4 pb-16 sm:px-7 lg:px-10">
+      <nav className="figma-account-mobile-bar" aria-label="Edit profile navigation">
+        <Link href="/settings" aria-label="Back to Settings">‹</Link>
+        <strong>Edit profile</strong>
+        {profileUrl ? <Link href={profileUrl} aria-label="View public profile">⋯</Link> :
+          <Link href="/settings" aria-label="Account settings">⋯</Link>}
+      </nav>
+      <div className="figma-profile-container mx-auto max-w-[1240px] px-4 pb-16 sm:px-7 lg:px-10">
         <section className="converge-page-intro border-b border-white/[0.09] py-8 sm:py-10">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">Your identity / Profile</p>
           <div className="mt-3 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -263,32 +269,28 @@ export default function ProfilePage() {
         {message && <div role={messageTone === "error" ? "alert" : "status"} className={`mt-5 rounded-xl border px-4 py-3 text-sm leading-6 ${messageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : messageTone === "success" ? "border-emerald-200/20 bg-emerald-200/[0.06] text-emerald-100" : "border-white/10 bg-white/[0.03] text-white/70"}`}>{message}</div>}
 
         <div className="grid gap-6 pt-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
-          <form onSubmit={handleSave} className="space-y-5">
+          <form onSubmit={handleSave} className="figma-profile-form space-y-5">
             <section className="converge-app-section-card rounded-2xl border border-white/[0.09] bg-[#101815]/85 p-5 sm:p-7">
-              <div className="flex items-start gap-4 border-b border-white/[0.08] pb-5 sm:gap-5">
-                <div className="grid size-[76px] shrink-0 place-items-center overflow-hidden rounded-[23px] border border-emerald-200/20 bg-emerald-200/[0.09] text-xl font-bold text-emerald-100 sm:size-[88px]">
+              <div className="figma-profile-avatar-section flex items-start gap-4 border-b border-white/[0.08] pb-5 sm:gap-5">
+                <div className="figma-profile-avatar grid size-[76px] shrink-0 place-items-center overflow-hidden rounded-[23px] border border-emerald-200/20 bg-emerald-200/[0.09] text-xl font-bold text-emerald-100 sm:size-[88px]">
                   {form.avatar_url ? <img src={form.avatar_url} alt="Profile picture preview" className="size-full object-cover" /> : nameInitials}
                 </div>
-                <div className="min-w-0 flex-1 pt-1">
+                <div className="figma-profile-photo-controls min-w-0 flex-1 pt-1">
                   <h2 className="text-base font-semibold">Profile picture</h2>
                   <p className="mt-1.5 text-xs leading-5 text-white/45">A clear image helps people recognise you in discussions and research.</p>
                   <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/15 px-3.5 py-2 text-xs font-semibold text-white/75 transition hover:border-emerald-200/35 hover:text-white">
-                    {uploading ? "Uploading picture…" : form.avatar_url ? "Change picture" : "Upload picture"}
+                    {uploading ? "Uploading picture…" : <><span className="figma-profile-photo-desktop">{form.avatar_url ? "Change picture" : "Upload picture"}</span><span className="figma-profile-photo-mobile">Change photo ↗</span></>}
                     <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={uploading} onChange={handleAvatarChange} className="sr-only" />
                   </label>
                   <p className="mt-2 text-[10px] text-white/30">JPG, PNG, WebP or GIF · Maximum 5 MB</p>
                 </div>
               </div>
 
-              <div className="grid gap-5 pt-5 sm:grid-cols-2">
+              <div className="figma-profile-core grid gap-5 pt-5 sm:grid-cols-2">
                 <label className={labelClass}>Display name <span className="text-emerald-200">*</span><input className={fieldClass} value={form.display_name} onChange={(event) => update("display_name", event.target.value)} maxLength={80} required placeholder="How people should address you" /></label>
                 <label className={labelClass}>Username <span className="text-white/35 font-normal">(optional)</span><div className="mt-2 flex items-center rounded-xl border border-white/[0.11] bg-[#0a100d] focus-within:border-emerald-200/55"><span className="pl-3.5 text-sm text-white/35">@</span><input className="w-full bg-transparent px-2.5 py-3 text-sm outline-none placeholder:text-white/25" value={form.username} onChange={(event) => update("username", event.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))} maxLength={24} autoCapitalize="none" placeholder="yourhandle" /></div><span className="mt-1.5 block text-[10px] font-normal text-white/35">3–24 letters, numbers or underscores.</span></label>
                 <label className={labelClass}>Headline<input className={fieldClass} value={form.headline} onChange={(event) => update("headline", event.target.value)} maxLength={120} placeholder="e.g. Researcher exploring genomic AI" /></label>
-                <label className={labelClass}>Organisation or affiliation<input className={fieldClass} value={form.organization} onChange={(event) => update("organization", event.target.value)} maxLength={120} placeholder="University, company, lab, or independent" /></label>
-                <label className={labelClass}>Location<input className={fieldClass} value={form.location} onChange={(event) => update("location", event.target.value)} maxLength={100} placeholder="City or region (optional)" /></label>
-                <label className={labelClass}>Website or portfolio<input className={fieldClass} value={form.website_url} onChange={(event) => update("website_url", event.target.value)} maxLength={240} inputMode="url" placeholder="example.com" /></label>
                 <label className={[labelClass, "sm:col-span-2"].join(" ")}>About you<textarea className={[fieldClass, "min-h-[126px] resize-y leading-6"].join(" ")} value={form.bio} onChange={(event) => update("bio", event.target.value)} maxLength={1000} placeholder="What do you work on? What perspectives or experience do you bring to the conversation?" /><span className="mt-1.5 block text-right text-[10px] font-normal text-white/30">{form.bio.length}/1000</span></label>
-                <label className={[labelClass, "sm:col-span-2"].join(" ")}>Interests and research areas<textarea className={[fieldClass, "min-h-[82px] resize-y leading-6"].join(" ")} value={form.interests} onChange={(event) => update("interests", event.target.value)} maxLength={500} placeholder="Genomic AI, public health, economics, open research" /><span className="mt-1.5 block text-[10px] font-normal text-white/35">Separate each interest with a comma. Up to 15 will be shown.</span></label>
               </div>
             </section>
 
@@ -320,8 +322,17 @@ export default function ProfilePage() {
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[11px] leading-5 text-white/35">Your profile helps people discover shared interests and expertise.</p>
-              <button type="submit" disabled={saving || uploading || !userId} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-200 px-5 py-3 text-sm font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50">{saving ? "Saving profile…" : "Save profile"} <span aria-hidden="true">↗</span></button>
+              <button type="submit" disabled={saving || uploading || !userId} className="figma-profile-save inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-200 px-5 py-3 text-sm font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50">{saving ? "Saving profile…" : <><span className="figma-profile-save-mobile">Save changes</span><span className="figma-profile-save-desktop">Save profile</span></>} <span className="figma-profile-save-arrow" aria-hidden="true">↗</span></button>
             </div>
+            <details className="figma-profile-advanced">
+              <summary>Additional profile details</summary>
+              <div className="grid gap-4 pt-4 sm:grid-cols-2">
+                <label className={labelClass}>Organisation or affiliation<input className={fieldClass} value={form.organization} onChange={(event) => update("organization", event.target.value)} maxLength={120} placeholder="University, company, lab, or independent" /></label>
+                <label className={labelClass}>Location<input className={fieldClass} value={form.location} onChange={(event) => update("location", event.target.value)} maxLength={100} placeholder="City or region (optional)" /></label>
+                <label className={labelClass}>Website or portfolio<input className={fieldClass} value={form.website_url} onChange={(event) => update("website_url", event.target.value)} maxLength={240} inputMode="url" placeholder="example.com" /></label>
+                <label className={[labelClass, "sm:col-span-2"].join(" ")}>Interests and research areas<textarea className={[fieldClass, "min-h-[82px] resize-y leading-6"].join(" ")} value={form.interests} onChange={(event) => update("interests", event.target.value)} maxLength={500} placeholder="Genomic AI, public health, economics, open research" /><span className="mt-1.5 block text-[10px] font-normal text-white/35">Separate each interest with a comma. Up to 15 will be shown.</span></label>
+              </div>
+            </details>
           </form>
 
           <aside className="space-y-4 lg:sticky lg:top-[92px]">
