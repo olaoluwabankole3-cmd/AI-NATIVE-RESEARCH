@@ -143,7 +143,7 @@ export default function SettingsPage() {
                   <p className="mt-2 text-xs leading-6 text-white/45">Organisations you own will be transferred to another active owner/administrator when possible. An organisation without another active owner/administrator will be deleted. This action cannot be undone.</p>
                   <p className="mt-2 text-xs leading-6 text-amber-100/70">Security check: before permanently deleting your account, sign out and sign in again. The deletion must be requested within 15 minutes of that new sign-in.</p>
                 </div>
-                {!deleteAccountOpen && <button type="button" onClick={() => { setDeleteAccountOpen(true); setDeleteError(""); }} className="shrink-0 rounded-lg border border-red-300/25 px-4 py-2.5 text-xs font-semibold text-red-100 transition hover:bg-red-300/[0.07]">Delete account</button>}
+                {!deleteAccountOpen && <button type="button" onClick={() => { setDeleteAccountOpen(true); setDeleteError(""); }} className="figma-settings-danger-action shrink-0 rounded-lg border border-red-300/25 px-4 py-2.5 text-xs font-semibold text-red-100 transition hover:bg-red-300/[0.07]"><span className="figma-settings-danger-mobile">Delete account · confirmation required</span><span className="figma-settings-danger-desktop">Delete account</span></button>}
               </div>
 
               {deleteAccountOpen && (
