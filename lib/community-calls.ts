@@ -1,138 +1,152 @@
 import "server-only";
 
-/** Server-only Daily media provider for community calls.
- * No API keys, reusable room URLs or meeting tokens are sent without authorization.
- * Rooms are always private, and tokens are individually scoped to the community.
+/** Cloudflare RealtimeKit backend. Distinct from the existing 1:1 TURN credentials.
+ * API tokens never reach browsers; only membership-authorized participant tokens do.
  */
-const API_BASE = "https://api.daily.co/v1";
-const MEMBER_TOKEN_LIFETIME_SECONDS = 60 * 60 * 2;
+const API_ROOT = "https://api.cloudflare.com/client/v4/accounts/";
+const MAX_PARTICIPANTS = 10;
+const MAX_MEETING_MINUTES = 30;
+const TOKEN_LIFETIME_MINUTES = 35;
 
-type DailyRoom = { name: string; url: string; privacy: string };
-type DailyPresence = { total_count?: number; data?: unknown[] };
-type DailyToken = { token: string };
+export class CommunityCallError extends Error {
+  constructor(message: string, readonly status = 503) { super(message); }
+}
 
-export class DailyCallError extends Error {
-  constructor(message: string, readonly status: number) {
-    super(message);
+type ApiResult<T> = { success: boolean; data?: T; errors?: { message: string }[] };
+type MeetingInfo = { id: string; status?: string };
+type LiveSession = { status: "LIVE" | "ENDED"; live_participants: number; started_at?: string };
+
+function config() {
+  const account = process.env.CLOUDFLARE_REALTIMEKIT_ACCOUNT_ID;
+  const app = process.env.CLOUDFLARE_REALTIMEKIT_APP_ID;
+  const token = process.env.CLOUDFLARE_REALTIMEKIT_API_TOKEN;
+  const preset = process.env.CLOUDFLARE_REALTIMEKIT_PRESET;
+  if (!account || !app || !token || !preset) throw new CommunityCallError("Community calling is not configured.", 503);
+  if (!/^[\w-]{1,64}$/.test(account) || !/^[\w-]{1,64}$/.test(app)) {
+    throw new CommunityCallError("Invalid Cloudflare media configuration.", 503);
   }
+  return { account, app, token, preset };
 }
 
 export function communityCallsConfigured() {
-  return Boolean(process.env.DAILY_API_KEY);
+  return Boolean(process.env.CLOUDFLARE_REALTIMEKIT_ACCOUNT_ID &&
+    process.env.CLOUDFLARE_REALTIMEKIT_APP_ID &&
+    process.env.CLOUDFLARE_REALTIMEKIT_API_TOKEN &&
+    process.env.CLOUDFLARE_REALTIMEKIT_PRESET);
 }
 
-export function communityCallRoomName(communityId: string) {
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(communityId)) {
-    throw new DailyCallError("Invalid community.", 400);
-  }
-  return "converge-community-" + communityId.replace(/-/g, "").toLowerCase();
-}
-
-async function dailyRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const key = process.env.DAILY_API_KEY;
-  if (!key) throw new DailyCallError("Community calls need media-provider setup.", 503);
-  const response = await fetch(API_BASE + path, {
-    ...options,
-    cache: "no-store",
-    headers: {
-      Authorization: "Bearer " + key,
-      "Content-Type": "application/json",
-      ...(options.headers ?? {}),
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const { account, app, token } = config();
+  const response = await fetch(
+    API_ROOT + account + "/realtime/kit/" + app + path,
+    {
+      ...init,
+      cache: "no-store",
+      headers: {
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+        ...(init.headers ?? {}),
+      },
+      signal: AbortSignal.timeout(10000),
     },
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!response.ok) throw new DailyCallError("Call provider returned an error.", response.status);
-  // Daily returns an empty successful body for DELETE /rooms/:name.
-  if (response.status === 204) return undefined as T;
-  const body = await response.text();
-  return body ? JSON.parse(body) as T : undefined as T;
-}
-
-function assertPrivateRoom(room: DailyRoom, roomName: string) {
-  const url = new URL(room.url);
-  if (room.name !== roomName || room.privacy !== "private" ||
-      url.protocol !== "https:" ||
-      !(url.hostname === "daily.co" || url.hostname.endsWith(".daily.co")) ||
-      url.pathname !== "/" + roomName) {
-    throw new DailyCallError("The media room did not pass private-room validation.", 503);
+  );
+  const raw = await response.text();
+  let body: ApiResult<T> | null = null;
+  try { body = JSON.parse(raw) as ApiResult<T>; } catch { /* Cloudflare may omit body for errors. */ }
+  if (!response.ok || !body?.success || !body.data) {
+    if (response.status === 404) throw new CommunityCallError("No active meeting.", 404);
+    throw new CommunityCallError("Cloudflare RealtimeKit request failed.", 503);
   }
-  return room;
+  return body.data;
 }
 
-export async function activeCommunityCall(communityId: string) {
-  const name = communityCallRoomName(communityId);
-  if (!communityCallsConfigured()) return { configured: false, active: false, participants: 0 };
+function checkMeetingId(meetingId: string) {
+  if (!/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i.test(meetingId)) {
+    throw new CommunityCallError("Invalid media meeting identifier.", 400);
+  }
+  return meetingId;
+}
+
+export async function createCloudflareMeeting(title: string) {
+  const result = await request<MeetingInfo>("/meetings", {
+    method: "POST",
+    body: JSON.stringify({
+      title: title.trim().slice(0, 100),
+      record_on_start: false,
+      transcribe_on_end: false,
+      summarize_on_end: false,
+      live_stream_on_start: false,
+      persist_chat: false,
+      session_keep_alive_time_in_secs: 60,
+    }),
+  });
+  return checkMeetingId(result.id);
+}
+
+export async function getCloudflareSession(meetingId: string): Promise<{
+  active: boolean; participants: number; expired: boolean;
+}> {
   try {
-    const presence = await dailyRequest<DailyPresence>("/rooms/" + name + "/presence");
-    const count = typeof presence.total_count === "number" ? presence.total_count :
-      (Array.isArray(presence.data) ? presence.data.length : 0);
-    return { configured: true, active: count > 0, participants: Math.max(0, count) };
+    const session = await request<LiveSession>(
+      "/meetings/" + checkMeetingId(meetingId) + "/active-session");
+    const minutes = session.started_at ? (Date.now() - Date.parse(session.started_at)) / 60000 : 0;
+    return {
+      active: session.status === "LIVE" && session.live_participants > 0,
+      participants: Math.max(0, session.live_participants || 0),
+      expired: minutes >= MAX_MEETING_MINUTES,
+    };
   } catch (error) {
-    if (error instanceof DailyCallError && error.status === 404) {
-      return { configured: true, active: false, participants: 0 };
+    if (error instanceof CommunityCallError && error.status === 404) {
+      return { active: false, participants: 0, expired: false };
     }
     throw error;
   }
 }
 
-async function ensurePrivateCommunityRoom(communityId: string) {
-  const name = communityCallRoomName(communityId);
-  let room: DailyRoom;
-  try {
-    room = await dailyRequest<DailyRoom>("/rooms/" + name);
-  } catch (error) {
-    if (!(error instanceof DailyCallError && error.status === 404)) throw error;
-    try {
-      room = await dailyRequest<DailyRoom>("/rooms", {
-        method: "POST",
-        body: JSON.stringify({
-          name,
-          privacy: "private",
-          properties: {
-            enable_prejoin_ui: true,
-            start_video_off: true,
-            start_audio_off: true,
-            enforce_unique_user_ids: true,
-          },
-        }),
-      });
-    } catch (createError) {
-      // Two members can try to start the first call simultaneously.
-      if (!(createError instanceof DailyCallError && [400, 409].includes(createError.status))) throw createError;
-      room = await dailyRequest<DailyRoom>("/rooms/" + name);
-    }
+export async function issueCloudflareParticipantToken(
+  meetingId: string,
+  viewerId: string,
+  displayName: string,
+) {
+  const session = await getCloudflareSession(meetingId);
+  if (session.expired) throw new CommunityCallError("This call has reached its time limit.", 409);
+  if (session.participants >= MAX_PARTICIPANTS) throw new CommunityCallError("Community call is full.", 409);
+  const expiresOn = new Date(Date.now() + TOKEN_LIFETIME_MINUTES * 60_000).toISOString();
+  const { preset } = config();
+  const result = await request<{ token: string }>(
+    "/meetings/" + checkMeetingId(meetingId) + "/participants",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        // A unique record per join allows a freshly authorized short-lived token.
+        // UUID contains no personally identifying information.
+        custom_participant_id: crypto.randomUUID(),
+        name: displayName.trim().slice(0, 80) || "Converge member",
+        preset_name: preset,
+        token: { expires_on: expiresOn },
+      }),
+    },
+  );
+  if (!result.token || typeof result.token !== "string") {
+    throw new CommunityCallError("Could not obtain your participant token.", 503);
   }
-  return assertPrivateRoom(room, name);
+  // Viewer identity is only used for server-side checks; never let the browser
+  // choose a different user or preset.
+  void viewerId;
+  return result.token;
 }
 
-export async function createCommunityCallJoinUrl(communityId: string, userId: string, displayName: string) {
-  const room = await ensurePrivateCommunityRoom(communityId);
-  const tokenResponse = await dailyRequest<DailyToken>("/meeting-tokens", {
-    method: "POST",
-    body: JSON.stringify({
-      properties: {
-        room_name: room.name,
-        user_id: userId,
-        user_name: displayName.trim().slice(0, 80) || "Converge member",
-        is_owner: false,
-        exp: Math.floor(Date.now() / 1000) + MEMBER_TOKEN_LIFETIME_SECONDS,
-        eject_at_token_exp: true,
-      },
-    }),
+export async function endCloudflareMeeting(meetingId: string) {
+  const id = checkMeetingId(meetingId);
+  try {
+    await request<unknown>("/meetings/" + id + "/active-session/kick-all", { method: "POST" });
+  } catch (error) {
+    if (!(error instanceof CommunityCallError && error.status === 404)) throw error;
+  }
+  // Inactivate the meeting after ending so previously issued bearer tokens
+  // cannot start another session of the same room.
+  await request<MeetingInfo>("/meetings/" + id, {
+    method: "PATCH",
+    body: JSON.stringify({ status: "INACTIVE" }),
   });
-  if (!tokenResponse.token || typeof tokenResponse.token !== "string") {
-    throw new DailyCallError("The call provider did not issue a meeting token.", 502);
-  }
-  const url = new URL(room.url);
-  url.searchParams.set("t", tokenResponse.token);
-  return url.toString();
-}
-
-export async function endCommunityCall(communityId: string) {
-  const name = communityCallRoomName(communityId);
-  try {
-    await dailyRequest<unknown>("/rooms/" + name, { method: "DELETE" });
-  } catch (error) {
-    if (!(error instanceof DailyCallError && error.status === 404)) throw error;
-  }
 }
