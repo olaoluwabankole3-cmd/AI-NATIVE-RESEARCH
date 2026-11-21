@@ -893,8 +893,11 @@ export default function TopicPage() {
                 </div>
               ) : (
                 posts.map((post, index) => (
+                  <Fragment key={post.id}>
+                    {(index === 0 || !sameChatDay(posts[index - 1].created_at, post.created_at)) && (
+                      <div className="converge-topic-day-separator" role="separator" aria-label={chatDayLabel(post.created_at)}><span>{chatDayLabel(post.created_at)}</span></div>
+                    )}
                   <article
-                    key={post.id}
                     data-own={post.participant?.user_id === currentUserId ? "true" : "false"}
                      data-agent={post.participant?.participant_type === "AGENT" ? "true" : "false"}
                      className={`converge-topic-message border-b border-white/[0.08] p-5 last:border-b-0 sm:p-6 ${post.participant?.participant_type === "AGENT" ? "bg-emerald-300/[0.025]" : "bg-transparent"}`}
@@ -909,7 +912,7 @@ export default function TopicPage() {
                             className="size-full object-cover"
                           />
                         ) : (
-                          initials(post.profile)
+                          post.agent ? post.agent.name.split(/\s+/).filter(Boolean).slice(0, 2).map((name) => name[0]).join("").toUpperCase() : initials(post.profile ?? (post.participant?.user_id === currentUserId ? viewerProfile ?? undefined : undefined))
                         )}
                       </div>
 
@@ -919,15 +922,15 @@ export default function TopicPage() {
                             {post.agent?.name ||
                               post.profile?.display_name ||
                               post.profile?.username ||
-                              "Converge member"}
+                              (post.participant?.user_id === currentUserId ? "You" : "Converge member")}
                           </span>
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${post.participant?.participant_type === "AGENT" ? "border border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-200" : "bg-white/[0.05] text-white/40"}`}>
                             {post.participant?.participant_type === "AGENT" ? "AI specialist" : "Member"}
                           </span>
                           <span className="text-xs text-white/30">·</span>
-                          <span className="converge-topic-post-time text-xs text-white/35">
-                            {formatDate(post.created_at)}
-                          </span>
+                          <time dateTime={post.created_at} title={formatDate(post.created_at)} className="converge-topic-post-time text-xs text-white/35">
+                            {chatTime(post.created_at)}
+                          </time>
                           {index === 0 && (
                             <span className="text-[11px] text-white/30">First reply</span>
                           )}
@@ -939,18 +942,24 @@ export default function TopicPage() {
                       </div>
                     </div>
                   </article>
+                  </Fragment>
                 ))
               )}
+              <div ref={topicMessagesEndRef} className="converge-topic-messages-end" aria-hidden="true" />
             </div>
 
             {topic.type === "RESEARCH" && currentParticipantId && <button type="button" className="figma-topic-evidence-peek" onClick={() => setMobileSection("evidence")}>
               <strong>✦ &nbsp; EVIDENCE RECORD</strong><span>Review saved research sources ↗</span>
             </button>}
+            {showTopicLatest && mobileSection === "discussion" && (
+              <button type="button" className="converge-topic-jump-latest" onClick={() => jumpToLatestTopic()}>↓ Latest messages</button>
+            )}
             {isCommunityMember && currentParticipantId ? (
             <form
               onSubmit={handleReply}
               className="converge-topic-reply mt-8 border-t border-emerald-300/15 pt-5 pb-4 sm:pt-6"
               aria-label="Reply to this discussion"
+              aria-busy={posting}
             >
               <div className="converge-topic-composer-heading">
                 <h3 className="font-semibold">Write a reply</h3>
@@ -967,6 +976,7 @@ export default function TopicPage() {
                     resizeReplyTextarea(event.currentTarget);
                   }}
                   rows={1}
+                  onKeyDown={handleReplyKeyDown}
                   maxLength={12000}
                   placeholder="Message the discussion"
                   className="min-w-0 flex-1 resize-none rounded-xl border border-white/10 bg-[#07110f] px-4 py-3 text-base leading-6 outline-none placeholder:text-white/35 focus:border-emerald-300/50"
@@ -982,6 +992,7 @@ export default function TopicPage() {
                   <span className="figma-topic-send-desktop">{posting ? "Posting & getting AI replies…" : "Post reply"}</span>
                 </button>
               </div>
+              {posting && <p role="status" className="converge-topic-publishing-status">Publishing your reply and waiting for AI responses…</p>}
               {message && (
                 <p role={messageTone === "error" ? "alert" : "status"} className={`converge-topic-feedback mt-3 text-sm ${messageTone === "error" ? "text-red-200" : messageTone === "success" ? "text-emerald-200" : "text-white/60"}`}>{message}</p>
               )}
