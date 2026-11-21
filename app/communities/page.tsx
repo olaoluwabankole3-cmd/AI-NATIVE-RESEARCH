@@ -172,6 +172,7 @@ export default function CommunitiesPage() {
         <strong>New community</strong>
       </nav>}
       <div className="figma-research-container mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
+        <div className="converge-research-primary">
         <div className="converge-page-intro flex flex-col gap-2 border-b border-white/[0.09] py-7 sm:py-9">
           <Link href="/communities" className="figma-research-desktop-logo" aria-label="Converge research home"><img src="/converge-header-lockup.svg" alt="Converge" width={175} height={41} /></Link>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/80">CONVERGE / RESEARCH</p>
@@ -309,6 +310,13 @@ export default function CommunitiesPage() {
           </section>
 
         </div>
+
+
+        <section id="communities-directory" className="mt-12 scroll-mt-24 border-t border-white/[0.09] pt-7">
+          <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/70">Explore</p><h2 className="mt-2 text-xl font-semibold">Community directory</h2></div><span className="text-xs text-white/35">{filteredCommunities.length} spaces</span></div>
+          {filteredCommunities.length > 0 ? <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{filteredCommunities.map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="converge-directory-card rounded-lg border border-white/[0.09] bg-white/[0.015] p-4 transition hover:border-emerald-200/25 hover:bg-white/[0.03]"><div className="flex items-center gap-2"><span className="grid size-8 place-items-center rounded-lg bg-emerald-200/10 text-xs font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><h3 className="text-sm font-semibold">{community.name}</h3></div><p className="mt-3 line-clamp-2 text-xs leading-5 text-white/40">{community.description || "A shared space for discussion and research."}</p><p className="mt-3 text-[10px] font-semibold text-emerald-200/70">Open community →</p></Link>)}</div> : <p className="mt-4 text-sm text-white/40">No communities found.</p>}
+        </section>
+        </div>
         <aside className="figma-research-workspace" aria-label="Research quick actions">
           <p className="figma-eyebrow">MY WORKSPACE</p>
           <h2>Keep your ideas moving.</h2>
@@ -326,11 +334,6 @@ export default function CommunitiesPage() {
             <p>Claims, sources and decisions belong beside the discussion—not lost in the chat history.</p>
           </div>
         </aside>
-
-        <section id="communities-directory" className="mt-12 scroll-mt-24 border-t border-white/[0.09] pt-7">
-          <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/70">Explore</p><h2 className="mt-2 text-xl font-semibold">Community directory</h2></div><span className="text-xs text-white/35">{filteredCommunities.length} spaces</span></div>
-          {filteredCommunities.length > 0 ? <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{filteredCommunities.map((community) => <Link key={community.id} href={`/communities/${community.slug}`} className="converge-directory-card rounded-lg border border-white/[0.09] bg-white/[0.015] p-4 transition hover:border-emerald-200/25 hover:bg-white/[0.03]"><div className="flex items-center gap-2"><span className="grid size-8 place-items-center rounded-lg bg-emerald-200/10 text-xs font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span><h3 className="text-sm font-semibold">{community.name}</h3></div><p className="mt-3 line-clamp-2 text-xs leading-5 text-white/40">{community.description || "A shared space for discussion and research."}</p><p className="mt-3 text-[10px] font-semibold text-emerald-200/70">Open community →</p></Link>)}</div> : <p className="mt-4 text-sm text-white/40">No communities found.</p>}
-        </section>
       </div>
     </main>
   );
