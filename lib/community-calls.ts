@@ -120,7 +120,7 @@ export async function issueCloudflareParticipantToken(
       body: JSON.stringify({
         // A unique record per join allows a freshly authorized short-lived token.
         // UUID contains no personally identifying information.
-        custom_participant_id: crypto.randomUUID(),
+        custom_participant_id: viewerId + "-" + crypto.randomUUID(),
         name: displayName.trim().slice(0, 80) || "Converge member",
         preset_name: preset,
         token: { expires_on: expiresOn },
@@ -130,9 +130,6 @@ export async function issueCloudflareParticipantToken(
   if (!result.token || typeof result.token !== "string") {
     throw new CommunityCallError("Could not obtain your participant token.", 503);
   }
-  // Viewer identity is only used for server-side checks; never let the browser
-  // choose a different user or preset.
-  void viewerId;
   return result.token;
 }
 
