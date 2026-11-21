@@ -198,9 +198,9 @@ export default function CommunityCallPage() {
         }
       } catch { /* Presence refresh is best effort. */ }
     };
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void check();
-    }, 20000);
+    // Keep best-effort time-limit enforcement active in background tabs too.
+    // Timer throttling still means this is not a provider-level billing cap.
+    const timer = window.setInterval(() => { void check(); }, 20000);
     return () => { cancelled = true; controller.abort(); window.clearInterval(timer); };
   }, [view]);
 
