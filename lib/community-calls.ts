@@ -42,7 +42,10 @@ async function dailyRequest<T>(path: string, options: RequestInit = {}): Promise
     signal: AbortSignal.timeout(10000),
   });
   if (!response.ok) throw new DailyCallError("Call provider returned an error.", response.status);
-  return await response.json() as T;
+  // Daily returns an empty successful body for DELETE /rooms/:name.
+  if (response.status === 204) return undefined as T;
+  const body = await response.text();
+  return body ? JSON.parse(body) as T : undefined as T;
 }
 
 function assertPrivateRoom(room: DailyRoom, roomName: string) {
@@ -89,6 +92,7 @@ async function ensurePrivateCommunityRoom(communityId: string) {
             enable_prejoin_ui: true,
             start_video_off: true,
             start_audio_off: true,
+            enforce_unique_user_ids: true,
           },
         }),
       });
