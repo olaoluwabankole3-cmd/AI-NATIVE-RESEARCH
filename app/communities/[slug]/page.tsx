@@ -327,7 +327,7 @@ export default function CommunityPage() {
         <strong>New topic</strong>
       </nav>}
       <div className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
-        <div className="border-b border-white/[0.09] py-5"><Link href="/communities" className="inline-flex items-center gap-2 text-xs font-medium text-white/45 transition hover:text-emerald-200">← All communities</Link></div>
+        <div className="converge-community-back border-b border-white/[0.09] py-5"><Link href="/communities" className="inline-flex items-center gap-2 text-xs font-medium text-white/45 transition hover:text-emerald-200">← All communities</Link></div>
 
         <header id="community-overview" className="converge-community-head converge-page-intro">
           <div className="converge-community-head__main">
@@ -350,8 +350,13 @@ export default function CommunityPage() {
             {!currentIsMember && community.visibility === "PUBLIC" && <button type="button" disabled={joining} onClick={() => void handleJoinPublic()} className="converge-community-action converge-community-action--primary">{joining ? "Joining…" : "Join community"}</button>}
             {privateLocked && !isBanned && joinRequest?.status !== "PENDING" && <button type="button" onClick={() => setShowRequestForm((value) => !value)} className="converge-community-action converge-community-action--primary">{showRequestForm ? "Cancel request" : "Request access"}</button>}
             {canCreateTopic && <button type="button" onClick={() => { setShowForm((value) => !value); setMessage(""); }} aria-expanded={showForm} aria-controls="create-topic-form" className="converge-community-action converge-community-action--primary"><span aria-hidden="true">{showForm ? "×" : "+"}</span>{showForm ? "Cancel" : "New discussion"}</button>}
-            {(isOwner || memberRole === "OWNER" || memberRole === "MODERATOR") && <Link href={"/communities/" + community.slug + "/members"} className="converge-community-action">Manage members</Link>}
-            {isOwner && <Link href={"/communities/" + community.slug + "/settings"} className="converge-community-action">Settings{pendingRequestCount ? " · " + pendingRequestCount + " pending" : ""}</Link>}
+            {(isOwner || memberRole === "OWNER" || memberRole === "MODERATOR") && <details className="converge-community-manage-menu">
+              <summary aria-label="Community management options" className="converge-community-action">Manage <span aria-hidden="true">⋯</span>{pendingRequestCount > 0 && isOwner && <span className="converge-community-manage-menu__count">{pendingRequestCount}</span>}</summary>
+              <div className="converge-community-manage-menu__links">
+                <Link href={"/communities/" + community.slug + "/members"}>Manage members</Link>
+                {isOwner && <Link href={"/communities/" + community.slug + "/settings"}>Community settings{pendingRequestCount ? " · " + pendingRequestCount + " pending" : ""}</Link>}
+              </div>
+            </details>}
           </div>
         </header>
 
@@ -411,7 +416,7 @@ export default function CommunityPage() {
                 <h2>{filter === "RESEARCH" ? "Research rooms" : filter === "DISCUSSION" ? "Discussions" : "All conversations"}</h2>
                 <p>{visibleTopics.length} {visibleTopics.length === 1 ? "conversation" : "conversations"} · most recently active first</p>
               </div>
-              {canCreateTopic && <button type="button" className="converge-community-conversations__new" onClick={() => { setShowForm(true); setMessage(""); document.getElementById("create-topic-form")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>+ New topic</button>}
+              {canCreateTopic && <button type="button" className="converge-community-conversations__new" onClick={() => { setShowForm(true); setMessage(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>+ New topic</button>}
             </div>
             {!currentIsMember && community.visibility === "PUBLIC" && <p className="converge-community-join-note">You can read this public space. <button type="button" onClick={() => void handleJoinPublic()}>Join to participate</button> in conversations.</p>}
             {!canCreateTopic && currentIsMember && <p className="converge-community-join-note">The owner currently manages who can start new topics. Members can still participate in existing conversations.</p>}
