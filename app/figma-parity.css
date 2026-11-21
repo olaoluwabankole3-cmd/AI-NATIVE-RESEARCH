@@ -480,11 +480,20 @@ main.converge-app-page.converge-figma :is(a,button,input,select,textarea):focus-
     border-radius:12px !important;background:#213c2a !important;
     box-shadow:none !important;
   }
-  main.converge-app-page.figma-messages .converge-inbox-search-field input {
+  /* One continuous search surface: reset the native/theme input box.
+     The wrapper owns the background, radius and focus treatment. */
+  main.converge-app-page.figma-messages .converge-inbox-search-field #converge-inbox-search {
+    flex:1 1 auto !important;width:100% !important;min-width:0 !important;
     height:46px !important;min-height:46px !important;
-    background:transparent !important;border:0 !important;
+    margin:0 !important;padding:0 0 0 10px !important;
+    border:0 !important;border-radius:0 !important;
+    background:transparent !important;background-color:transparent !important;
+    box-shadow:none !important;outline:none !important;
+    appearance:none !important;-webkit-appearance:none !important;
     font-size:13px !important;color:var(--fig-text) !important;
-    box-shadow:none !important;
+  }
+  main.converge-app-page.figma-messages .converge-inbox-search-field:focus-within {
+    outline:2px solid var(--fig-mint) !important;outline-offset:2px;
   }
   main.converge-app-page.figma-messages .converge-inbox-search-field input::placeholder {color:#9cb3a4;opacity:1;}
   main.converge-app-page.figma-messages .converge-inbox-refresh {display:none !important;}
