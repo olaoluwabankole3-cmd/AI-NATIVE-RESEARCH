@@ -287,7 +287,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <main className="converge-app-page min-h-screen bg-[#0b1110] text-[#edf5ee]" data-mobile-creating-topic={showForm && canCreateTopic ? "true" : "false"}>
+    <main className="converge-app-page converge-community-chat min-h-screen bg-[#0b1110] text-[#edf5ee]" data-mobile-creating-topic={showForm && canCreateTopic ? "true" : "false"}>
       <SiteHeader />
       {showForm && canCreateTopic && <nav className="converge-create-mobile-back" aria-label="Create topic navigation">
         <button type="button" onClick={() => setShowForm(false)}>← {community.name}</button>
