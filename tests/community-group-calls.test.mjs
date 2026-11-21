@@ -8,60 +8,83 @@ const provider = read("lib/community-calls.ts");
 const callPage = read("app/communities/[slug]/call/page.tsx");
 const communityPage = read("app/communities/[slug]/page.tsx");
 const card = read("components/community-call-card.tsx");
+const migration = read("supabase/migrations/20261121120000_community_realtimekit_call_mapping.sql");
+const uiLoader = read("public/cloudflare-realtimekit-loader.js");
 
-test("group call endpoints require current server-side membership and ban checks", () => {
+test("group call endpoints revalidate server-side membership and bans", () => {
   assert.match(api, /auth\.auth\.getUser\(\)/);
   assert.match(api, /getCommunityAccess\(admin, id, user\.id\)/);
   assert.match(api, /if \(!access\.canParticipate\)/);
-  assert.match(api, /getCommunityAccess/);
-  assert.match(api, /if \(ctx\.status !== 200\)/);
-  assert.match(api, /can join this community call/);
+  assert.match(api, /if \(ctx\.status !== 200/);
+  assert.match(api, /Only approved, unbanned community members/);
 });
 
-test("meeting tokens are created by the server and are scoped to a private, fixed community room", () => {
-  assert.match(provider, /process\.env\.DAILY_API_KEY/);
-  assert.doesNotMatch(provider, /NEXT_PUBLIC_DAILY_API_KEY/);
-  assert.match(provider, /room_name: room\.name/);
-  assert.match(provider, /privacy: "private"/);
-  assert.match(provider, /room\.privacy !== "private"/);
-  assert.match(provider, /room\.name !== roomName/);
-  assert.match(provider, /eject_at_token_exp: true/);
-  assert.match(provider, /enforce_unique_user_ids: true/);
+test("Cloudflare API token is server-only and is not confused with existing TURN credentials", () => {
+  assert.match(provider, /process\.env\.CLOUDFLARE_REALTIMEKIT_API_TOKEN/);
+  assert.match(provider, /api\.cloudflare\.com\/client\/v4\/accounts\//);
+  assert.match(provider, /Authorization: "Bearer " \+ token/);
+  assert.doesNotMatch(provider, /DAILY_API_KEY|api\.daily\.co/);
+  assert.doesNotMatch(provider, /CLOUDFLARE_TURN_API_TOKEN|NEXT_PUBLIC_CLOUDFLARE_REALTIMEKIT_API_TOKEN/);
   assert.match(api, /"Cache-Control": "no-store"/);
   assert.match(api, /"Referrer-Policy": "no-referrer"/);
 });
 
-test("public communities do not confer group call access to nonmembers", () => {
+test("Cloudflare meeting records are server-private in Supabase", () => {
+  assert.match(migration, /enable row level security/i);
+  assert.match(migration, /revoke all on table public\.community_group_call_rooms from public, anon, authenticated/i);
+  assert.doesNotMatch(migration, /create policy .* authenticated/i);
+  assert.match(api, /startOrFindMeeting/);
+  assert.match(api, /meetingRow/);
+  assert.match(api, /"community_group_call_rooms"/);
+});
+
+test("Cloudflare meeting disables recording and transcripts to control cost", () => {
+  assert.match(provider, /record_on_start: false/);
+  assert.match(provider, /transcribe_on_end: false/);
+  assert.match(provider, /summarize_on_end: false/);
+  assert.match(provider, /live_stream_on_start: false/);
+  assert.match(provider, /MAX_PARTICIPANTS = 10/);
+  assert.match(provider, /MAX_MEETING_MINUTES = 30/);
+  assert.match(provider, /TOKEN_LIFETIME_MINUTES = 35/);
+  assert.match(provider, /token: \{ expires_on: expiresOn \}/);
+  assert.match(api, /session\.expired/);
+  assert.match(api, /terminate\(ctx\.admin/);
+});
+
+test("reusable URLs are not exposed and public communities do not grant nonmembers call access", () => {
+  assert.doesNotMatch(api, /joinUrl/);
+  assert.match(api, /authToken/);
   assert.match(api, /if \(!access\.canParticipate\)/);
   assert.doesNotMatch(api, /access\.canRead\s*\)/);
 });
 
-test("only current owners or moderators can end an entire group call", () => {
+test("only current owners or moderators may kick everyone", () => {
   assert.match(api, /if \(!ctx\.access\.isOwner\)/);
-  assert.match(api, /roleRow\.role !== "OWNER"/);
-  assert.match(api, /roleRow\.role !== "MODERATOR"/);
-  assert.match(api, /endCommunityCall\(id\)/);
-  assert.match(callPage, /window\.confirm\("End this community call for everyone/);
+  assert.match(api, /roleRow\?\.role !== "OWNER"/);
+  assert.match(api, /roleRow\?\.role !== "MODERATOR"/);
+  assert.match(provider, /active-session\/kick-all/);
+  assert.match(provider, /status: "INACTIVE"/);
 });
 
-test("community page exposes group calls only to current members and shows live presence", () => {
+test("community page displays live presence card to approved members", () => {
   assert.match(communityPage, /currentIsMember && !isBanned && <CommunityCallCard/);
-  assert.match(card, /20{3}/);
+  assert.match(card, /20000/);
   assert.match(card, /Join call/);
   assert.match(card, /Start call/);
   assert.match(card, /status\.configured/);
 });
 
-test("embedded group media stays in a protected community route, leaving unloads iframe", () => {
-  assert.match(callPage, /method: "POST"/);
-  assert.match(callPage, /method: "DELETE"/);
-  assert.match(callPage, /<iframe/);
-  assert.match(callPage, /allow="microphone; camera; autoplay; fullscreen; display-capture"/);
-  assert.match(callPage, /referrerPolicy="no-referrer"/);
-  assert.match(callPage, /Back to community/);
+test("Cloudflare browser UI uses version pinned official SDK web components", () => {
+  assert.match(callPage, /@cloudflare\/realtimekit@2\.0\.4\/dist\/browser\.js/);
+  assert.match(uiLoader, /@cloudflare\/realtimekit-ui@2\.0\.3\/loader\/index\.es2017\.js/);
+  assert.match(callPage, /customElements\.whenDefined\("rtk-meeting"\)/);
+  assert.match(callPage, /authToken/);
+  assert.match(callPage, /defaults: \{ audio: false, video: false \}/);
+  assert.match(callPage, /<CloudflareGroupRoom authToken=\{view\.authToken\}/);
+  assert.match(callPage, /meetingRef\.current\.leave\(\)/);
 });
 
-test("group calls do not change the one-to-one voice/video implementation", () => {
+test("group calling does not change private voice/video call path", () => {
   assert.match(read("app/calls/[callId]/page.tsx"), /RTCPeerConnection/);
   assert.match(read("app/api/calls/ice/route.ts"), /voiceCallsEnabled/);
 });
