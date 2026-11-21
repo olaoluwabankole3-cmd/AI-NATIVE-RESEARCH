@@ -52,14 +52,16 @@ test("AI directory keeps filtering and admin access without duplicate prominent 
   assert.match(directory, /setSelectedId\(agent\.id\)/);
 });
 
-test("topic reply no longer obscures posts on mobile and retains submit permission guards", () => {
+test("topic reply stays pinned while discussion scrolls and retains submit permission guards", () => {
   const topic = read("app/topics/[id]/page.tsx");
-  const css = read("app/application-refinement.css");
+  const css = read("app/mobile-chat-refinement.css");
+  const legacy = read("app/application-refinement.css");
   assert.match(topic, /onSubmit=\{handleReply\}/);
-  assert.match(topic, /rows=\{3\}/);
+  assert.match(topic, /rows=\{1\}/);
   assert.match(topic, /disabled=\{posting \|\| !reply\.trim\(\)\}/);
   assert.match(topic, /converge-topic-reply/);
-  assert.match(css, /form:has\(#topic-reply\)/);
-  assert.match(css, /position:static !important/);
+  assert.match(css, /form\.converge-topic-reply:has\(#topic-reply\)/);
+  assert.match(css, /position:fixed !important/);
+  assert.match(legacy, /\.converge-app-page:not\(\.figma-topic\)/);
   assert.doesNotMatch(topic, /Posting as you\./);
 });
