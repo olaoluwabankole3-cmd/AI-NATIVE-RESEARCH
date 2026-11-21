@@ -921,7 +921,7 @@ export default function TopicPage() {
                 <p role={messageTone === "error" ? "alert" : "status"} className={`converge-topic-feedback mt-3 text-sm ${messageTone === "error" ? "text-red-200" : messageTone === "success" ? "text-emerald-200" : "text-white/60"}`}>{message}</p>
               )}
               <p className="converge-topic-compose-hint mt-3 text-xs text-white/45">Your reply appears in the community discussion.</p>
-            </form>     </form>
+            </form>
             ) : (
               <div className="mt-8 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-5 sm:p-6">
                 <h3 className="font-semibold">{community.visibility === "PUBLIC" ? "Join to participate" : "Community membership required"}</h3>
