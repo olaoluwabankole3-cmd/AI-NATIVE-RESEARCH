@@ -396,17 +396,22 @@ export default function DirectConversationPage() {
               {requestStatus === "IGNORED" && requestCreatorId === viewerId && <div className="border-b border-white/10 px-4 py-3 text-xs text-white/50 sm:px-6">This message request was ignored. You can no longer send messages in this conversation.</div>}
               {blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">You have blocked this person. Open conversation options above to unblock them.</div>}
               {blockedBetween && !blockedByMe && <div className="border-b border-red-300/15 bg-red-300/[0.04] px-4 py-3 text-xs leading-5 text-red-100/80 sm:px-6">Messaging is unavailable because one of you has blocked the other.</div>}
-              <div ref={messagesViewportRef} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" className="converge-chat-messages min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-5 sm:px-6 sm:py-7">
+              <div ref={messagesViewportRef} onScroll={trackMessageScroll} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" className="converge-chat-messages min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-5 sm:px-6 sm:py-7">
                 {member && <p className="figma-chat-privacy">Only you and {member.display_name} can see this chat.</p>}
-                {messages.length ? messages.map((message) => {
+                {messages.length ? messages.map((message, index) => {
                   const own = message.sender_id === viewerId;
                   return (
-                    <div key={message.id} className={["flex", own ? "justify-end" : "justify-start"].join(" ")}>
+                    <Fragment key={message.id}>
+                      {(index === 0 || !sameChatDay(messages[index - 1].created_at, message.created_at)) && (
+                        <div className="converge-chat-day-separator" role="separator" aria-label={chatDayLabel(message.created_at)}><span>{chatDayLabel(message.created_at)}</span></div>
+                      )}
+                    <div className={["flex", own ? "justify-end" : "justify-start"].join(" ")}>
                       <div className={["max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[75%]", own ? "rounded-br-md border border-emerald-200/15 bg-emerald-200/[0.11]" : "rounded-bl-md border border-white/[0.08] bg-white/[0.035]"].join(" ")}>
                         <p className="whitespace-pre-wrap break-words text-sm leading-6 text-white/85">{message.body}</p>
-                        <p className={["mt-2 text-right text-[9px]", own ? "text-emerald-100/55" : "text-white/30"].join(" ")}>{own ? "You · " : ""}{timeLabel(message.created_at)}</p>
+                        <time dateTime={message.created_at} title={new Date(message.created_at).toLocaleString()} className={["converge-chat-time mt-2 block text-right text-[9px]", own ? "text-emerald-100/55" : "text-white/30"].join(" ")}>{own ? "You · " : ""}{chatTime(message.created_at)}</time>
                       </div>
                     </div>
+                    </Fragment>
                   );
                 }) : (
                   <div className="flex min-h-[35vh] flex-col items-center justify-center px-4 text-center">
@@ -416,8 +421,9 @@ export default function DirectConversationPage() {
                   </div>
                 )}
               </div>
+              {showJumpToLatest && <button type="button" className="converge-chat-jump-latest" onClick={scrollToLatest} aria-label="Jump to latest messages">↓ Latest messages</button>}
               {pageError && <p role="alert" className="mx-4 mb-3 rounded-xl border border-red-300/20 bg-red-300/[0.05] px-3 py-2 text-xs leading-5 text-red-200 sm:mx-6">{pageError}</p>}
-              {canSend ? <form onSubmit={sendMessage} className="converge-chat-composer border-t border-white/[0.08] p-3 sm:p-5" aria-label="Send a direct message">
+              {canSend ? <form onSubmit={sendMessage} className="converge-chat-composer border-t border-white/[0.08] p-3 sm:p-5" aria-label="Send a direct message" aria-busy={sending}>
                 <label htmlFor="message-body" className="sr-only">Write a message</label>
                 <div className="flex items-end gap-2 rounded-2xl border border-white/[0.1] bg-[#0b1110] p-2 focus-within:border-emerald-200/25">
                   <textarea id="message-body" ref={messageInputRef} value={draft} onChange={(event) => { setDraft(event.target.value); setSendFeedback("idle"); resizeMessageInput(event.currentTarget); }}
@@ -425,7 +431,7 @@ export default function DirectConversationPage() {
                      aria-describedby="converge-message-composer-help"
                      placeholder={isOutgoingRequest ? "Write your introductory message…" : "Write a message…"}
                      className="min-w-0 max-h-36 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-base leading-6 text-white outline-none placeholder:text-white/35 sm:text-sm" />
-                  <button type="submit" disabled={!draft.trim() || sending || draft.trim().length > 5000} className="mb-0.5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-200 px-4 py-3 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"><CommunicationIcon name="send" className="size-4" /><span>{sending ? "Sending…" : "Send"}</span></button>
+                  <button type="submit" aria-label={sending ? "Sending message" : "Send message"} disabled={!draft.trim() || sending || draft.trim().length > 5000} className="mb-0.5 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-emerald-200 px-4 py-3 text-xs font-bold text-[#0b1710] transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"><CommunicationIcon name="send" className="size-4" /><span>{sending ? "Sending…" : "Send"}</span></button>
                 </div>
                 <div id="converge-message-composer-help" className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-white/45">
                   <span>{isOutgoingRequest ? "Send one introduction. Replies unlock when accepted." : <>
@@ -435,6 +441,7 @@ export default function DirectConversationPage() {
                   <span className={draft.length > 4500 ? "text-amber-100" : ""}>{draft.length.toLocaleString()} / 5,000</span>
                 </div>
                 <div role="status" aria-live="polite" className="min-h-4 px-1 text-[11px]">
+                  {sending && <span className="converge-chat-sending">Sending message…</span>}
                   {sendFeedback === "sent" && !draft && <span className="inline-flex items-center gap-1.5 text-emerald-100"><CommunicationIcon name="check" className="size-3.5" />Message sent</span>}
                   {sendFeedback === "failed" && <span className="text-red-200">Not sent — your draft is preserved. Try again.</span>}
                 </div>
