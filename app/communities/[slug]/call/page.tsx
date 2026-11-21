@@ -190,6 +190,13 @@ export default function CommunityCallPage() {
         const result = await fetch("/api/communities/" + view.community.id + "/call", {
           cache: "no-store", signal: controller.signal,
         });
+        if (result.status === 401 || result.status === 403 || result.status === 404) {
+          if (!cancelled) {
+            setError("Your community call access has changed. The meeting has been disconnected.");
+            setView(null);
+          }
+          return;
+        }
         if (!result.ok) return;
         const status = await result.json() as { expired?: boolean };
         if (status.expired && !cancelled) {
