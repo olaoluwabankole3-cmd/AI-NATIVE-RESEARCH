@@ -69,7 +69,10 @@ export default function CommunitiesPage() {
       if (user) {
         const { data: memberships, error: membershipsError } = await supabase
           .from("community_members").select("community_id").eq("user_id", user.id);
-        setJoinedCommunityIds(membershipsError ? [] : (memberships ?? []).map((m) => m.community_id));
+        setJoinedCommunityIds([...new Set([
+          ...(membershipsError ? [] : (memberships ?? []).map((m) => m.community_id)),
+          ...communityList.filter((community) => community.created_by === user.id).map((community) => community.id),
+        ])]);
       } else {
         setJoinedCommunityIds([]);
       }
@@ -107,6 +110,23 @@ export default function CommunitiesPage() {
       return matchesFilter && matchesSearch && matchesCommunity;
     });
   }, [topics, search, filter, communityView, joinedCommunityIds]);
+
+  const communityConversationMap = useMemo(() => {
+    const latest = new Map<string, Topic>();
+    for (const topic of topics) {
+      // This query is already filtered by existing Supabase read permissions.
+      if (!latest.has(topic.community_id)) latest.set(topic.community_id, topic);
+    }
+    return latest;
+  }, [topics]);
+
+  const shownCommunities = useMemo(() => {
+    const joined = new Set(joinedCommunityIds);
+    return [...filteredCommunities].sort((a, b) =>
+      Number(joined.has(b.id)) - Number(joined.has(a.id)));
+  }, [filteredCommunities, joinedCommunityIds]);
+
+  const memberCommunityCount = communities.filter((community) => joinedCommunityIds.includes(community.id)).length;
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -199,6 +219,56 @@ export default function CommunitiesPage() {
               onClick={() => setCommunityView(tab.value)}>{tab.label}</button>
           ))}
         </div>
+        <section id="converge-your-communities" className="converge-community-landing mt-5 scroll-mt-24" aria-label="Your communities and community discovery">
+          <div className="converge-community-landing__header">
+            <div>
+              <p className="converge-community-landing__eyebrow">{communityView === "EXPLORE" ? "DISCOVER" : "YOUR NETWORK"}</p>
+              <h2>{communityView === "EXPLORE" ? "Explore communities" : communityView === "JOINED" ? "Your communities" : memberCommunityCount ? "Your communities" : "Find your community"}</h2>
+              <p>{communityView === "EXPLORE" ? "Find people working on ideas you care about." :
+                memberCommunityCount ? "Get back to your conversations and research rooms." :
+                "Join a community to start collaborating with people and AI."}</p>
+            </div>
+            <div className="converge-community-landing__actions">
+              <button type="button" onClick={() => setCommunityView(communityView === "EXPLORE" ? "JOINED" : "EXPLORE")}>
+                {communityView === "EXPLORE" ? "My communities" : "Discover"} <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+          </div>
+          <div className="converge-community-landing__list" aria-live="polite">
+            {loading ? <div className="converge-community-landing__placeholder">Loading your communities…</div> :
+              shownCommunities.slice(0, 8).length ? shownCommunities.slice(0, 8).map((community) => {
+                const joined = joinedCommunityIds.includes(community.id);
+                const latestTopic = communityConversationMap.get(community.id);
+                const canPreview = community.visibility === "PUBLIC" || joined;
+                return (
+                  <Link key={community.id} href={`/communities/${community.slug}`} className="converge-community-landing__row">
+                    <span className="converge-community-landing__avatar" aria-hidden="true">{community.name.charAt(0).toUpperCase()}</span>
+                    <span className="converge-community-landing__copy">
+                      <span className="converge-community-landing__name">{community.name}</span>
+                      <span className="converge-community-landing__preview">
+                        {canPreview && latestTopic
+                          ? `${latestTopic.type === "RESEARCH" ? "Research" : "Discussion"} · ${latestTopic.title}`
+                          : community.visibility === "PRIVATE" && !joined ? "Private · Approval required"
+                          : community.description || "A space for shared conversations"}
+                      </span>
+                    </span>
+                    <span className="converge-community-landing__meta">
+                      <span>{joined ? "Joined" : community.visibility === "PRIVATE" ? "Private" : "Explore"}</span>
+                      <span className="converge-community-landing__chevron" aria-hidden="true">›</span>
+                    </span>
+                  </Link>
+                );
+              }) : <div className="converge-community-landing__placeholder">
+                {search.trim() ? "No communities match your search." :
+                  communityView === "JOINED" ? "You have not joined a community yet." : "No communities available yet."}
+              </div>}
+          </div>
+          {shownCommunities.length > 8 && <button type="button" className="converge-community-landing__more"
+            onClick={() => document.getElementById("communities-directory")?.scrollIntoView({ behavior: "smooth", block: "start" })}>
+              View all {shownCommunities.length} communities <span aria-hidden="true">↓</span>
+            </button>}
+        </section>
+
         <div className="converge-research-board converge-research-board--clean grid gap-7 pt-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
           <aside className="figma-research-spaces space-y-6">
             <section className="rounded-xl border border-white/[0.09] bg-white/[0.018] p-4">
@@ -218,7 +288,7 @@ export default function CommunitiesPage() {
               <h2>Where ideas become evidence.</h2>
               <span>Follow meaningful questions. Think with people and AI. Keep the findings.</span>
             </div>
-            <h2 className="figma-research-mobile-section-title">ACTIVE TOPICS</h2>
+            <h2 className="figma-research-mobile-section-title">RECENT CONVERSATIONS</h2>
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.09] pb-4">
               <div><h2 className="text-lg font-semibold tracking-tight">Explore topics</h2><p className="mt-1 text-xs text-white/45">{loading ? "Loading topics…" : `${filteredTopics.length} of ${topics.length} recent topics`}</p></div>
               <div role="group" aria-label="Filter topics" className="flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border border-white/[0.08] bg-white/[0.02] p-1">{filters.map((item) => <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)} className={`min-h-10 shrink-0 rounded-md px-3 py-2 text-xs font-medium transition ${filter === item.id ? "bg-emerald-200 text-[#0b1710]" : "text-white/50 hover:text-white"}`}>{item.label}</button>)}</div>

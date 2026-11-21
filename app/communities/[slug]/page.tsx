@@ -18,6 +18,7 @@ type Community = {
 };
 type Topic = { id: string; title: string; body: string; type: "DISCUSSION" | "RESEARCH"; created_at: string; created_by: string };
 type TopicFilter = "ALL" | "RESEARCH" | "DISCUSSION";
+type TopicActivity = { topic_id: string; body: string; created_at: string };
 type CommunityRole = "OWNER" | "MODERATOR" | "MEMBER";
 type JoinRequest = { id: string; status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"; message?: string | null };
 
@@ -35,9 +36,10 @@ function relativeDate(value: string) {
 
 export default function CommunityPage() {
   const params = useParams<{ slug: string }>();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [community, setCommunity] = useState<Community | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [latestReplyByTopic, setLatestReplyByTopic] = useState<Record<string, TopicActivity>>({});
   const [memberCount, setMemberCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [isMember, setIsMember] = useState(false);
@@ -71,6 +73,7 @@ export default function CommunityPage() {
     setMessage("");
     setCommunity(null);
     setTopics([]);
+    setLatestReplyByTopic({});
     setMemberCount(0);
     setIsMember(false);
     setIsBanned(false);
@@ -148,7 +151,23 @@ export default function CommunityPage() {
         setMessage("Topics could not be loaded. Please refresh and try again.");
         setMessageTone("error");
       } else {
-        setTopics((topicData ?? []).map((topic) => ({ ...topic, type: topic.type as Topic["type"] })));
+        const loadedTopics = (topicData ?? []).map((topic) => ({ ...topic, type: topic.type as Topic["type"] }));
+        setTopics(loadedTopics);
+        // Recent replies drive WhatsApp-style conversation ordering. The
+        // existing posts RLS continues to control which messages are readable.
+        if (loadedTopics.length) {
+          const { data: recentPosts, error: postsError } = await supabase.from("posts")
+            .select("topic_id, body, created_at")
+            .in("topic_id", loadedTopics.slice(0, 100).map((topic) => topic.id))
+            .order("created_at", { ascending: false }).limit(300);
+          if (!postsError) {
+            const activity: Record<string, TopicActivity> = {};
+            for (const post of recentPosts ?? []) {
+              if (!activity[post.topic_id]) activity[post.topic_id] = post;
+            }
+            setLatestReplyByTopic(activity);
+          }
+        }
       }
       if (!memberResult.error && memberResult.count !== null) setMemberCount(memberResult.count ?? 0);
     }
@@ -157,14 +176,49 @@ export default function CommunityPage() {
 
   useEffect(() => { if (params.slug) void loadCommunity(); }, [params.slug]);
 
+  // Reuse the posts Realtime publication already used by individual topics.
+  // Only activity from topics visible to this member is reflected in this list.
+  useEffect(() => {
+    if (!community || !topics.length || privateLocked) return;
+    const allowedTopicIds = new Set(topics.map((topic) => topic.id));
+    const channel = supabase.channel("community-activity-" + community.id)
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "posts",
+      }, (payload) => {
+        const post = payload.new as Partial<TopicActivity>;
+        if (!post.topic_id || !allowedTopicIds.has(post.topic_id) ||
+            !post.created_at || typeof post.body !== "string") return;
+        setLatestReplyByTopic((current) => {
+          const old = current[post.topic_id!];
+          if (old && old.created_at >= post.created_at!) return current;
+          return { ...current, [post.topic_id!]: post as TopicActivity };
+        });
+      }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [community?.id, topics, privateLocked, supabase]);
+
   const visibleTopics = useMemo(() => {
     const query = search.trim().toLowerCase();
     return topics.filter((topic) => {
       const matchesType = filter === "ALL" || topic.type === filter;
-      const matchesSearch = !query || [topic.title, topic.body].some((value) => value.toLowerCase().includes(query));
+      const lastReply = latestReplyByTopic[topic.id];
+      const matchesSearch = !query || [topic.title, topic.body, lastReply?.body ?? ""]
+        .some((value) => value.toLowerCase().includes(query));
       return matchesType && matchesSearch;
+    }).sort((a, b) => {
+      const aTime = latestReplyByTopic[a.id]?.created_at ?? a.created_at;
+      const bTime = latestReplyByTopic[b.id]?.created_at ?? b.created_at;
+      return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
-  }, [topics, filter, search]);
+  }, [topics, filter, search, latestReplyByTopic]);
+
+  const organizerTopic = useMemo(() => topics
+    .filter((topic) => topic.created_by === community?.created_by)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] ?? null,
+    [topics, community?.created_by]);
+
+  const discussionCount = topics.filter((topic) => topic.type === "DISCUSSION").length;
+  const researchCount = topics.filter((topic) => topic.type === "RESEARCH").length;
 
   async function handleDeleteTopic(topic: Topic) {
     if (!community || !userId || deletingTopicId) return;
@@ -258,7 +312,7 @@ export default function CommunityPage() {
     }
     const { data: topic, error } = await supabase.from("topics").insert({
       community_id: community.id, title: trimmedTitle, body: trimmedBody, type, created_by: user.id,
-    }).select("id, title, body, type, created_at").single();
+    }).select("id, title, body, type, created_at, created_by").single();
     if (error) {
       setMessage(error.message.includes("row-level security")
         ? "Topic creation is disabled for members of this community."
@@ -294,36 +348,57 @@ export default function CommunityPage() {
         <strong>New topic</strong>
       </nav>}
       <div className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-7 lg:px-10">
-        <div className="border-b border-white/[0.09] py-5"><Link href="/communities" className="inline-flex items-center gap-2 text-xs font-medium text-white/45 transition hover:text-emerald-200">← All communities</Link></div>
+        <div className="converge-community-back border-b border-white/[0.09] py-5"><Link href="/communities" className="inline-flex items-center gap-2 text-xs font-medium text-white/45 transition hover:text-emerald-200">← All communities</Link></div>
 
-        <section className="converge-page-intro border-b border-white/[0.09] py-8 sm:py-10">
-          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-emerald-200/20 bg-emerald-200/[0.07] text-lg font-semibold text-emerald-200">{community.name.charAt(0).toUpperCase()}</span>
-                <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200/70">Community</p><p className="mt-1 text-xs text-white/35">A shared space on Converge</p></div>
-                <span className={"inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] " + (community.visibility === "PRIVATE" ? "border-amber-200/20 bg-amber-200/[0.06] text-amber-100/75" : "border-emerald-200/20 bg-emerald-200/[0.05] text-emerald-100/75")}>{community.visibility === "PRIVATE" ? "▣ Private" : "◉ Public"}</span>
+        <header id="community-overview" className="converge-community-head converge-page-intro">
+          <div className="converge-community-head__main">
+            <span className="converge-community-head__avatar" aria-hidden="true">{community.name.charAt(0).toUpperCase()}</span>
+            <div className="converge-community-head__details">
+              <div className="converge-community-head__eyebrow">
+                <span>Community</span>
+                <span className="converge-community-head__privacy">{community.visibility === "PRIVATE" ? "Private" : "Public"}</span>
               </div>
-              <h1 className="mt-5 break-words text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">{community.name}</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-white/50">{community.description || "A shared space for thoughtful discussion, evidence, and research."}</p>
-              <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-white/40">
+              <h1>{community.name}</h1>
+              <p className="converge-community-head__description">{community.description || "A shared space for discussion, evidence and research."}</p>
+              <div className="converge-community-head__meta">
                 {(community.visibility === "PUBLIC" || isOwner) && <span>{memberCount} {memberCount === 1 ? "member" : "members"}</span>}
-                <span className="text-white/20">·</span>
-                <span>{privateLocked ? "Topics hidden until your request is approved" : topics.length + (topics.length === 1 ? " topic" : " topics")}</span>
-                {isOwner && <><span className="text-white/20">·</span><span className="text-emerald-200/70">You own this community</span></>}
+                {!privateLocked && <><span>{discussionCount} discussions</span><span>{researchCount} research rooms</span></>}
+                {isOwner && <span className="converge-community-head__owner">You manage this community</span>}
               </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(isOwner || memberRole === "OWNER" || memberRole === "MODERATOR") && <Link href={"/communities/" + community.slug + "/members"} className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-white/75 transition hover:border-emerald-200/30 hover:text-emerald-100">Manage members ↗</Link>}
-              {isOwner && <Link href={"/communities/" + community.slug + "/settings"} className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium text-white/75 transition hover:border-emerald-200/30 hover:text-emerald-100">Community settings{pendingRequestCount > 0 ? " · " + pendingRequestCount + " pending" : ""}</Link>}
-              {!currentIsMember && community.visibility === "PUBLIC" && <button type="button" disabled={joining} onClick={() => void handleJoinPublic()} className="inline-flex items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100 disabled:opacity-50">{joining ? "Joining…" : "Join community"}</button>}
-              {privateLocked && !isBanned && joinRequest?.status !== "PENDING" && <button type="button" onClick={() => setShowRequestForm((value) => !value)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-200 px-4 py-2.5 text-sm font-semibold text-[#0b1710] transition hover:bg-emerald-100">{showRequestForm ? "Cancel request" : "Request access"}</button>}
-              {canCreateTopic && <button type="button" onClick={() => { setShowForm((value) => !value); setMessage(""); }} className="inline-flex items-center gap-2 rounded-lg border border-emerald-200/25 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-200/10"><span className="text-lg leading-none">{showForm ? "×" : "+"}</span>{showForm ? "Cancel topic" : "Create topic"}</button>}
             </div>
           </div>
-        </section>
+          <div className="converge-community-head__actions">
+            {!currentIsMember && community.visibility === "PUBLIC" && <button type="button" disabled={joining} onClick={() => void handleJoinPublic()} className="converge-community-action converge-community-action--primary">{joining ? "Joining…" : "Join community"}</button>}
+            {privateLocked && !isBanned && joinRequest?.status !== "PENDING" && <button type="button" onClick={() => setShowRequestForm((value) => !value)} className="converge-community-action converge-community-action--primary">{showRequestForm ? "Cancel request" : "Request access"}</button>}
+            {canCreateTopic && <button type="button" onClick={() => { setShowForm((value) => !value); setMessage(""); }} aria-expanded={showForm} aria-controls="create-topic-form" className="converge-community-action converge-community-action--primary"><span aria-hidden="true">{showForm ? "×" : "+"}</span>{showForm ? "Cancel" : "New discussion"}</button>}
+            {(isOwner || memberRole === "OWNER" || memberRole === "MODERATOR") && <details className="converge-community-manage-menu">
+              <summary aria-label="Community management options" className="converge-community-action">Manage <span aria-hidden="true">⋯</span>{pendingRequestCount > 0 && isOwner && <span className="converge-community-manage-menu__count">{pendingRequestCount}</span>}</summary>
+              <div className="converge-community-manage-menu__links">
+                <Link href={"/communities/" + community.slug + "/members"}>Manage members</Link>
+                {isOwner && <Link href={"/communities/" + community.slug + "/settings"}>Community settings{pendingRequestCount ? " · " + pendingRequestCount + " pending" : ""}</Link>}
+              </div>
+            </details>}
+          </div>
+        </header>
 
-        {community && currentIsMember && !isBanned && <CommunityCallCard communityId={community.id} slug={community.slug} />}
+        {!privateLocked && <nav className="converge-community-section-nav" aria-label="Community sections">
+          <a href="#community-conversations" onClick={() => setFilter("ALL")} className={filter === "ALL" ? "is-active" : ""} aria-current={filter === "ALL" ? "location" : undefined}>All <span>{topics.length}</span></a>
+          <a href="#community-conversations" onClick={() => setFilter("DISCUSSION")} className={filter === "DISCUSSION" ? "is-active" : ""} aria-current={filter === "DISCUSSION" ? "location" : undefined}>Discussions <span>{discussionCount}</span></a>
+          <a href="#community-conversations" onClick={() => setFilter("RESEARCH")} className={filter === "RESEARCH" ? "is-active" : ""} aria-current={filter === "RESEARCH" ? "location" : undefined}>Research <span>{researchCount}</span></a>
+          {currentIsMember && !isBanned && <a href="#community-call" className="converge-community-section-nav__call">Group call <span aria-hidden="true">↗</span></a>}
+        </nav>}
+
+        {!privateLocked && organizerTopic && <section className="converge-community-organizer" aria-label="Latest topic from the community owner">
+          <div className="converge-community-organizer__symbol" aria-hidden="true">✦</div>
+          <div className="converge-community-organizer__body">
+            <p>FROM THE COMMUNITY OWNER <span>· {relativeDate(organizerTopic.created_at)}</span></p>
+            <Link href={"/topics/" + organizerTopic.id}>{organizerTopic.title}</Link>
+            <span className="converge-community-organizer__preview">{organizerTopic.body}</span>
+          </div>
+          <Link href={"/topics/" + organizerTopic.id} aria-label={"Open owner topic: " + organizerTopic.title} className="converge-community-organizer__open">↗</Link>
+        </section>}
+
+        {community && currentIsMember && !isBanned && <div id="community-call" className="converge-community-call-anchor"><CommunityCallCard communityId={community.id} slug={community.slug} /></div>}
 
         {message && <p role="status" className={"mt-4 rounded-lg border px-4 py-3 text-sm " + (messageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-100")}>{message}</p>}
 
@@ -355,17 +430,59 @@ export default function CommunityPage() {
         </form>}
 
         {!privateLocked && <div className="grid gap-8 pt-7 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-10">
-          <section className="min-w-0">
-            <div className="flex flex-col justify-between gap-4 border-b border-white/[0.09] pb-4 sm:flex-row sm:items-end">
-              <div><h2 className="text-xl font-semibold tracking-tight">Topics</h2><p className="mt-1 text-xs text-white/35">{visibleTopics.length} shown · newest first</p></div>
-              <div className="flex flex-wrap gap-1 rounded-lg border border-white/[0.08] bg-white/[0.02] p-1">{([{id:"ALL",label:"All topics"},{id:"DISCUSSION",label:"Discussions"},{id:"RESEARCH",label:"Research"}] as {id:TopicFilter;label:string}[]).map((item) => <button key={item.id} type="button" onClick={() => setFilter(item.id)} className={"rounded-md px-3 py-1.5 text-xs font-medium transition " + (filter === item.id ? "bg-emerald-200 text-[#0b1710]" : "text-white/50 hover:text-white")}>{item.label}</button>)}</div>
+          <section id="community-conversations" className="converge-community-conversations min-w-0 scroll-mt-32" aria-label="Community discussions and research rooms">
+            <div className="converge-community-conversations__heading">
+              <div>
+                <p className="converge-community-conversations__eyebrow">COMMUNITY CONVERSATIONS</p>
+                <h2>{filter === "RESEARCH" ? "Research rooms" : filter === "DISCUSSION" ? "Discussions" : "All conversations"}</h2>
+                <p>{visibleTopics.length} {visibleTopics.length === 1 ? "conversation" : "conversations"} · most recently active first</p>
+              </div>
+              {canCreateTopic && <button type="button" className="converge-community-conversations__new" onClick={() => { setShowForm(true); setMessage(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>+ New topic</button>}
             </div>
-            {!currentIsMember && community.visibility === "PUBLIC" && <div className="mt-4 rounded-lg border border-emerald-200/15 bg-emerald-200/[0.035] px-4 py-3 text-sm text-white/60">You are viewing a public community. <button type="button" onClick={() => void handleJoinPublic()} className="font-semibold text-emerald-200 hover:text-white">Join to participate</button> in discussions and start topics.</div>}
-            {!canCreateTopic && currentIsMember && <p className="mt-3 text-xs text-white/35">The owner has limited topic creation to community owners.</p>}
-            <label className="mt-4 block"><span className="sr-only">Search topics in this community</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search topics in this community…" className="w-full rounded-lg border border-white/10 bg-white/[0.02] px-3.5 py-3 text-sm outline-none placeholder:text-white/25 focus:border-emerald-200/40" /></label>
+            {!currentIsMember && community.visibility === "PUBLIC" && <p className="converge-community-join-note">You can read this public space. <button type="button" onClick={() => void handleJoinPublic()}>Join to participate</button> in conversations.</p>}
+            {!canCreateTopic && currentIsMember && <p className="converge-community-join-note">The owner currently manages who can start new topics. Members can still participate in existing conversations.</p>}
+            <div className="converge-community-conversations__tools">
+              <label className="converge-community-conversations__search">
+                <span className="sr-only">Search discussions and research rooms</span>
+                <span aria-hidden="true">⌕</span>
+                <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search conversations…" />
+                {search && <button type="button" aria-label="Clear community search" onClick={() => setSearch("")}>×</button>}
+              </label>
+              <div className="converge-community-conversations__filters" role="group" aria-label="Filter community conversations">
+                {([{ id:"ALL",label:"All" },{ id:"DISCUSSION",label:"Discussions" },{ id:"RESEARCH",label:"Research" }] as { id:TopicFilter; label:string }[]).map((item) =>
+                  <button key={item.id} type="button" aria-pressed={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}</button>
+                )}
+              </div>
+            </div>
             {visibleTopics.length === 0 ? (
-              <div className="my-5 rounded-xl border border-dashed border-white/15 px-5 py-12 text-center"><span className="text-2xl text-emerald-200">↗</span><h3 className="mt-3 text-base font-semibold">{search ? "No matching topics" : filter === "RESEARCH" ? "No research topics yet" : filter === "DISCUSSION" ? "No discussions yet" : "Start the first conversation"}</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/40">{search ? "Try another search or clear the current query." : canCreateTopic ? "A strong topic gives the community a specific question or problem to work through together." : "The community owner controls who can open new topics."}</p>{search ? <button type="button" onClick={() => setSearch("")} className="mt-4 text-xs font-semibold text-emerald-200">Clear search</button> : canCreateTopic ? <button type="button" onClick={() => setShowForm(true)} className="mt-4 text-xs font-semibold text-emerald-200">Create a topic →</button> : null}</div>
-            ) : <div className="divide-y divide-white/[0.085]">{visibleTopics.map((topic) => <article key={topic.id} className="group py-5 sm:py-6"><div className="flex items-start gap-3 sm:gap-4"><span className={"mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg border text-xs font-bold " + (topic.type === "RESEARCH" ? "border-sky-300/20 bg-sky-300/[0.07] text-sky-200" : "border-emerald-200/20 bg-emerald-200/[0.06] text-emerald-200")}>{topic.type === "RESEARCH" ? "R" : "D"}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em]"><span className={topic.type === "RESEARCH" ? "text-sky-200/80" : "text-emerald-200/80"}>{topic.type === "RESEARCH" ? "Research" : "Discussion"}</span><span className="text-white/20">·</span><span className="text-white/35">{relativeDate(topic.created_at)}</span></div><Link href={"/topics/" + topic.id} className="mt-2 block text-base font-semibold leading-6 tracking-[-0.015em] text-white/90 transition group-hover:text-emerald-100 sm:text-lg">{topic.title}</Link><p className="mt-2 line-clamp-3 whitespace-pre-line text-sm leading-6 text-white/45">{topic.body}</p><div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">{(isOwner || topic.created_by === userId || memberRole === "OWNER" || memberRole === "MODERATOR") && <button type="button" disabled={deletingTopicId === topic.id} onClick={() => void handleDeleteTopic(topic)} className="inline-flex text-xs font-medium text-red-300/70 transition hover:text-red-200 disabled:opacity-40">{deletingTopicId === topic.id ? "Deleting…" : "Delete topic"}</button>}</div></div></div></article>)}</div>}
+              <div className="converge-community-conversations__empty">
+                <span aria-hidden="true">✦</span>
+                <h3>{search ? "No matching conversations" : filter === "RESEARCH" ? "No research rooms yet" : filter === "DISCUSSION" ? "No discussions yet" : "Start the first conversation"}</h3>
+                <p>{search ? "Try a different search or clear the search field." : canCreateTopic ? "Bring a question to the community and start a discussion." : "New topics will appear here when they are created."}</p>
+                {search ? <button type="button" onClick={() => setSearch("")}>Clear search</button> :
+                  canCreateTopic && <button type="button" onClick={() => setShowForm(true)}>Create a topic</button>}
+              </div>
+            ) : <div className="converge-community-conversations__list">
+              {visibleTopics.map((topic) => {
+                const recentReply = latestReplyByTopic[topic.id];
+                const activityTime = recentReply?.created_at ?? topic.created_at;
+                const canModerateTopic = isOwner || topic.created_by === userId || memberRole === "OWNER" || memberRole === "MODERATOR";
+                return <article key={topic.id} className="converge-community-conversation">
+                  <Link href={"/topics/" + topic.id} className="converge-community-conversation__link">
+                    <span className={"converge-community-conversation__avatar " + (topic.type === "RESEARCH" ? "is-research" : "is-discussion")} aria-hidden="true">{topic.type === "RESEARCH" ? "✦" : "◌"}</span>
+                    <span className="converge-community-conversation__content">
+                      <span className="converge-community-conversation__meta">{topic.type === "RESEARCH" ? "Research room" : "Group discussion"}{recentReply && <span> · Newest reply</span>}</span>
+                      <strong>{topic.title}</strong>
+                      <span className="converge-community-conversation__preview">{recentReply?.body || topic.body}</span>
+                    </span>
+                    <span className="converge-community-conversation__time"><time dateTime={activityTime} title={new Date(activityTime).toLocaleString()}>{relativeDate(activityTime)}</time><span aria-hidden="true">›</span></span>
+                  </Link>
+                  {canModerateTopic && <div className="converge-community-conversation__moderation">
+                    <button type="button" disabled={deletingTopicId === topic.id} onClick={() => void handleDeleteTopic(topic)}>{deletingTopicId === topic.id ? "Deleting…" : "Delete topic"}</button>
+                  </div>}
+                </article>;
+              })}
+            </div>}
           </section>
           <aside className="converge-community-info-aside space-y-4">
             <section className="rounded-xl border border-white/[0.09] bg-white/[0.018] p-5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200/75">About this space</p><h2 className="mt-3 text-base font-semibold">{community.name}</h2><p className="mt-2 text-sm leading-6 text-white/45">{community.description || "A shared space for thoughtful discussion and research."}</p><div className="mt-4 border-t border-white/[0.08] pt-4"><div className="flex items-center justify-between py-1.5 text-xs"><span className="text-white/40">Access</span><span className="font-medium text-white/75">{community.visibility === "PUBLIC" ? "Open to join" : "Private"}</span></div>{(community.visibility === "PUBLIC" || isOwner) && <div className="flex items-center justify-between py-1.5 text-xs"><span className="text-white/40">Members</span><span className="font-medium text-white/75">{memberCount}</span></div>}<div className="flex items-center justify-between py-1.5 text-xs"><span className="text-white/40">Topics</span><span className="font-medium text-white/75">{topics.length}</span></div><div className="flex items-center justify-between py-1.5 text-xs"><span className="text-white/40">Topic creation</span><span className="font-medium text-white/75">{community.members_can_create_topics ? "Members allowed" : "Owner only"}</span></div></div></section>

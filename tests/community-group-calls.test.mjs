@@ -67,7 +67,7 @@ test("only current owners or moderators may kick everyone", () => {
 });
 
 test("community page displays live presence card to approved members", () => {
-  assert.match(communityPage, /currentIsMember && !isBanned && <CommunityCallCard/);
+  assert.match(communityPage, /currentIsMember && !isBanned && <div id="community-call"[^>]*><CommunityCallCard/);
   assert.match(card, /20000/);
   assert.match(card, /Join call/);
   assert.match(card, /Start call/);
