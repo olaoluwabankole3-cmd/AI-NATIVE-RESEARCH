@@ -400,3 +400,143 @@ main.figma-topic .converge-topic-feedback {
     transition:none !important;
   }
 }
+
+
+/* Mobile chat hardening: visible day boundaries, stable composer and reading position. */
+@media (max-width:767px) {
+  main.figma-topic .converge-topic-day-separator,
+  main.figma-conversation .converge-chat-day-separator {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    align-self:stretch;
+    margin:7px 0 3px;
+    text-align:center;
+    color:#aac8b2;
+    font-size:11px;
+    font-weight:600;
+    line-height:1.4;
+  }
+  main.figma-topic .converge-topic-day-separator span,
+  main.figma-conversation .converge-chat-day-separator span {
+    display:inline-block;
+    padding:5px 12px;
+    border:1px solid #2b4837;
+    border-radius:999px;
+    background:#17291f;
+  }
+  main.figma-topic .converge-topic-messages-end {
+    height:1px;
+    flex:0 0 1px;
+    scroll-margin-bottom:112px;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message .flex.flex-wrap > time.converge-topic-post-time {
+    display:inline-block !important;
+    margin-left:auto;
+    font-size:10px !important;
+    font-weight:400 !important;
+    line-height:15px !important;
+    color:#a3b7a9 !important;
+  }
+  main.figma-topic .converge-topic-jump-latest,
+  main.figma-conversation .converge-chat-jump-latest {
+    z-index:70;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:36px;
+    padding:8px 15px;
+    border:1px solid #375a45;
+    border-radius:999px;
+    background:#21392b;
+    box-shadow:0 7px 22px rgba(0,0,0,.4);
+    color:#dbf8e3;
+    font-size:12px;
+    font-weight:700;
+  }
+  main.figma-topic .converge-topic-jump-latest {
+    position:fixed;
+    left:50%;
+    bottom:calc(83px + var(--converge-topic-keyboard-inset,0px) + env(safe-area-inset-bottom));
+    transform:translateX(-50%);
+    z-index:89;
+    white-space:nowrap;
+  }
+  main.figma-topic[data-keyboard-open="true"] .converge-room-discussion form.converge-topic-reply {
+    padding-bottom:8px !important;
+  }
+  main.figma-topic .converge-room-discussion form.converge-topic-reply .converge-topic-publishing-status {
+    position:absolute;
+    bottom:calc(100% + 8px);
+    left:12px;
+    right:12px;
+    z-index:5;
+    margin:0 !important;
+    padding:9px 13px;
+    border:1px solid #30523e;
+    border-radius:12px;
+    background:#1d3828;
+    box-shadow:0 7px 24px #0005;
+    color:#b6edc8;
+    font-size:12px;
+    line-height:1.45;
+  }
+  main.figma-conversation .converge-chat-thread {
+    position:relative !important;
+  }
+  main.figma-conversation .converge-chat-messages {
+    overscroll-behavior-y:contain;
+    -webkit-overflow-scrolling:touch;
+    overflow-anchor:auto;
+    scrollbar-width:thin;
+  }
+  main.figma-conversation .converge-chat-jump-latest {
+    position:absolute;
+    bottom:90px;
+    right:17px;
+  }
+  main.figma-conversation .converge-chat-time {
+    display:block;
+    color:#a1b6a7 !important;
+    font-size:10px !important;
+    line-height:14px !important;
+    margin-top:6px !important;
+  }
+  main.figma-conversation .converge-chat-composer .converge-chat-sending {
+    display:inline-flex;
+    align-items:center;
+    padding:3px 12px 0;
+    color:#b6ebca;
+    font-size:11px;
+  }
+  main.figma-conversation .converge-chat-composer >div[role="status"]:empty {
+    display:none !important;
+  }
+  main.figma-conversation .converge-chat-composer textarea#message-body,
+  main.figma-topic .converge-topic-reply textarea#topic-reply {
+    overflow-wrap:anywhere;
+    -webkit-text-size-adjust:100%;
+    caret-color:#b0edc5;
+  }
+}
+/* Day separators are still useful for desktop chats. */
+@media (min-width:768px) {
+  main.figma-topic .converge-topic-day-separator,
+  main.figma-conversation .converge-chat-day-separator {
+    display:flex;
+    justify-content:center;
+    padding:13px 0 9px;
+    font-size:11px;
+    color:#9cb7a4;
+  }
+  main.figma-conversation .converge-chat-day-separator span,
+  main.figma-topic .converge-topic-day-separator span {
+    padding:5px 12px;
+    border-radius:999px;
+    background:#1d3024;
+  }
+  main.figma-topic .converge-topic-jump-latest,
+  main.figma-conversation .converge-chat-jump-latest {
+    display:none !important;
+  }
+}
