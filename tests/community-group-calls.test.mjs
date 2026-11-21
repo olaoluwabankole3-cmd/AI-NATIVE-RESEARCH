@@ -84,6 +84,12 @@ test("Cloudflare browser UI uses version pinned official SDK web components", ()
   assert.match(callPage, /meetingRef\.current\.leave\(\)/);
 });
 
+test("live group call client disconnects after membership or ban revocation", () => {
+  assert.match(callPage, /result\.status === 401 \|\| result\.status === 403 \|\| result\.status === 404/);
+  assert.match(callPage, /setView\(null\)/);
+  assert.match(callPage, /meetingRef\.current\.leave\(\)/);
+});
+
 test("group calling does not change private voice/video call path", () => {
   assert.match(read("app/calls/[callId]/page.tsx"), /RTCPeerConnection/);
   assert.match(read("app/api/calls/ice/route.ts"), /voiceCallsEnabled/);
