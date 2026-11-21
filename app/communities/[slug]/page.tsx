@@ -18,6 +18,7 @@ type Community = {
 };
 type Topic = { id: string; title: string; body: string; type: "DISCUSSION" | "RESEARCH"; created_at: string; created_by: string };
 type TopicFilter = "ALL" | "RESEARCH" | "DISCUSSION";
+type TopicActivity = { topic_id: string; body: string; created_at: string };
 type CommunityRole = "OWNER" | "MODERATOR" | "MEMBER";
 type JoinRequest = { id: string; status: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED"; message?: string | null };
 
@@ -38,6 +39,7 @@ export default function CommunityPage() {
   const supabase = createClient();
   const [community, setCommunity] = useState<Community | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [latestReplyByTopic, setLatestReplyByTopic] = useState<Record<string, TopicActivity>>({});
   const [memberCount, setMemberCount] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [isMember, setIsMember] = useState(false);
@@ -71,6 +73,7 @@ export default function CommunityPage() {
     setMessage("");
     setCommunity(null);
     setTopics([]);
+    setLatestReplyByTopic({});
     setMemberCount(0);
     setIsMember(false);
     setIsBanned(false);
@@ -148,7 +151,23 @@ export default function CommunityPage() {
         setMessage("Topics could not be loaded. Please refresh and try again.");
         setMessageTone("error");
       } else {
-        setTopics((topicData ?? []).map((topic) => ({ ...topic, type: topic.type as Topic["type"] })));
+        const loadedTopics = (topicData ?? []).map((topic) => ({ ...topic, type: topic.type as Topic["type"] }));
+        setTopics(loadedTopics);
+        // Recent replies drive WhatsApp-style conversation ordering. The
+        // existing posts RLS continues to control which messages are readable.
+        if (loadedTopics.length) {
+          const { data: recentPosts, error: postsError } = await supabase.from("posts")
+            .select("topic_id, body, created_at")
+            .in("topic_id", loadedTopics.slice(0, 100).map((topic) => topic.id))
+            .order("created_at", { ascending: false }).limit(300);
+          if (!postsError) {
+            const activity: Record<string, TopicActivity> = {};
+            for (const post of recentPosts ?? []) {
+              if (!activity[post.topic_id]) activity[post.topic_id] = post;
+            }
+            setLatestReplyByTopic(activity);
+          }
+        }
       }
       if (!memberResult.error && memberResult.count !== null) setMemberCount(memberResult.count ?? 0);
     }
@@ -161,10 +180,24 @@ export default function CommunityPage() {
     const query = search.trim().toLowerCase();
     return topics.filter((topic) => {
       const matchesType = filter === "ALL" || topic.type === filter;
-      const matchesSearch = !query || [topic.title, topic.body].some((value) => value.toLowerCase().includes(query));
+      const lastReply = latestReplyByTopic[topic.id];
+      const matchesSearch = !query || [topic.title, topic.body, lastReply?.body ?? ""]
+        .some((value) => value.toLowerCase().includes(query));
       return matchesType && matchesSearch;
+    }).sort((a, b) => {
+      const aTime = latestReplyByTopic[a.id]?.created_at ?? a.created_at;
+      const bTime = latestReplyByTopic[b.id]?.created_at ?? b.created_at;
+      return new Date(bTime).getTime() - new Date(aTime).getTime();
     });
-  }, [topics, filter, search]);
+  }, [topics, filter, search, latestReplyByTopic]);
+
+  const organizerTopic = useMemo(() => topics
+    .filter((topic) => topic.created_by === community?.created_by)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] ?? null,
+    [topics, community?.created_by]);
+
+  const discussionCount = topics.filter((topic) => topic.type === "DISCUSSION").length;
+  const researchCount = topics.filter((topic) => topic.type === "RESEARCH").length;
 
   async function handleDeleteTopic(topic: Topic) {
     if (!community || !userId || deletingTopicId) return;
