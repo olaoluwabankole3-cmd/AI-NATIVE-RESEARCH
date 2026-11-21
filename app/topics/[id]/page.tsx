@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, FormEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import type { Agent } from "@/lib/agents";
 import { ResearchRoom } from "@/components/research-room";
+import { chatDayLabel, chatTime, sameChatDay } from "@/lib/chat-time";
 
 type Topic = {
   id: string;
@@ -81,6 +82,8 @@ export default function TopicPage() {
   const replyRequestRef = useRef<{ body: string; id: string } | null>(null);
   const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const topicViewportRef = useRef<HTMLElement | null>(null);
+  const topicMessagesEndRef = useRef<HTMLDivElement | null>(null);
+  const hasOpenedLatestRef = useRef(false);
 
   const [topic, setTopic] = useState<Topic | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
@@ -91,6 +94,8 @@ export default function TopicPage() {
   const [posts, setPosts] = useState<PostView[]>([]);
   const [currentParticipantId, setCurrentParticipantId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
+  const [viewerProfile, setViewerProfile] = useState<Profile | null>(null);
+  const [showTopicLatest, setShowTopicLatest] = useState(false);
 
   // The mobile composer starts as one line and grows only when the member types.
   function resizeReplyTextarea(input: HTMLTextAreaElement) {
@@ -102,28 +107,83 @@ export default function TopicPage() {
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error" | "info">("info");
 
-  // Keep the reply action visible above software keyboards without affecting other routes.
+  // Safari sometimes keeps the layout viewport unchanged while its keyboard
+  // covers part of the page. Only offset the composer while its input is focused.
   useEffect(() => {
     const viewport = window.visualViewport;
-    if (!viewport) return;
+    let raf = 0;
     const update = () => {
-      const obscured = Math.max(0, window.innerHeight - (viewport.height + viewport.offsetTop));
-      topicViewportRef.current?.style.setProperty("--converge-topic-keyboard-inset", `${obscured}px`);
+      window.cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(() => {
+        const main = topicViewportRef.current;
+        if (!main) return;
+        const focused = document.activeElement === replyTextareaRef.current;
+        const hiddenByKeyboard = viewport
+          ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+          : 0;
+        const open = focused && hiddenByKeyboard > 100;
+        main.style.setProperty("--converge-topic-keyboard-inset", open ? Math.round(hiddenByKeyboard) + "px" : "0px");
+        main.dataset.keyboardOpen = open ? "true" : "false";
+      });
     };
     update();
-    viewport.addEventListener("resize", update);
-    viewport.addEventListener("scroll", update);
+    viewport?.addEventListener("resize", update);
+    viewport?.addEventListener("scroll", update);
     window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    window.addEventListener("focusin", update);
+    window.addEventListener("focusout", update);
     return () => {
-      viewport.removeEventListener("resize", update);
-      viewport.removeEventListener("scroll", update);
+      window.cancelAnimationFrame(raf);
+      viewport?.removeEventListener("resize", update);
+      viewport?.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+      window.removeEventListener("focusin", update);
+      window.removeEventListener("focusout", update);
     };
   }, []);
 
   useEffect(() => {
     if (!reply && replyTextareaRef.current) replyTextareaRef.current.style.setProperty("height", "44px", "important");
   }, [reply]);
+
+  useEffect(() => {
+    if (!topic || posts.length === 0 || hasOpenedLatestRef.current ||
+        !window.matchMedia("(max-width: 767px)").matches) return;
+    hasOpenedLatestRef.current = true;
+    const raf = window.requestAnimationFrame(() => {
+      topicMessagesEndRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [topic, posts.length]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const nearBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200;
+      setShowTopicLatest(window.matchMedia("(max-width: 767px)").matches && posts.length > 3 && !nearBottom);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [posts.length]);
+
+  function jumpToLatestTopic(behavior: ScrollBehavior = "smooth") {
+    topicMessagesEndRef.current?.scrollIntoView({ block: "end", behavior });
+    setShowTopicLatest(false);
+  }
+
+  function handleReplyKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.metaKey ||
+        event.altKey || event.nativeEvent.isComposing || posting) return;
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
 
   function showMessage(value: string, tone: "success" | "error" | "info" = "info") {
     setMessage(value);
@@ -142,6 +202,8 @@ export default function TopicPage() {
       setTopic(null);
       setCommunity(null);
       setPosts([]);
+      setViewerProfile(null);
+      hasOpenedLatestRef.current = false;
       setCurrentParticipantId(null);
       setTopicParticipants([]);
       setIsCommunityMember(false);
@@ -288,6 +350,8 @@ export default function TopicPage() {
       profileMap = new Map((profileData ?? []).map((profile) => [profile.id, profile]));
     }
 
+    setViewerProfile(profileMap.get(user.id) ?? null);
+
     const registryResponse = await fetch("/api/agents", { cache: "no-store" });
     const registryPayload = await registryResponse.json().catch(() => null);
     const platformAgents: Agent[] = registryResponse.ok && Array.isArray(registryPayload?.agents)
@@ -419,7 +483,7 @@ export default function TopicPage() {
         {
           ...payload.humanPost,
           participant: participantMap.get(payload.humanPost.participant_id),
-          profile: undefined,
+          profile: viewerProfile ?? undefined,
           agent: undefined,
         },
         ...(payload.agentPosts ?? []).map(
@@ -440,6 +504,7 @@ export default function TopicPage() {
 
       if (replyRequestRef.current?.id === requestId) replyRequestRef.current = null;
       setReply("");
+      window.requestAnimationFrame(() => jumpToLatestTopic());
 
       const failures = payload.failures ?? [];
       const failureDetails = (payload.failureDetails ?? []) as Array<{ agentId: string; agentName: string; message: string }>;
