@@ -1,5 +1,6 @@
 -- Server-only mapping from a community to its Cloudflare RealtimeKit meeting.
--- Not applied to live production by this PR. Requires targeted review + migration.
+-- Applied to the existing AI-NATIVE-RESEARCH Supabase database on 2026-11-21.
+-- The migration is additive; keep it in version control for future environments.
 -- Browser clients must never read or mutate meeting identifiers directly.
 
 create table if not exists public.community_group_call_rooms (
