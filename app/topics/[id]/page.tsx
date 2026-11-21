@@ -79,6 +79,8 @@ export default function TopicPage() {
   const router = useRouter();
   const supabase = createClient();
   const replyRequestRef = useRef<{ body: string; id: string } | null>(null);
+  const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const topicViewportRef = useRef<HTMLElement | null>(null);
 
   const [topic, setTopic] = useState<Topic | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
@@ -89,10 +91,39 @@ export default function TopicPage() {
   const [posts, setPosts] = useState<PostView[]>([]);
   const [currentParticipantId, setCurrentParticipantId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
+
+  // The mobile composer starts as one line and grows only when the member types.
+  function resizeReplyTextarea(input: HTMLTextAreaElement) {
+    input.style.setProperty("height", "44px", "important");
+    input.style.setProperty("height", Math.min(Math.max(input.scrollHeight, 44), 120) + "px", "important");
+  }
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error" | "info">("info");
+
+  // Keep the reply action visible above software keyboards without affecting other routes.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const update = () => {
+      const obscured = Math.max(0, window.innerHeight - (viewport.height + viewport.offsetTop));
+      topicViewportRef.current?.style.setProperty("--converge-topic-keyboard-inset", `${obscured}px`);
+    };
+    update();
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!reply && replyTextareaRef.current) replyTextareaRef.current.style.setProperty("height", "44px", "important");
+  }, [reply]);
 
   function showMessage(value: string, tone: "success" | "error" | "info" = "info") {
     setMessage(value);
@@ -581,7 +612,7 @@ export default function TopicPage() {
   }
 
   return (
-    <main className="converge-app-page converge-figma figma-topic min-h-screen bg-[#07110f] text-white">
+    <main ref={topicViewportRef} className="converge-app-page converge-figma figma-topic min-h-screen bg-[#07110f] text-white">
       <SiteHeader />
       <div className="converge-topic-workspace mx-auto max-w-5xl px-5 py-6 sm:px-6 lg:px-10">
         <nav className="converge-mobile-topic-back" aria-label="Research room back navigation">
@@ -784,7 +815,7 @@ export default function TopicPage() {
               </div>
             )}
 
-            <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]">
+            <div className="converge-topic-messages mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.015]" role="log" aria-label="Community discussion replies">
               {posts.length === 0 ? (
                 <div className="border-b border-white/10 p-8 text-center">
                   <div className="mx-auto grid size-11 place-items-center rounded-full bg-emerald-300/10 text-emerald-300">
@@ -799,7 +830,9 @@ export default function TopicPage() {
                 posts.map((post, index) => (
                   <article
                     key={post.id}
-                    className={`border-b border-white/[0.08] p-5 last:border-b-0 sm:p-6 ${post.participant?.participant_type === "AGENT" ? "bg-emerald-300/[0.025]" : "bg-transparent"}`}
+                    data-own={post.participant?.user_id === currentUserId ? "true" : "false"}
+                     data-agent={post.participant?.participant_type === "AGENT" ? "true" : "false"}
+                     className={`converge-topic-message border-b border-white/[0.08] p-5 last:border-b-0 sm:p-6 ${post.participant?.participant_type === "AGENT" ? "bg-emerald-300/[0.025]" : "bg-transparent"}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-emerald-300/10 text-sm font-semibold text-emerald-200">
@@ -827,7 +860,7 @@ export default function TopicPage() {
                             {post.participant?.participant_type === "AGENT" ? "AI specialist" : "Member"}
                           </span>
                           <span className="text-xs text-white/30">·</span>
-                          <span className="text-xs text-white/35">
+                          <span className="converge-topic-post-time text-xs text-white/35">
                             {formatDate(post.created_at)}
                           </span>
                           {index === 0 && (
@@ -852,37 +885,43 @@ export default function TopicPage() {
             <form
               onSubmit={handleReply}
               className="converge-topic-reply mt-8 border-t border-emerald-300/15 pt-5 pb-4 sm:pt-6"
+              aria-label="Reply to this discussion"
             >
-              <div>
+              <div className="converge-topic-composer-heading">
                 <h3 className="font-semibold">Write a reply</h3>
               </div>
-
-              <label htmlFor="topic-reply" className="sr-only">Write a reply to this topic</label>
-              <textarea
-                id="topic-reply"
-                disabled={posting}
-                value={reply}
-                onChange={(event) => setReply(event.target.value)}
-                rows={3}
-                placeholder="Share a thought, question or source…"
-                className="mt-4 w-full resize-y rounded-xl border border-white/10 bg-[#07110f] px-4 py-3 text-sm leading-7 outline-none placeholder:text-white/25 focus:border-emerald-300/50"
-              />
-
-              {message && (
-                <p role={messageTone === "error" ? "alert" : "status"} className={`mt-3 text-sm ${messageTone === "error" ? "text-red-200" : messageTone === "success" ? "text-emerald-200" : "text-white/60"}`}>{message}</p>
-              )}
-
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                 <span className="text-xs text-white/45">Your reply will appear in this discussion.</span>
+              <div className="converge-topic-compose-row">
+                <label htmlFor="topic-reply" className="sr-only">Write a reply to this topic</label>
+                <textarea
+                  id="topic-reply"
+                  ref={replyTextareaRef}
+                  disabled={posting}
+                  value={reply}
+                  onChange={(event) => {
+                    setReply(event.target.value);
+                    resizeReplyTextarea(event.currentTarget);
+                  }}
+                  rows={1}
+                  maxLength={12000}
+                  placeholder="Message the discussion"
+                  className="min-w-0 flex-1 resize-none rounded-xl border border-white/10 bg-[#07110f] px-4 py-3 text-base leading-6 outline-none placeholder:text-white/35 focus:border-emerald-300/50"
+                />
                 <button
                   type="submit"
+                  aria-label={posting ? "Posting reply" : "Send reply"}
                   disabled={posting || !reply.trim()}
-                  className="rounded-xl bg-emerald-300 px-5 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="converge-topic-send-button rounded-xl bg-emerald-300 px-5 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <span className="figma-topic-send-mobile">{posting ? "Posting…" : "Send"}</span><span className="figma-topic-send-desktop">{posting ? "Posting & getting AI replies…" : "Post reply"}</span>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m4 20 16-8L4 4l3 8-3 8Z" /><path d="M7 12h13" /></svg>
+                  <span className="figma-topic-send-mobile">{posting ? "Posting…" : "Send"}</span>
+                  <span className="figma-topic-send-desktop">{posting ? "Posting & getting AI replies…" : "Post reply"}</span>
                 </button>
               </div>
-            </form>
+              {message && (
+                <p role={messageTone === "error" ? "alert" : "status"} className={`converge-topic-feedback mt-3 text-sm ${messageTone === "error" ? "text-red-200" : messageTone === "success" ? "text-emerald-200" : "text-white/60"}`}>{message}</p>
+              )}
+              <p className="converge-topic-compose-hint mt-3 text-xs text-white/45">Your reply appears in the community discussion.</p>
+            </form>     </form>
             ) : (
               <div className="mt-8 rounded-2xl border border-emerald-300/15 bg-emerald-300/[0.025] p-5 sm:p-6">
                 <h3 className="font-semibold">{community.visibility === "PUBLIC" ? "Join to participate" : "Community membership required"}</h3>
