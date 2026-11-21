@@ -42,6 +42,7 @@ export default function DirectConversationPage() {
   const router = useRouter();
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
   const workspaceRef = useRef<HTMLElement | null>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [member, setMember] = useState<MemberProfile | null>(null);
   const [requestStatus, setRequestStatus] = useState<ConversationRow["request_status"]>("ACCEPTED");
@@ -51,6 +52,15 @@ export default function DirectConversationPage() {
   const [moderatingRequest, setModeratingRequest] = useState(false);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [draft, setDraft] = useState("");
+
+  function resizeMessageInput(input: HTMLTextAreaElement) {
+    input.style.setProperty("height", "44px", "important");
+    input.style.setProperty("height", Math.min(Math.max(input.scrollHeight, 44), 120) + "px", "important");
+  }
+
+  useEffect(() => {
+    if (!draft && messageInputRef.current) messageInputRef.current.style.setProperty("height", "44px", "important");
+  }, [draft]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [sendFeedback, setSendFeedback] = useState<"idle" | "sent" | "failed">("idle");
@@ -379,8 +389,8 @@ export default function DirectConversationPage() {
               {canSend ? <form onSubmit={sendMessage} className="converge-chat-composer border-t border-white/[0.08] p-3 sm:p-5" aria-label="Send a direct message">
                 <label htmlFor="message-body" className="sr-only">Write a message</label>
                 <div className="flex items-end gap-2 rounded-2xl border border-white/[0.1] bg-[#0b1110] p-2 focus-within:border-emerald-200/25">
-                  <textarea id="message-body" value={draft} onChange={(event) => { setDraft(event.target.value); setSendFeedback("idle"); }}
-                     onKeyDown={handleComposerKeyDown} maxLength={5000} rows={2}
+                  <textarea id="message-body" ref={messageInputRef} value={draft} onChange={(event) => { setDraft(event.target.value); setSendFeedback("idle"); resizeMessageInput(event.currentTarget); }}
+                     onKeyDown={handleComposerKeyDown} maxLength={5000} rows={1}
                      aria-describedby="converge-message-composer-help"
                      placeholder={isOutgoingRequest ? "Write your introductory message…" : "Write a message…"}
                      className="min-w-0 max-h-36 min-h-12 flex-1 resize-y bg-transparent px-2 py-2 text-base leading-6 text-white outline-none placeholder:text-white/35 sm:text-sm" />

@@ -1,0 +1,402 @@
+/*
+ * Converge mobile conversation refinement — WhatsApp's message-first behavior,
+ * not its proprietary visual identity or icons. Scoped to application routes.
+ * Imported after original Figma styles to remove old forum-form presentation.
+ */
+main.figma-topic .converge-topic-compose-row {
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  width:100%;
+}
+main.figma-topic .converge-topic-compose-row textarea {
+  min-width:0;
+  flex:1 1 auto;
+  max-height:120px;
+}
+main.figma-topic .converge-topic-send-button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  white-space:nowrap;
+}
+main.figma-topic .converge-topic-send-button svg {
+  display:none;
+}
+main.figma-topic .converge-topic-feedback {
+  overflow-wrap:anywhere;
+}
+@media (min-width:768px) {
+  main.figma-topic .converge-topic-compose-row textarea {
+    min-height:52px;
+    resize:vertical;
+  }
+  main.figma-topic .converge-topic-compose-hint {
+    margin-top:12px;
+  }
+}
+
+@media (max-width:767px) {
+  /* Research rooms and direct chats are focused screens, not scrolling forms. */
+  main.figma-topic {
+    --converge-composer-surface:#0e1a14;
+    --converge-composer-ink:#a6e6bd;
+    overflow-x:clip;
+    scroll-padding-bottom:130px;
+  }
+  main.figma-topic .converge-mobile-topic-back {
+    position:sticky !important;
+    top:0 !important;
+    z-index:65 !important;
+    background:#0b1110 !important;
+    box-shadow:0 2px 12px rgba(0,0,0,.13);
+  }
+  main.figma-topic .converge-topic-workspace > .py-7 {
+    padding-bottom:calc(125px + env(safe-area-inset-bottom)) !important;
+  }
+  main.figma-topic .converge-topic-hero h1 {
+    font-size:clamp(21px,5.6vw,25px) !important;
+    line-height:1.23 !important;
+    max-width:25ch;
+  }
+  main.figma-topic .converge-topic-hero .figma-topic-mobile-body {
+    margin-top:9px;
+  }
+  main.figma-topic .converge-room-tabbar {
+    margin-top:14px !important;
+    padding-bottom:12px !important;
+  }
+
+  /* Compact group-chat bubbles. Display the real dynamic member/AI content. */
+  main.figma-topic .converge-room-discussion .converge-topic-messages {
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch;
+    gap:12px;
+    margin-top:15px !important;
+    border:0 !important;
+    background:transparent !important;
+    overflow:visible !important;
+  }
+  main.figma-topic .converge-room-discussion .converge-topic-messages > article.converge-topic-message {
+    display:flex;
+    justify-content:flex-start;
+    width:100%;
+    min-height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+  }
+  main.figma-topic .converge-room-discussion .converge-topic-messages > article.converge-topic-message:not(:last-child) {
+    border-bottom:0 !important;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message > .flex.items-start {
+    width:auto;
+    max-width:94%;
+    align-items:flex-end;
+    gap:8px !important;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message .size-10.rounded-full {
+    width:30px !important;
+    height:30px !important;
+    flex:0 0 30px !important;
+    margin-bottom:2px;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message .min-w-0.flex-1 {
+    flex:1 1 auto;
+    min-width:0;
+    border:1px solid #263b2c;
+    border-radius:14px 14px 14px 5px;
+    padding:11px 13px 8px;
+    background:#18271d;
+    box-shadow:0 1px 1px rgba(0,0,0,.12);
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message[data-own="true"] {
+    justify-content:flex-end;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message[data-own="true"] > .flex.items-start {
+    flex-direction:row-reverse;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message[data-own="true"] .min-w-0.flex-1 {
+    background:#234634;
+    border-color:#345744;
+    border-radius:14px 14px 5px 14px;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message[data-agent="true"] .min-w-0.flex-1 {
+    border-color:#315b49;
+    background:#172c26;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message .flex.flex-wrap {
+    display:flex !important;
+    align-items:center !important;
+    flex-wrap:wrap;
+    gap:5px 8px !important;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message .flex.flex-wrap > span:first-child {
+    font-size:12px !important;
+    line-height:16px !important;
+    font-weight:700 !important;
+    color:#b2e3bd !important;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message[data-agent="true"] .flex.flex-wrap > span:nth-child(2) {
+    display:inline-flex !important;
+    background:rgba(99,197,170,.14);
+    color:#a9dfcc !important;
+    border:0 !important;
+    font-size:9px !important;
+    letter-spacing:0 !important;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message .flex.flex-wrap > span.converge-topic-post-time {
+    display:block !important;
+    font-size:9px !important;
+    margin-left:auto;
+    line-height:14px !important;
+    color:#91a89a !important;
+  }
+  main.figma-topic .converge-topic-messages .converge-topic-message p.mt-3 {
+    margin-top:6px !important;
+    font-size:14px !important;
+    line-height:1.45 !important;
+    color:#e1efe4 !important;
+  }
+
+  /* The composer is a single anchored bar, independent from replies scrolling. */
+  main.converge-app-page.figma-topic .converge-room-discussion form.converge-topic-reply:has(#topic-reply) {
+    position:fixed !important;
+    left:0 !important;
+    right:0 !important;
+    bottom:var(--converge-topic-keyboard-inset,0px) !important;
+    z-index:90 !important;
+    width:100% !important;
+    min-height:0 !important;
+    max-height:min(230px,55dvh) !important;
+    margin:0 !important;
+    padding:9px 12px calc(9px + env(safe-area-inset-bottom)) !important;
+    border:0 !important;
+    border-top:1px solid #284032 !important;
+    border-radius:0 !important;
+    background:var(--converge-composer-surface) !important;
+    box-shadow:0 -7px 22px rgba(0,0,0,.29) !important;
+  }
+  main.figma-topic .converge-topic-composer-heading,
+  main.figma-topic .converge-topic-compose-hint {
+    display:none !important;
+  }
+  main.figma-topic .converge-topic-compose-row {
+    display:flex !important;
+    width:100%;
+    align-items:flex-end !important;
+    gap:8px !important;
+    padding:5px 5px 5px 15px;
+    border:1px solid #345743;
+    border-radius:26px;
+    background:#1b3125;
+    transition:border-color .15s;
+  }
+  main.figma-topic .converge-topic-compose-row:focus-within {
+    border-color:#82d4a4;
+  }
+  main.figma-topic .converge-room-discussion form.converge-topic-reply textarea#topic-reply {
+    flex:1 1 auto !important;
+    width:100% !important;
+    height:44px !important;
+    min-height:44px !important;
+    max-height:120px !important;
+    margin:0 !important;
+    padding:10px 2px !important;
+    overflow-y:auto !important;
+    resize:none !important;
+    border:0 !important;
+    border-radius:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    outline:none !important;
+    color:#eef8f0 !important;
+    font-size:16px !important;
+    line-height:24px !important;
+    -webkit-appearance:none;
+  }
+  main.figma-topic .converge-topic-reply textarea::placeholder {
+    color:#a0b3a6 !important;
+    opacity:1;
+  }
+  main.figma-topic .converge-room-discussion form.converge-topic-reply button.converge-topic-send-button {
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    position:static !important;
+    inset:auto !important;
+    flex:0 0 44px !important;
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+    min-height:44px !important;
+    padding:0 !important;
+    margin:0 !important;
+    border:0 !important;
+    border-radius:50% !important;
+    background:#a6e6bd !important;
+    color:#0c2015 !important;
+  }
+  main.figma-topic .converge-topic-send-button svg {
+    display:block !important;
+    width:19px;
+    height:19px;
+  }
+  main.figma-topic .converge-topic-send-button .figma-topic-send-mobile,
+  main.figma-topic .converge-topic-send-button .figma-topic-send-desktop {
+    display:none !important;
+  }
+  main.figma-topic .converge-room-discussion form.converge-topic-reply .converge-topic-feedback {
+    position:absolute;
+    bottom:calc(100% + 7px);
+    left:12px;
+    right:12px;
+    z-index:3;
+    max-height:72px;
+    overflow:auto;
+    margin:0 !important;
+    padding:10px 13px;
+    border-radius:12px;
+    background:#1d3226;
+    border:1px solid #345743;
+    font-size:12px !important;
+    line-height:1.45 !important;
+    box-shadow:0 7px 24px rgba(0,0,0,.3);
+  }
+  main.figma-topic .converge-room-layout[data-mobile-tab="evidence"] form.converge-topic-reply {
+    display:none !important;
+  }
+
+  /* The personal message composer follows the same natural one-line model. */
+  main.figma-conversation .converge-chat-composer {
+    min-height:0 !important;
+    margin:0 0 0 !important;
+    padding:8px 12px calc(9px + env(safe-area-inset-bottom)) !important;
+    background:#0e1a14 !important;
+    border-top:1px solid #284032 !important;
+  }
+  main.figma-conversation .converge-chat-composer >div:first-of-type {
+    align-items:flex-end !important;
+    height:auto !important;
+    min-height:55px !important;
+    padding:5px 5px 5px 15px !important;
+    border-radius:28px !important;
+    background:#1b3125 !important;
+    border:1px solid #345743 !important;
+  }
+  main.figma-conversation .converge-chat-composer textarea#message-body {
+    flex:1 1 auto !important;
+    min-height:44px !important;
+    height:44px !important;
+    max-height:120px !important;
+    padding:10px 0 !important;
+    margin:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    font-size:16px !important;
+    line-height:24px !important;
+    resize:none !important;
+    overflow-y:auto !important;
+  }
+  main.figma-conversation .converge-chat-composer button[type="submit"] {
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+    min-height:44px !important;
+    flex:0 0 44px !important;
+    padding:0 !important;
+    margin:0 !important;
+    border-radius:50% !important;
+    justify-content:center !important;
+  }
+  main.figma-conversation .converge-chat-composer button[type="submit"] svg {
+    display:block !important;
+    width:19px !important;
+    height:19px !important;
+  }
+  main.figma-conversation .converge-chat-composer button[type="submit"] span {
+    display:none !important;
+  }
+  main.figma-conversation .converge-chat-composer >div[role="status"]:empty {
+    display:none !important;
+  }
+  main.figma-conversation .converge-chat-composer >div[role="status"]:not(:empty) {
+    padding:5px 13px 0 !important;
+    min-height:0 !important;
+  }
+  main.figma-conversation .converge-chat-messages {
+    padding-bottom:18px !important;
+    gap:10px !important;
+  }
+  main.figma-conversation .converge-chat-messages >div.flex >div {
+    max-width:87% !important;
+    padding:10px 12px 8px !important;
+    border-radius:14px !important;
+  }
+  main.figma-conversation .converge-chat-messages >div.flex.justify-end >div {
+    border-bottom-right-radius:5px !important;
+  }
+  main.figma-conversation .converge-chat-messages >div.flex.justify-start >div {
+    border-bottom-left-radius:5px !important;
+  }
+  main.figma-conversation .converge-chat-messages >div.flex >div p:first-child {
+    font-size:14px !important;
+    line-height:1.46 !important;
+  }
+  main.figma-conversation .converge-chat-messages >div.flex >div p:last-child {
+    margin-top:5px !important;
+    font-size:10px !important;
+  }
+
+  /* Community overview: a readable group list rather than an oversized hero. */
+  main.converge-community-chat .converge-page-intro {
+    padding:19px 0 18px !important;
+  }
+  main.converge-community-chat .converge-page-intro h1 {
+    margin-top:13px !important;
+    font-size:24px !important;
+    line-height:1.23 !important;
+    letter-spacing:-.035em;
+  }
+  main.converge-community-chat .converge-page-intro p.max-w-3xl {
+    margin-top:8px !important;
+    line-height:1.55 !important;
+    font-size:13px !important;
+  }
+  main.converge-community-chat .converge-page-intro .flex.flex-wrap.items-center.gap-3.text-xs {
+    margin-top:11px !important;
+  }
+  main.converge-community-chat .converge-page-intro .flex.flex-wrap.gap-2 {
+    gap:8px !important;
+  }
+  main.converge-community-chat .converge-page-intro .flex.flex-wrap.gap-2 :is(button,a) {
+    min-height:42px;
+    border-radius:14px !important;
+  }
+  main.converge-community-chat .converge-page-intro + .mt-6 {
+    margin-top:14px !important;
+  }
+  main.converge-community-chat .converge-page-intro ~ div.grid > section {
+    min-width:0;
+  }
+  main.converge-community-chat .converge-page-intro ~ div.grid article.group {
+    padding:14px 0 !important;
+  }
+  main.converge-community-chat .converge-page-intro ~ div.grid article.group >div.flex {
+    gap:12px !important;
+  }
+  main.converge-community-chat .converge-page-intro ~ div.grid article.group p.line-clamp-3 {
+    -webkit-line-clamp:2;
+    line-clamp:2;
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  main.figma-topic .converge-topic-compose-row,
+  main.figma-conversation .converge-chat-composer >div:first-of-type {
+    transition:none !important;
+  }
+}

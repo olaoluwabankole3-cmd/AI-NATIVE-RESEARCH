@@ -6,6 +6,7 @@ import "./application-refinement.css";
 import "./figma-parity.css";
 import "./figma-parity-phase2.css";
 import "./figma-parity-phase3.css";
+import "./mobile-chat-refinement.css";
 import { IncomingVoiceCall } from "@/components/incoming-voice-call";
 import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
