@@ -25,7 +25,7 @@ These four fields are absent until configured. No secrets are committed in this 
 ## Supabase schema
 
 New migration: supabase/migrations/20261121120000_community_realtimekit_call_mapping.sql.
-This adds a service-only community-to-Cloudflare-meeting mapping (community_id, meeting_id and timestamps). Browser roles have zero grants and RLS is on. Do not run a blanket database push or replay migrations; review and apply only the new intended migration once to the target environment. This PR does not change the live database.
+This adds a service-only community-to-Cloudflare-meeting mapping (community_id, meeting_id and timestamps). Browser roles have zero grants and RLS is on. Do not run a blanket database push or replay migrations; review and apply only the new intended migration once to the target environment. The new service-only mapping migration was applied to the existing Converge Supabase project on 2026-11-21. Verified RLS enabled; anon/authenticated have no table access; service_role can read. No existing tables or data were reset.
 
 ## Cost controls and caveats
 
