@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, KeyboardEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/site-header";
 import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 import { ConversationRail } from "@/components/conversation-rail";
 import { CommunicationIcon } from "@/components/communication-icon";
+import { chatDayLabel, chatTime, sameChatDay } from "@/lib/chat-time";
 
 type ConversationRow = { id: string; user_low_id: string; user_high_id: string; created_by: string; request_status: "PENDING" | "ACCEPTED" | "IGNORED" };
 type MemberProfile = {
@@ -29,11 +30,6 @@ type MessageRow = {
 function initials(value: string) {
   return value.trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "C";
 }
-function timeLabel(value: string) {
-  const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) return "";
-  return new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(date);
-}
 
 export default function DirectConversationPage() {
   const params = useParams<{ conversationId: string }>();
@@ -43,6 +39,8 @@ export default function DirectConversationPage() {
   const messagesViewportRef = useRef<HTMLDivElement | null>(null);
   const workspaceRef = useRef<HTMLElement | null>(null);
   const messageInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const shouldStickToBottomRef = useRef(true);
+  const forceScrollAfterSendRef = useRef(false);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [member, setMember] = useState<MemberProfile | null>(null);
   const [requestStatus, setRequestStatus] = useState<ConversationRow["request_status"]>("ACCEPTED");
@@ -52,6 +50,7 @@ export default function DirectConversationPage() {
   const [moderatingRequest, setModeratingRequest] = useState(false);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [draft, setDraft] = useState("");
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
 
   function resizeMessageInput(input: HTMLTextAreaElement) {
     input.style.setProperty("height", "44px", "important");
@@ -149,28 +148,55 @@ export default function DirectConversationPage() {
     return () => { void supabase.removeChannel(channel); };
   }, [conversationId, loadThread, supabase, viewerId]);
 
-  // iOS virtual keyboards can shrink visualViewport without resizing 100dvh.
-  // Limit the variable to this page so other screens keep their own viewport rules.
+  // Keep the conversation within the *visible* viewport when iOS/Android
+  // software keyboards appear. The chat list, not the whole document, scrolls.
   useEffect(() => {
     const viewport = window.visualViewport;
     if (!viewport) return;
+    let frame = 0;
     const resize = () => {
-      workspaceRef.current?.style.setProperty("--converge-chat-visible-height", `${Math.floor(viewport.height)}px`);
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        workspaceRef.current?.style.setProperty("--converge-chat-visible-height", Math.floor(viewport.height) + "px");
+      });
     };
     resize();
     viewport.addEventListener("resize", resize);
+    viewport.addEventListener("scroll", resize);
     window.addEventListener("resize", resize);
+    window.addEventListener("orientationchange", resize);
     return () => {
+      window.cancelAnimationFrame(frame);
       viewport.removeEventListener("resize", resize);
+      viewport.removeEventListener("scroll", resize);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("orientationchange", resize);
     };
   }, []);
 
-  // Scroll *within the conversation*, not the whole page. scrollIntoView previously
-  // pushed the composer below the mobile viewport when a thread opened or refreshed.
-  useEffect(() => {
+  function trackMessageScroll() {
     const viewport = messagesViewportRef.current;
-    if (viewport) viewport.scrollTop = viewport.scrollHeight;
+    if (!viewport) return;
+    const nearBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 110;
+    shouldStickToBottomRef.current = nearBottom;
+    setShowJumpToLatest(!nearBottom);
+  }
+
+  function scrollToLatest() {
+    const viewport = messagesViewportRef.current;
+    if (!viewport) return;
+    shouldStickToBottomRef.current = true;
+    viewport.scrollTop = viewport.scrollHeight;
+    setShowJumpToLatest(false);
+  }
+
+  // Do not pull someone out of older messages when a Realtime INSERT arrives.
+  // Initial load and successful outgoing messages do jump to the latest.
+  useEffect(() => {
+    if (shouldStickToBottomRef.current || forceScrollAfterSendRef.current) {
+      scrollToLatest();
+      forceScrollAfterSendRef.current = false;
+    }
   }, [messages]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -178,6 +204,10 @@ export default function DirectConversationPage() {
     const body = draft.trim();
     if (!body || !viewerId || threadUnavailable || sending || body.length > 5000) return;
 
+    const submittedDraft = draft;
+    // Clear the composer immediately; if the database rejects the message,
+    // restore this exact draft without discarding any new text typed meanwhile.
+    setDraft("");
     setSending(true);
     setSendFeedback("idle");
     setPageError("");
@@ -188,7 +218,7 @@ export default function DirectConversationPage() {
         body,
       });
       if (error) throw error;
-      setDraft("");
+      forceScrollAfterSendRef.current = true;
       setSendFeedback("sent");
       try {
         await loadThread(viewerId);
@@ -197,6 +227,7 @@ export default function DirectConversationPage() {
         setPageError("Message sent, but the conversation could not refresh. Please reload to see the latest messages.");
       }
     } catch (caught) {
+      setDraft((current) => current ? submittedDraft + "\n" + current : submittedDraft);
       setSendFeedback("failed");
       setPageError(caught instanceof Error ? caught.message : "Could not send your message. Try again.");
     } finally {
