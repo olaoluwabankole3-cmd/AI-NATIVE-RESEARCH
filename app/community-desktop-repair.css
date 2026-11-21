@@ -1,0 +1,285 @@
+/*
+ * Converge desktop Research/Community hub — structural layout repair.
+ * The original Figma desktop research shell used absolute positioning for an
+ * exact 1440px screenshot; the later Community directory introduced content
+ * that must participate in layout flow. Never place dynamic content under
+ * an absolutely positioned sidebar, header or search controls.
+ * Scope: authenticated /communities only. Mobile Figma remains untouched.
+ */
+main.converge-app-page.figma-research .converge-research-primary {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  main.converge-app-page.figma-research > .figma-research-container {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(238px, 278px) !important;
+    gap: clamp(20px, 2.5vw, 35px) !important;
+    align-items: start !important;
+    width: 100% !important;
+    max-width: 1540px !important;
+    min-height: 100dvh !important;
+    margin: 0 auto !important;
+    padding: 28px clamp(20px, 2.7vw, 46px) 70px !important;
+    background: #0b1110 !important;
+  }
+
+  main.converge-app-page.figma-research > .figma-research-container > .converge-research-primary {
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+    gap: 18px;
+  }
+
+  /* Natural, flowing page title instead of the left fixed 368px Figma rail. */
+  main.converge-app-page.figma-research .converge-page-intro {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 0 18px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #304334 !important;
+    background: transparent !important;
+  }
+  main.converge-app-page.figma-research .figma-research-desktop-logo {
+    display: none !important;
+  }
+  main.converge-app-page.figma-research .converge-page-intro > p:first-of-type {
+    display: block !important;
+    margin: 0 0 9px !important;
+    color: #77caa4 !important;
+    font-size: 10px !important;
+    font-weight: 750 !important;
+    letter-spacing: .14em !important;
+  }
+  main.converge-app-page.figma-research .converge-page-intro > div {
+    display: flex !important;
+    align-items: end !important;
+    justify-content: space-between !important;
+    flex-direction: row !important;
+    gap: 18px;
+  }
+  main.converge-app-page.figma-research .converge-page-intro h1 {
+    margin: 0 !important;
+    color: #f1faf3;
+    font-size: clamp(27px, 2.5vw, 35px) !important;
+    line-height: 1.15 !important;
+    letter-spacing: -.045em !important;
+    white-space: normal !important;
+  }
+  main.converge-app-page.figma-research .figma-research-title-mobile {
+    display: none !important;
+  }
+  main.converge-app-page.figma-research .figma-research-title-desktop {
+    display: inline !important;
+  }
+  main.converge-app-page.figma-research .converge-page-intro p.text-sm {
+    display: block !important;
+    max-width: 64ch;
+    margin: 7px 0 0 !important;
+    color: #a2b9a8 !important;
+    font-size: 12px !important;
+    line-height: 1.55 !important;
+  }
+  main.converge-app-page.figma-research .converge-page-intro button {
+    display: inline-flex !important;
+    min-height: 43px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 12px;
+    white-space: nowrap;
+    background: #a6e6bd;
+    color: #0b1c12;
+    font-size: 12px;
+    font-weight: 750;
+  }
+  main.converge-app-page.figma-research .figma-research-action-short {
+    display: none !important;
+  }
+  main.converge-app-page.figma-research .figma-research-action-long {
+    display: inline !important;
+  }
+
+  /* Search and filters have normal height and never overlap directory rows. */
+  main.converge-app-page.figma-research .converge-research-discovery {
+    position: relative !important;
+    inset: auto !important;
+    z-index: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 49px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+  }
+  main.converge-app-page.figma-research .converge-research-discovery__input {
+    width: 100% !important;
+    height: 49px !important;
+    min-height: 49px !important;
+    min-width: 0 !important;
+    padding: 11px 17px !important;
+    border: 1px solid #36533f !important;
+    border-radius: 13px !important;
+    background: #1b3023 !important;
+    color: #f0f7f1;
+    font-size: 14px;
+  }
+  main.converge-app-page.figma-research .converge-research-discovery__input:focus {
+    border-color: #a6e6bd !important;
+    outline: none;
+  }
+  main.converge-app-page.figma-research .figma-research-mobile-tabs {
+    position: relative !important;
+    inset: auto !important;
+    z-index: auto !important;
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  main.converge-app-page.figma-research .figma-research-mobile-tabs button {
+    min-height: 37px;
+    height: 37px;
+    min-width: 0;
+    padding: 8px 17px;
+    border-radius: 11px;
+  }
+
+  /* No duplicate "Research spaces" navigator. Directory now owns that task. */
+  main.converge-app-page.figma-research .converge-research-board,
+  main.converge-app-page.figma-research .converge-research-board--clean {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  main.converge-app-page.figma-research .figma-research-spaces {
+    display: none !important;
+  }
+  main.converge-app-page.figma-research .figma-research-topics {
+    position: relative !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  main.converge-app-page.figma-research .figma-research-desktop-intro,
+  main.converge-app-page.figma-research .figma-research-mobile-section-title {
+    display: none !important;
+  }
+  main.converge-app-page.figma-research .figma-research-topics > div.flex {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+  }
+  main.converge-app-page.figma-research .figma-research-topics > div.flex > div:first-child,
+  main.converge-app-page.figma-research .figma-research-topics > div.flex > div[role="group"] {
+    order: initial !important;
+  }
+  main.converge-app-page.figma-research .figma-research-topics > div.flex h2 {
+    color: #f2f8f3 !important;
+    font-size: 19px !important;
+    line-height: 1.4 !important;
+    letter-spacing: -.025em !important;
+  }
+  main.converge-app-page.figma-research .converge-topic-card-list {
+    padding-top: 14px !important;
+  }
+  main.converge-app-page.figma-research .converge-community-landing {
+    margin: 0 !important;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* The right workspace participates in the same grid instead of covering it. */
+  main.converge-app-page.figma-research .figma-research-workspace {
+    position: sticky !important;
+    top: 22px !important;
+    inset-inline: auto !important;
+    grid-column: 2;
+    display: block !important;
+    align-self: start;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: calc(100dvh - 44px);
+    overflow-y: auto;
+    margin: 0 !important;
+    padding: 24px 20px !important;
+    border: 1px solid #2b4433;
+    border-radius: 18px;
+    background: #14251b !important;
+    scrollbar-width: thin;
+  }
+  main.converge-app-page.figma-research .figma-research-workspace h2 {
+    margin: 12px 0 18px;
+    font-size: 19px;
+  }
+  main.converge-app-page.figma-research .figma-research-workspace section {
+    margin-bottom: 24px;
+  }
+  main.converge-app-page.figma-research .figma-research-workspace-note {
+    margin-top: 25px;
+    padding-top: 23px;
+  }
+  main.converge-app-page.figma-research #communities-directory {
+    width: 100%;
+    margin: 10px 0 0 !important;
+    padding-top: 24px !important;
+    padding-bottom: 30px !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1179px) {
+  main.converge-app-page.figma-research > .figma-research-container {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 242px) !important;
+    gap: 22px !important;
+    padding-inline: 22px !important;
+  }
+  main.converge-app-page.figma-research .converge-community-landing__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  main.converge-app-page.figma-research .converge-community-landing__row {
+    border-right: 0 !important;
+  }
+  main.converge-app-page.figma-research .converge-page-intro button {
+    min-width: 122px;
+    padding-inline: 12px;
+  }
+}
+
+@media (max-width: 1023px) {
+  /* Preserve the established single-column and mobile Figma flows. */
+  main.converge-app-page.figma-research > .figma-research-container > .converge-research-primary {
+    display: contents;
+  }
+  main.converge-app-page.figma-research .figma-research-workspace {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main.converge-app-page.figma-research .figma-research-workspace {
+    scroll-behavior: auto;
+  }
+}
