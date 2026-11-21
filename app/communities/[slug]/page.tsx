@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
+import { CommunityCallCard } from "@/components/community-call-card";
 
 type Community = {
   id: string;
@@ -321,6 +322,8 @@ export default function CommunityPage() {
             </div>
           </div>
         </section>
+
+        {community && currentIsMember && !isBanned && <CommunityCallCard communityId={community.id} slug={community.slug} />}
 
         {message && <p role="status" className={"mt-4 rounded-lg border px-4 py-3 text-sm " + (messageTone === "error" ? "border-red-300/20 bg-red-300/[0.05] text-red-200" : "border-emerald-200/15 bg-emerald-200/[0.05] text-emerald-100")}>{message}</p>}
 
