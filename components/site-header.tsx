@@ -118,7 +118,8 @@ export function SiteHeader() {
   const pathname = usePathname();
   // Detail screens own their mobile back button and composer. A permanent global dock
   // makes those screens cramped and can cover the chat input when the keyboard opens.
-  const isFocusedMobileRoute = /^\/(?:messages|topics|calls)\/[^/]+\/?$/.test(pathname) ||\n    /^\/communities\/[^/]+\/call\/?$/.test(pathname);
+  const isFocusedMobileRoute = /^\/(?:messages|topics|calls)\/[^/]+\/?$/.test(pathname) ||
+    /^\/communities\/[^/]+\/call\/?$/.test(pathname);
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [mobileOpen, setMobileOpen] = useState(false);
