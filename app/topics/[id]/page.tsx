@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, FormEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { SiteHeader } from "@/components/site-header";
 import type { Agent } from "@/lib/agents";
 import { ResearchRoom } from "@/components/research-room";
+import { chatDayLabel, chatTime, sameChatDay } from "@/lib/chat-time";
 
 type Topic = {
   id: string;
@@ -81,6 +82,8 @@ export default function TopicPage() {
   const replyRequestRef = useRef<{ body: string; id: string } | null>(null);
   const replyTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const topicViewportRef = useRef<HTMLElement | null>(null);
+  const topicMessagesEndRef = useRef<HTMLDivElement | null>(null);
+  const hasOpenedLatestRef = useRef(false);
 
   const [topic, setTopic] = useState<Topic | null>(null);
   const [community, setCommunity] = useState<Community | null>(null);
@@ -91,6 +94,8 @@ export default function TopicPage() {
   const [posts, setPosts] = useState<PostView[]>([]);
   const [currentParticipantId, setCurrentParticipantId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
+  const [viewerProfile, setViewerProfile] = useState<Profile | null>(null);
+  const [showTopicLatest, setShowTopicLatest] = useState(false);
 
   // The mobile composer starts as one line and grows only when the member types.
   function resizeReplyTextarea(input: HTMLTextAreaElement) {
@@ -102,28 +107,83 @@ export default function TopicPage() {
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error" | "info">("info");
 
-  // Keep the reply action visible above software keyboards without affecting other routes.
+  // Safari sometimes keeps the layout viewport unchanged while its keyboard
+  // covers part of the page. Only offset the composer while its input is focused.
   useEffect(() => {
     const viewport = window.visualViewport;
-    if (!viewport) return;
+    let raf = 0;
     const update = () => {
-      const obscured = Math.max(0, window.innerHeight - (viewport.height + viewport.offsetTop));
-      topicViewportRef.current?.style.setProperty("--converge-topic-keyboard-inset", `${obscured}px`);
+      window.cancelAnimationFrame(raf);
+      raf = window.requestAnimationFrame(() => {
+        const main = topicViewportRef.current;
+        if (!main) return;
+        const focused = document.activeElement === replyTextareaRef.current;
+        const hiddenByKeyboard = viewport
+          ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+          : 0;
+        const open = focused && hiddenByKeyboard > 100;
+        main.style.setProperty("--converge-topic-keyboard-inset", open ? Math.round(hiddenByKeyboard) + "px" : "0px");
+        main.dataset.keyboardOpen = open ? "true" : "false";
+      });
     };
     update();
-    viewport.addEventListener("resize", update);
-    viewport.addEventListener("scroll", update);
+    viewport?.addEventListener("resize", update);
+    viewport?.addEventListener("scroll", update);
     window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    window.addEventListener("focusin", update);
+    window.addEventListener("focusout", update);
     return () => {
-      viewport.removeEventListener("resize", update);
-      viewport.removeEventListener("scroll", update);
+      window.cancelAnimationFrame(raf);
+      viewport?.removeEventListener("resize", update);
+      viewport?.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+      window.removeEventListener("focusin", update);
+      window.removeEventListener("focusout", update);
     };
   }, []);
 
   useEffect(() => {
     if (!reply && replyTextareaRef.current) replyTextareaRef.current.style.setProperty("height", "44px", "important");
   }, [reply]);
+
+  useEffect(() => {
+    if (!topic || posts.length === 0 || hasOpenedLatestRef.current ||
+        !window.matchMedia("(max-width: 767px)").matches) return;
+    hasOpenedLatestRef.current = true;
+    const raf = window.requestAnimationFrame(() => {
+      topicMessagesEndRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [topic, posts.length]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const nearBottom = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 200;
+      setShowTopicLatest(window.matchMedia("(max-width: 767px)").matches && posts.length > 3 && !nearBottom);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [posts.length]);
+
+  function jumpToLatestTopic(behavior: ScrollBehavior = "smooth") {
+    topicMessagesEndRef.current?.scrollIntoView({ block: "end", behavior });
+    setShowTopicLatest(false);
+  }
+
+  function handleReplyKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.metaKey ||
+        event.altKey || event.nativeEvent.isComposing || posting) return;
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+    event.preventDefault();
+    event.currentTarget.form?.requestSubmit();
+  }
 
   function showMessage(value: string, tone: "success" | "error" | "info" = "info") {
     setMessage(value);
@@ -142,6 +202,8 @@ export default function TopicPage() {
       setTopic(null);
       setCommunity(null);
       setPosts([]);
+      setViewerProfile(null);
+      hasOpenedLatestRef.current = false;
       setCurrentParticipantId(null);
       setTopicParticipants([]);
       setIsCommunityMember(false);
@@ -288,6 +350,8 @@ export default function TopicPage() {
       profileMap = new Map((profileData ?? []).map((profile) => [profile.id, profile]));
     }
 
+    setViewerProfile(profileMap.get(user.id) ?? null);
+
     const registryResponse = await fetch("/api/agents", { cache: "no-store" });
     const registryPayload = await registryResponse.json().catch(() => null);
     const platformAgents: Agent[] = registryResponse.ok && Array.isArray(registryPayload?.agents)
@@ -419,7 +483,7 @@ export default function TopicPage() {
         {
           ...payload.humanPost,
           participant: participantMap.get(payload.humanPost.participant_id),
-          profile: undefined,
+          profile: viewerProfile ?? undefined,
           agent: undefined,
         },
         ...(payload.agentPosts ?? []).map(
@@ -440,6 +504,7 @@ export default function TopicPage() {
 
       if (replyRequestRef.current?.id === requestId) replyRequestRef.current = null;
       setReply("");
+      window.requestAnimationFrame(() => jumpToLatestTopic());
 
       const failures = payload.failures ?? [];
       const failureDetails = (payload.failureDetails ?? []) as Array<{ agentId: string; agentName: string; message: string }>;
@@ -828,8 +893,11 @@ export default function TopicPage() {
                 </div>
               ) : (
                 posts.map((post, index) => (
+                  <Fragment key={post.id}>
+                    {(index === 0 || !sameChatDay(posts[index - 1].created_at, post.created_at)) && (
+                      <div className="converge-topic-day-separator" role="separator" aria-label={chatDayLabel(post.created_at)}><span>{chatDayLabel(post.created_at)}</span></div>
+                    )}
                   <article
-                    key={post.id}
                     data-own={post.participant?.user_id === currentUserId ? "true" : "false"}
                      data-agent={post.participant?.participant_type === "AGENT" ? "true" : "false"}
                      className={`converge-topic-message border-b border-white/[0.08] p-5 last:border-b-0 sm:p-6 ${post.participant?.participant_type === "AGENT" ? "bg-emerald-300/[0.025]" : "bg-transparent"}`}
@@ -844,7 +912,7 @@ export default function TopicPage() {
                             className="size-full object-cover"
                           />
                         ) : (
-                          initials(post.profile)
+                          post.agent ? post.agent.name.split(/\s+/).filter(Boolean).slice(0, 2).map((name) => name[0]).join("").toUpperCase() : initials(post.profile ?? (post.participant?.user_id === currentUserId ? viewerProfile ?? undefined : undefined))
                         )}
                       </div>
 
@@ -854,15 +922,15 @@ export default function TopicPage() {
                             {post.agent?.name ||
                               post.profile?.display_name ||
                               post.profile?.username ||
-                              "Converge member"}
+                              (post.participant?.user_id === currentUserId ? "You" : "Converge member")}
                           </span>
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${post.participant?.participant_type === "AGENT" ? "border border-emerald-300/20 bg-emerald-300/[0.08] text-emerald-200" : "bg-white/[0.05] text-white/40"}`}>
                             {post.participant?.participant_type === "AGENT" ? "AI specialist" : "Member"}
                           </span>
                           <span className="text-xs text-white/30">·</span>
-                          <span className="converge-topic-post-time text-xs text-white/35">
-                            {formatDate(post.created_at)}
-                          </span>
+                          <time dateTime={post.created_at} title={formatDate(post.created_at)} className="converge-topic-post-time text-xs text-white/35">
+                            {chatTime(post.created_at)}
+                          </time>
                           {index === 0 && (
                             <span className="text-[11px] text-white/30">First reply</span>
                           )}
@@ -874,18 +942,24 @@ export default function TopicPage() {
                       </div>
                     </div>
                   </article>
+                  </Fragment>
                 ))
               )}
+              <div ref={topicMessagesEndRef} className="converge-topic-messages-end" aria-hidden="true" />
             </div>
 
             {topic.type === "RESEARCH" && currentParticipantId && <button type="button" className="figma-topic-evidence-peek" onClick={() => setMobileSection("evidence")}>
               <strong>✦ &nbsp; EVIDENCE RECORD</strong><span>Review saved research sources ↗</span>
             </button>}
+            {showTopicLatest && mobileSection === "discussion" && (
+              <button type="button" className="converge-topic-jump-latest" onClick={() => jumpToLatestTopic()}>↓ Latest messages</button>
+            )}
             {isCommunityMember && currentParticipantId ? (
             <form
               onSubmit={handleReply}
               className="converge-topic-reply mt-8 border-t border-emerald-300/15 pt-5 pb-4 sm:pt-6"
               aria-label="Reply to this discussion"
+              aria-busy={posting}
             >
               <div className="converge-topic-composer-heading">
                 <h3 className="font-semibold">Write a reply</h3>
@@ -902,6 +976,7 @@ export default function TopicPage() {
                     resizeReplyTextarea(event.currentTarget);
                   }}
                   rows={1}
+                  onKeyDown={handleReplyKeyDown}
                   maxLength={12000}
                   placeholder="Message the discussion"
                   className="min-w-0 flex-1 resize-none rounded-xl border border-white/10 bg-[#07110f] px-4 py-3 text-base leading-6 outline-none placeholder:text-white/35 focus:border-emerald-300/50"
@@ -917,6 +992,7 @@ export default function TopicPage() {
                   <span className="figma-topic-send-desktop">{posting ? "Posting & getting AI replies…" : "Post reply"}</span>
                 </button>
               </div>
+              {posting && <p role="status" className="converge-topic-publishing-status">Publishing your reply and waiting for AI responses…</p>}
               {message && (
                 <p role={messageTone === "error" ? "alert" : "status"} className={`converge-topic-feedback mt-3 text-sm ${messageTone === "error" ? "text-red-200" : messageTone === "success" ? "text-emerald-200" : "text-white/60"}`}>{message}</p>
               )}
