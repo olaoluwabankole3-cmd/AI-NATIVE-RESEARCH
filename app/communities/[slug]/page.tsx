@@ -36,7 +36,7 @@ function relativeDate(value: string) {
 
 export default function CommunityPage() {
   const params = useParams<{ slug: string }>();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [community, setCommunity] = useState<Community | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [latestReplyByTopic, setLatestReplyByTopic] = useState<Record<string, TopicActivity>>({});
@@ -175,6 +175,27 @@ export default function CommunityPage() {
   }
 
   useEffect(() => { if (params.slug) void loadCommunity(); }, [params.slug]);
+
+  // Reuse the posts Realtime publication already used by individual topics.
+  // Only activity from topics visible to this member is reflected in this list.
+  useEffect(() => {
+    if (!community || !topics.length || privateLocked) return;
+    const allowedTopicIds = new Set(topics.map((topic) => topic.id));
+    const channel = supabase.channel("community-activity-" + community.id)
+      .on("postgres_changes", {
+        event: "INSERT", schema: "public", table: "posts",
+      }, (payload) => {
+        const post = payload.new as Partial<TopicActivity>;
+        if (!post.topic_id || !allowedTopicIds.has(post.topic_id) ||
+            !post.created_at || typeof post.body !== "string") return;
+        setLatestReplyByTopic((current) => {
+          const old = current[post.topic_id!];
+          if (old && old.created_at >= post.created_at!) return current;
+          return { ...current, [post.topic_id!]: post as TopicActivity };
+        });
+      }).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [community?.id, topics, privateLocked, supabase]);
 
   const visibleTopics = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -361,9 +382,9 @@ export default function CommunityPage() {
         </header>
 
         {!privateLocked && <nav className="converge-community-section-nav" aria-label="Community sections">
-          <a href="#community-conversations" onClick={() => setFilter("ALL")} className={filter === "ALL" ? "is-active" : ""}>All <span>{topics.length}</span></a>
-          <a href="#community-conversations" onClick={() => setFilter("DISCUSSION")} className={filter === "DISCUSSION" ? "is-active" : ""}>Discussions <span>{discussionCount}</span></a>
-          <a href="#community-conversations" onClick={() => setFilter("RESEARCH")} className={filter === "RESEARCH" ? "is-active" : ""}>Research <span>{researchCount}</span></a>
+          <a href="#community-conversations" onClick={() => setFilter("ALL")} className={filter === "ALL" ? "is-active" : ""} aria-current={filter === "ALL" ? "location" : undefined}>All <span>{topics.length}</span></a>
+          <a href="#community-conversations" onClick={() => setFilter("DISCUSSION")} className={filter === "DISCUSSION" ? "is-active" : ""} aria-current={filter === "DISCUSSION" ? "location" : undefined}>Discussions <span>{discussionCount}</span></a>
+          <a href="#community-conversations" onClick={() => setFilter("RESEARCH")} className={filter === "RESEARCH" ? "is-active" : ""} aria-current={filter === "RESEARCH" ? "location" : undefined}>Research <span>{researchCount}</span></a>
           {currentIsMember && !isBanned && <a href="#community-call" className="converge-community-section-nav__call">Group call <span aria-hidden="true">↗</span></a>}
         </nav>}
 
