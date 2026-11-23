@@ -1015,7 +1015,7 @@ export default function TopicPage() {
             </div>
             {topic.type === "RESEARCH" && currentParticipantId && (
               <aside id="converge-room-evidence-panel" className="converge-room-evidence" role="tabpanel" aria-labelledby="converge-evidence-tab">
-                <ResearchRoom topicId={topic.id} participantId={currentParticipantId} />
+                <ResearchRoom topicId={topic.id} participantId={currentParticipantId} topicTitle={topic.title} topicQuestion={topic.body} />
               </aside>
             )}
           </div>
