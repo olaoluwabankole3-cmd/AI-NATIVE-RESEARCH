@@ -2,28 +2,10 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { ResearchLineagePanel } from "@/components/research-lineage-panel";
+import { resolveResearchLinks, validResearchSourceUrl, type ResearchArtifact, type ResearchArtifactType } from "@/lib/research-outcome";
 
-type ArtifactType = "CLAIM" | "EVIDENCE" | "SOURCE" | "SYNTHESIS" | "DECISION";
-
-type ResearchArtifact = {
-  id: string;
-  topic_id: string;
-  created_by_participant_id: string | null;
-  artifact_type: ArtifactType;
-  title: string;
-  content: string;
-  provenance: {
-    source_url?: string;
-    note?: string;
-    generated?: boolean;
-    generated_by_agent_name?: string;
-    provider?: string;
-    model?: string;
-    context_artifact_ids?: string[];
-    context_post_count?: number;
-  };
-  created_at: string;
-};
+type ArtifactType = ResearchArtifactType;
 
 const artifactTypes: Array<{ value: ArtifactType; label: string; description: string }> = [
   { value: "CLAIM", label: "Claim", description: "A specific proposition the room wants to examine." },
@@ -43,9 +25,13 @@ function formatDate(value: string) {
 export function ResearchRoom({
   topicId,
   participantId,
+  topicTitle,
+  topicQuestion,
 }: {
   topicId: string;
   participantId: string;
+  topicTitle: string;
+  topicQuestion: string;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [artifacts, setArtifacts] = useState<ResearchArtifact[]>([]);
@@ -56,6 +42,7 @@ export function ResearchRoom({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
+  const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [loadError, setLoadError] = useState("");
   const [artifactFilter, setArtifactFilter] = useState<"ALL" | ArtifactType>("ALL");
@@ -70,13 +57,19 @@ export function ResearchRoom({
   }, [artifacts, artifactFilter, artifactSearch]);
   const [generating, setGenerating] = useState(false);
 
+  function recordHumanDecision() {
+    setType("DECISION");
+    setShowForm(true);
+    window.requestAnimationFrame(() => document.getElementById("converge-artifact-form")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
   async function loadArtifacts() {
     setLoading(true);
     setLoadError("");
     try {
       const { data, error } = await supabase
         .from("research_artifacts")
-        .select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, created_at")
+        .select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, created_at, updated_at")
         .eq("topic_id", topicId)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -129,11 +122,21 @@ export function ResearchRoom({
       return;
     }
 
+    const checkedSource = trimmedSourceUrl ? validResearchSourceUrl(trimmedSourceUrl) : null;
+    if (trimmedSourceUrl && !checkedSource) {
+      setMessage("Use an http:// or https:// URL without embedded credentials for source references.");
+      return;
+    }
+
+    // Explicit links only: an AI's context_artifact_ids are never counted as citations.
+    const validIds = new Set(artifacts.filter((item) => item.topic_id === topicId).map((item) => item.id));
+    const linkedIds = Array.from(new Set(selectedLinkIds.filter((id) => validIds.has(id)))).slice(0, 20);
     setSaving(true);
     setMessage("");
 
     const provenance = {
-      ...(trimmedSourceUrl ? { source_url: trimmedSourceUrl } : {}),
+      ...(checkedSource ? { source_url: checkedSource } : {}),
+      ...(linkedIds.length ? { linked_artifact_ids: linkedIds } : {}),
       note: "Created from the Converge research room by a human participant.",
     };
 
@@ -148,7 +151,7 @@ export function ResearchRoom({
           content: trimmedContent,
           provenance,
         })
-        .select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, created_at")
+        .select("id, topic_id, created_by_participant_id, artifact_type, title, content, provenance, created_at, updated_at")
         .single();
       if (error) throw error;
       if (!data) throw new Error("Could not confirm the save. Reload before trying again.");
@@ -156,6 +159,7 @@ export function ResearchRoom({
       setTitle("");
       setContent("");
       setSourceUrl("");
+      setSelectedLinkIds([]);
       setType("SYNTHESIS");
       setShowForm(false);
       setMessage("Artifact saved to this research room.");
@@ -256,6 +260,25 @@ export function ResearchRoom({
             />
           </label>
 
+          {artifacts.length > 0 && (
+            <fieldset className="rounded-xl border border-emerald-300/15 p-3">
+              <legend className="px-2 text-xs font-semibold text-emerald-200">Explicitly link saved research material (optional)</legend>
+              <p className="mb-3 text-xs leading-5 text-white/45">Link a claim to evidence or a decision to claims. Links record researcher associations; they do not prove the source is reliable.</p>
+              <div className="grid max-h-44 gap-2 overflow-y-auto sm:grid-cols-2">
+                {artifacts.map((item) => (
+                  <label key={item.id} className="flex min-w-0 cursor-pointer items-start gap-2 rounded-lg border border-white/10 p-2 text-xs">
+                    <input type="checkbox" className="mt-0.5 accent-emerald-300"
+                      checked={selectedLinkIds.includes(item.id)}
+                      onChange={() => setSelectedLinkIds((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : current.length < 20 ? [...current, item.id] : current)}
+                    />
+                    <span className="min-w-0 break-words text-white/65"><b className="text-emerald-200">{item.artifact_type}</b> · {item.title}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-white/40">{selectedLinkIds.length} of 20 links selected</p>
+            </fieldset>
+          )}
+
           {message && <p role="status" aria-live="polite" className="text-sm text-amber-100">{message}</p>}
 
           <button
@@ -271,6 +294,18 @@ export function ResearchRoom({
         <div role="status" aria-live="polite" className="mt-5 rounded-xl border border-amber-300/15 bg-amber-300/[0.04] p-4 text-sm text-amber-100/80">
           {message}
         </div>
+      )}
+
+      {!loading && !loadError && (
+        <ResearchLineagePanel
+          topicId={topicId}
+          topicTitle={topicTitle}
+          topicQuestion={topicQuestion}
+          participantId={participantId}
+          artifacts={artifacts}
+          onArtifactUpdated={(updated) => setArtifacts((current) => current.map((item) => item.id === updated.id ? updated : item))}
+          onCreateDecision={recordHumanDecision}
+        />
       )}
 
       {!loading && !loadError && artifacts.length > 0 && (
@@ -336,7 +371,7 @@ export function ResearchRoom({
       ) : filteredArtifacts.length > 0 ? (
         <div className="mt-6 space-y-3">
           {filteredArtifacts.map((artifact) => (
-            <article key={artifact.id} className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.025] p-4 sm:p-5">
+            <article id={"research-artifact-" + artifact.id} key={artifact.id} className="min-w-0 scroll-mt-28 rounded-2xl border border-white/10 bg-white/[0.025] p-4 sm:p-5">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-emerald-200">
                   {artifact.artifact_type}
@@ -360,9 +395,23 @@ export function ResearchRoom({
                 </div>
               )}
               <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7 text-white/55">{artifact.content}</p>
-              {artifact.provenance?.source_url && (
+              {resolveResearchLinks(artifact, artifacts).length > 0 && (
+                <div className="mt-3 rounded-xl border border-emerald-300/15 bg-black/10 p-3">
+                  <p className="text-[11px] font-semibold text-emerald-200">Explicitly linked research material</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {resolveResearchLinks(artifact, artifacts).map((related) => (
+                      <a key={related.id} href={"#research-artifact-" + related.id}
+                        className="max-w-full truncate rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/75 hover:border-emerald-200/30 hover:text-emerald-200">
+                        {related.artifact_type}: {related.title}
+                      </a>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[11px] text-white/35">Recorded association — not independent verification.</p>
+                </div>
+              )}
+              {validResearchSourceUrl(artifact.provenance?.source_url) && (
                 <a
-                  href={artifact.provenance.source_url}
+                  href={validResearchSourceUrl(artifact.provenance?.source_url) ?? "#research-record"}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-4 inline-flex max-w-full break-all text-sm text-emerald-300 hover:text-emerald-200"
