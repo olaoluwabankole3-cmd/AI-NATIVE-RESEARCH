@@ -72,7 +72,7 @@ test("export contains question, human decision, AI attribution, open links and c
   assert.match(md,/Human decisions and next actions/);
   assert.match(md,/Proceed with a small pilot/);
   assert.match(md,/Critical Reviewer; groq; example-model/);
-  assert.match(md,/AI context supplied to a model is not evidence validation/);
+  assert.match(md,/Agent context supplied to a model is not evidence validation/);
   assert.match(md,/https:\/\/example\.org\/paper\?x=1/);
   assert.match(md,/\/topics\/21fdfb43-3f48-478a-972b-341341341341#research-artifact-source-1/);
   assert.doesNotMatch(md,/Private unrelated topic/);
