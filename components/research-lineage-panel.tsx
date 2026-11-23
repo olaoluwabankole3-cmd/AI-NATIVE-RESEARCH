@@ -30,17 +30,24 @@ export function ResearchLineagePanel({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [showOutcome, setShowOutcome] = useState(false);
+  const [outcomePreview, setOutcomePreview] = useState("");
   const stats = useMemo(() => summarizeResearchRecord(artifacts), [artifacts]);
   const editable = artifacts.filter((a) =>
     (a.artifact_type === "CLAIM" || a.artifact_type === "DECISION" || a.artifact_type === "SYNTHESIS") &&
     !a.provenance?.generated);
   const activeArtifact = artifacts.find((a) => a.id === editingId);
   const candidates = artifacts.filter((a) => a.topic_id === topicId && a.id !== editingId);
-  const outcomeMarkdown = useMemo(() => buildResearchOutcomeMarkdown({
-    topicId, title: topicTitle, question: topicQuestion, artifacts,
-    origin: "https://converge.example", // replaced with the actual browser origin at export
-    generatedAt: new Date("2026-01-01T00:00:00.000Z"), // preview only: not an export timestamp
-  }), [topicId, topicTitle, topicQuestion, artifacts]);
+  function toggleOutcomePreview() {
+    if (showOutcome) {
+      setShowOutcome(false);
+      return;
+    }
+    setOutcomePreview(buildResearchOutcomeMarkdown({
+      topicId, title: topicTitle, question: topicQuestion, artifacts,
+      origin: window.location.origin, generatedAt: new Date(),
+    }));
+    setShowOutcome(true);
+  }
 
   function startEditing(artifact: ResearchArtifact) {
     setEditingId(artifact.id);
@@ -208,7 +215,7 @@ export function ResearchLineagePanel({
             <h4 className="text-sm font-semibold text-white">Research outcome · Draft export</h4>
             <p className="mt-1 text-[11px] text-white/50">Includes recorded claims, evidence, AI syntheses, human decisions, gaps and traceable item links.</p>
           </div>
-          <button type="button" onClick={() => setShowOutcome((value) => !value)}
+          <button type="button" onClick={toggleOutcomePreview}
             aria-expanded={showOutcome} aria-controls="converge-outcome-preview"
             className="min-h-10 rounded-xl border border-white/15 px-4 text-xs font-semibold text-white/80">
             {showOutcome ? "Hide preview" : "Preview report"}
@@ -216,10 +223,10 @@ export function ResearchLineagePanel({
         </div>
         {showOutcome && <div id="converge-outcome-preview" className="mt-3 max-h-72 overflow-auto rounded-xl border border-white/10 bg-black/15 p-4">
           <pre className="whitespace-pre-wrap break-words font-sans text-xs leading-6 text-white/65">
-            {outcomeMarkdown.slice(0, 11000)}
-            {outcomeMarkdown.length > 11000 ? "\n\n… Preview truncated. Download for the complete outcome." : ""}
+            {outcomePreview.slice(0, 11000)}
+            {outcomePreview.length > 11000 ? "\n\n… Preview truncated. Download for the complete outcome." : ""}
           </pre>
-          <p className="mt-3 text-[11px] text-white/40">Preview uses a fixed placeholder URL and date; downloads use the current live origin and timestamp.</p>
+          <p className="mt-3 text-[11px] text-white/40">This is a point-in-time preview. Close and reopen it to refresh changes; downloads use the current live record and timestamp.</p>
         </div>}
         <div className="mt-4 flex flex-wrap gap-2">
           <button type="button" onClick={downloadOutcome} disabled={!artifacts.length}
