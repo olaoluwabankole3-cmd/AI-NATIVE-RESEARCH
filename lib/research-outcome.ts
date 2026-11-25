@@ -32,6 +32,125 @@ export type ResearchArtifact = {
   updated_at?: string;
 };
 
+export type EvidenceRelation = "SUPPORTS" | "CONTRADICTS" | "CONTEXT";
+export type ReviewVerdict = "SUPPORTED" | "DISPUTED" | "INCONCLUSIVE" | "REQUIRES_REVISION";
+
+export type EvidenceEdge = {
+  id: string;
+  topic_id: string;
+  claim_artifact_id: string;
+  evidence_artifact_id: string;
+  relation: EvidenceRelation;
+  passage: string;
+  locator: string;
+  note: string;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type ReviewSnapshot = {
+  snapshot_version: number;
+  claim: { title: string; content: string; updated_at: string };
+  edges: Array<{
+    id: string;
+    evidence_id: string;
+    relation: EvidenceRelation;
+    passage: string;
+    locator: string;
+    source_title: string;
+    source_updated_at: string | null;
+  }>;
+};
+
+export type ReviewEvent = {
+  id: string;
+  topic_id: string;
+  claim_artifact_id: string;
+  reviewer_id: string | null;
+  verdict: ReviewVerdict;
+  rationale: string;
+  snapshot: ReviewSnapshot;
+  created_at: string;
+};
+
+export function reviewSnapshotIsCurrent(
+  review: ReviewEvent,
+  artifacts: readonly ResearchArtifact[],
+  edges: readonly EvidenceEdge[],
+): boolean {
+  const claim = artifacts.find((a) => a.topic_id === review.topic_id && a.id === review.claim_artifact_id);
+  if (!claim || !review.snapshot?.claim || !Array.isArray(review.snapshot?.edges)) return false;
+  const state = review.snapshot.claim;
+  if (claim.title !== state.title || claim.content !== state.content || (claim.updated_at ?? "") !== state.updated_at) return false;
+  const activeEdges = edges.filter((e) => e.topic_id === review.topic_id && e.claim_artifact_id === review.claim_artifact_id);
+  if (activeEdges.length !== review.snapshot.edges.length) return false;
+  const index = new Map(activeEdges.map((e) => [e.id, e]));
+  return review.snapshot.edges.every((captured) => {
+    const live = index.get(captured.id);
+    const source = artifacts.find((a) => a.topic_id === review.topic_id && a.id === captured.evidence_id);
+    return Boolean(live && source && live.relation === captured.relation &&
+      live.passage === captured.passage && live.locator === captured.locator &&
+      source.title === captured.source_title &&
+      (source.updated_at ?? null) === captured.source_updated_at);
+  });
+}
+
+export function buildEvidenceReviewAppendix(input: {
+  topicId: string;
+  artifacts: readonly ResearchArtifact[];
+  edges: readonly EvidenceEdge[];
+  reviews: readonly ReviewEvent[];
+  origin: string;
+}): string {
+  const { topicId, origin } = input;
+  const artifacts = input.artifacts.filter((a) => a.topic_id === topicId);
+  const edges = input.edges.filter((e) => e.topic_id === topicId);
+  const reviews = input.reviews.filter((r) => r.topic_id === topicId);
+  const byId = new Map(artifacts.map((a) => [a.id, a]));
+  const root = new URL("/topics/" + encodeURIComponent(topicId), origin).href;
+  const out: string[] = [
+    "## Passage-level evidence and independent peer reviews",
+    "",
+    "> Evidence relationships reflect researcher assertions, not automatic fact checking.",
+    "> Reviewer verdicts are human opinions tied to a recorded snapshot, not formal certification.",
+    "",
+  ];
+  const claims = artifacts.filter((a) => a.artifact_type === "CLAIM");
+  if (!claims.length) out.push("_No claims have been recorded._", "");
+  for (const claim of claims) {
+    out.push("### Claim: " + claim.title.replace(/[\r\n]+/g, " "), "");
+    const linked = edges.filter((e) => e.claim_artifact_id === claim.id);
+    if (!linked.length) out.push("- No passage-level supporting or contradicting evidence recorded.", "");
+    for (const edge of linked) {
+      const source = byId.get(edge.evidence_artifact_id);
+      if (!source) continue;
+      out.push(
+        "- **" + edge.relation + "** — [" + source.artifact_type + ": " +
+          source.title.replace(/[\r\n]+/g, " ").replace(/[\[\]]/g, "") +
+          "](" + root + "#research-artifact-" + encodeURIComponent(source.id) + ")",
+        "  - Quoted passage (from a saved record, not independently verified): “" + edge.passage + "”",
+        ...(edge.locator ? ["  - Locator: " + edge.locator] : []),
+        ...(edge.note ? ["  - Researcher's note: " + edge.note] : []),
+        "",
+      );
+    }
+    const recorded = reviews.filter((r) => r.claim_artifact_id === claim.id)
+      .sort((a, b) => a.created_at.localeCompare(b.created_at));
+    if (!recorded.length) out.push("- No independent human review has been recorded.", "");
+    for (const review of recorded) {
+      out.push(
+        "- **Peer review: " + review.verdict.replaceAll("_", " ") + "**" +
+          " (" + review.created_at + "; " +
+          (reviewSnapshotIsCurrent(review, artifacts, edges) ? "current snapshot" : "snapshot now superseded") + ")",
+        "  - Reviewer account: " + (review.reviewer_id || "deleted account"),
+        "  - Rationale: " + review.rationale,
+        "",
+      );
+    }
+  }
+  return out.join("\n");
+}
+
 const linkLimit = 20;
 const urlProtocols = new Set(["https:", "http:"]);
 
@@ -102,6 +221,8 @@ export function buildResearchOutcomeMarkdown(input: {
   artifacts: readonly ResearchArtifact[];
   origin: string;
   generatedAt?: Date;
+  edges?: readonly EvidenceEdge[];
+  reviews?: readonly ReviewEvent[];
 }): string {
   const { topicId, title, question, origin } = input;
   const artifacts = input.artifacts.filter((a) => a.topic_id === topicId);
@@ -204,6 +325,10 @@ export function buildResearchOutcomeMarkdown(input: {
     "researcher's association between items, **not verification that the relationship is true**.",
     "AI context metadata is shown separately from explicit research links.",
     "Access to the linked Converge artifacts remains subject to community permissions.",
+    "",
+    buildEvidenceReviewAppendix({
+      topicId, artifacts, edges: input.edges ?? [], reviews: input.reviews ?? [], origin,
+    }),
     "",
   ].join("\n");
 }
