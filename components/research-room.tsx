@@ -3,7 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { ResearchLineagePanel } from "@/components/research-lineage-panel";
-import { resolveResearchLinks, validResearchSourceUrl, type ResearchArtifact, type ResearchArtifactType } from "@/lib/research-outcome";
+import { ResearchEvidenceReviewPanel } from "@/components/research-evidence-review-panel";
+import { resolveResearchLinks, validResearchSourceUrl, type EvidenceEdge, type ReviewEvent, type ResearchArtifact, type ResearchArtifactType } from "@/lib/research-outcome";
 
 type ArtifactType = ResearchArtifactType;
 
@@ -56,6 +57,29 @@ export function ResearchRoom({
     );
   }, [artifacts, artifactFilter, artifactSearch]);
   const [generating, setGenerating] = useState(false);
+  const [reviewRecords, setReviewRecords] = useState<{ edges: EvidenceEdge[]; reviews: ReviewEvent[] }>({
+    edges: [], reviews: [],
+  });
+  const [reviewLoading, setReviewLoading] = useState(true);
+  const [reviewError, setReviewError] = useState("");
+
+  async function loadReviewRecords() {
+    setReviewLoading(true);
+    setReviewError("");
+    try {
+      const response = await fetch("/api/topics/" + encodeURIComponent(topicId) + "/evidence-review", { cache: "no-store" });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error || "Could not load evidence review history.");
+      if (!Array.isArray(payload?.edges) || !Array.isArray(payload?.reviews)) throw new Error("Research review response incomplete.");
+      setReviewRecords({ edges: payload.edges as EvidenceEdge[], reviews: payload.reviews as ReviewEvent[] });
+    } catch (cause) {
+      setReviewError(cause instanceof Error ? cause.message : "Research review history could not be loaded.");
+    } finally {
+      setReviewLoading(false);
+    }
+  }
+
+  useEffect(() => { void loadReviewRecords(); }, [topicId]);
 
   function recordHumanDecision() {
     setType("DECISION");
@@ -305,6 +329,21 @@ export function ResearchRoom({
           artifacts={artifacts}
           onArtifactUpdated={(updated) => setArtifacts((current) => current.map((item) => item.id === updated.id ? updated : item))}
           onCreateDecision={recordHumanDecision}
+          evidenceEdges={reviewRecords.edges}
+          reviewEvents={reviewRecords.reviews}
+        />
+      )}
+
+      {!loading && !loadError && (
+        <ResearchEvidenceReviewPanel
+          topicId={topicId}
+          participantId={participantId}
+          artifacts={artifacts}
+          edges={reviewRecords.edges}
+          reviews={reviewRecords.reviews}
+          loading={reviewLoading}
+          error={reviewError}
+          onRefresh={loadReviewRecords}
         />
       )}
 

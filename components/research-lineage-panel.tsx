@@ -7,6 +7,8 @@ import {
   normalizeResearchLinks,
   resolveResearchLinks,
   summarizeResearchRecord,
+  type EvidenceEdge,
+  type ReviewEvent,
   type ResearchArtifact,
 } from "@/lib/research-outcome";
 
@@ -16,12 +18,14 @@ type Props = {
   topicQuestion: string;
   participantId: string;
   artifacts: ResearchArtifact[];
+  evidenceEdges: EvidenceEdge[];
+  reviewEvents: ReviewEvent[];
   onArtifactUpdated: (artifact: ResearchArtifact) => void;
   onCreateDecision: () => void;
 };
 
 export function ResearchLineagePanel({
-  topicId, topicTitle, topicQuestion, participantId, artifacts,
+  topicId, topicTitle, topicQuestion, participantId, artifacts, evidenceEdges, reviewEvents,
   onArtifactUpdated, onCreateDecision,
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
@@ -43,7 +47,7 @@ export function ResearchLineagePanel({
       return;
     }
     setOutcomePreview(buildResearchOutcomeMarkdown({
-      topicId, title: topicTitle, question: topicQuestion, artifacts,
+      topicId, title: topicTitle, question: topicQuestion, artifacts, edges: evidenceEdges, reviews: reviewEvents,
       origin: window.location.origin, generatedAt: new Date(),
     }));
     setShowOutcome(true);
@@ -97,7 +101,7 @@ export function ResearchLineagePanel({
   async function copyOutcome() {
     try {
       const report = buildResearchOutcomeMarkdown({
-        topicId, title: topicTitle, question: topicQuestion, artifacts,
+        topicId, title: topicTitle, question: topicQuestion, artifacts, edges: evidenceEdges, reviews: reviewEvents,
         origin: window.location.origin, generatedAt: new Date(),
       });
       await navigator.clipboard.writeText(report);
@@ -109,7 +113,7 @@ export function ResearchLineagePanel({
 
   function downloadOutcome() {
     const report = buildResearchOutcomeMarkdown({
-      topicId, title: topicTitle, question: topicQuestion, artifacts,
+      topicId, title: topicTitle, question: topicQuestion, artifacts, edges: evidenceEdges, reviews: reviewEvents,
       origin: window.location.origin, generatedAt: new Date(),
     });
     const filename = (topicTitle.toLowerCase().normalize("NFKD")
@@ -213,7 +217,7 @@ export function ResearchLineagePanel({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h4 className="text-sm font-semibold text-white">Research outcome · Draft export</h4>
-            <p className="mt-1 text-[11px] text-white/50">Includes recorded claims, evidence, AI syntheses, human decisions, gaps and traceable item links.</p>
+            <p className="mt-1 text-[11px] text-white/50">Includes claims, exact quoted evidence, independent review history, AI provenance, human decisions, gaps and traceable item links.</p>
           </div>
           <button type="button" onClick={toggleOutcomePreview}
             aria-expanded={showOutcome} aria-controls="converge-outcome-preview"
