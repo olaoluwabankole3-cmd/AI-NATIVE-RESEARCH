@@ -38,6 +38,7 @@ export function ResearchRoom({
   const [artifacts, setArtifacts] = useState<ResearchArtifact[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [workspaceStage, setWorkspaceStage] = useState<"materials" | "review" | "outcome">("materials");
   const [saving, setSaving] = useState(false);
   const [type, setType] = useState<ArtifactType>("SYNTHESIS");
   const [title, setTitle] = useState("");
@@ -82,6 +83,7 @@ export function ResearchRoom({
   useEffect(() => { void loadReviewRecords(); }, [topicId]);
 
   function recordHumanDecision() {
+    setWorkspaceStage("materials");
     setType("DECISION");
     setShowForm(true);
     window.requestAnimationFrame(() => document.getElementById("converge-artifact-form")?.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -111,6 +113,20 @@ export function ResearchRoom({
   useEffect(() => {
     void loadArtifacts();
   }, [topicId]);
+
+  // Deep links into a saved artifact always open the material record first.
+  useEffect(() => {
+    function openLinkedArtifact() {
+      if (!window.location.hash.startsWith("#research-artifact-")) return;
+      setWorkspaceStage("materials");
+      window.requestAnimationFrame(() => {
+        document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: "start" });
+      });
+    }
+    window.addEventListener("hashchange", openLinkedArtifact);
+    openLinkedArtifact();
+    return () => window.removeEventListener("hashchange", openLinkedArtifact);
+  }, [artifacts.length]);
 
   // Bring mobile and keyboard users directly into the artifact editor.
   useEffect(() => {
@@ -202,9 +218,9 @@ export function ResearchRoom({
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-emerald-300">Research room</p>
-          <h2 id="research-room-heading" className="mt-2 text-2xl font-semibold">Evidence & provenance</h2>
+          <h2 id="research-room-heading" className="mt-2 text-2xl font-semibold">Research evidence workspace</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-white/45">
-            Keep claims, sources, evidence, syntheses and decisions connected to this topic, separate from the discussion.
+            Organize research materials, examine supporting and conflicting evidence, then prepare a reviewable outcome.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -219,16 +235,42 @@ export function ResearchRoom({
           </button>
           <button
             type="button"
-            onClick={() => setShowForm((value) => !value)}
-            aria-expanded={showForm}
+            onClick={() => { setWorkspaceStage("materials"); setShowForm((value) => workspaceStage !== "materials" ? true : !value); }}
+            aria-expanded={showForm && workspaceStage === "materials"}
             aria-controls="converge-artifact-form"
             className="rounded-xl bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200"
           >
-            {showForm ? "Close" : "Add artifact"}
+            {showForm && workspaceStage === "materials" ? "Close editor" : "Add material"}
           </button>
         </div>
       </div>
 
+
+      <div className="converge-evidence-overview" aria-label="Research progress">
+        <div><strong>{artifacts.filter((item) => item.artifact_type === "CLAIM").length}</strong><span>Claims</span></div>
+        <div><strong>{artifacts.filter((item) => item.artifact_type === "SOURCE" || item.artifact_type === "EVIDENCE").length}</strong><span>Sources & evidence</span></div>
+        <div><strong>{reviewRecords.edges.length}</strong><span>Evidence links</span></div>
+        <div><strong>{reviewRecords.reviews.length}</strong><span>Peer reviews</span></div>
+      </div>
+      <nav className="converge-evidence-steps" role="tablist" aria-label="Evidence workflow steps">
+        <button type="button" role="tab" id="evidence-materials-tab" aria-controls="evidence-materials-panel"
+          aria-selected={workspaceStage === "materials"} onClick={() => setWorkspaceStage("materials")}>
+          <span className="converge-evidence-step-number">01</span><span><strong>Research materials</strong><small>Claims, sources & notes</small></span>
+        </button>
+        <button type="button" role="tab" id="evidence-review-tab" aria-controls="evidence-review-panel"
+          aria-selected={workspaceStage === "review"} onClick={() => setWorkspaceStage("review")}>
+          <span className="converge-evidence-step-number">02</span><span><strong>Evidence review</strong><small>Compare & challenge</small></span>
+        </button>
+        <button type="button" role="tab" id="evidence-outcome-tab" aria-controls="evidence-outcome-panel"
+          aria-selected={workspaceStage === "outcome"} onClick={() => setWorkspaceStage("outcome")}>
+          <span className="converge-evidence-step-number">03</span><span><strong>Research outcome</strong><small>Decisions & export</small></span>
+        </button>
+      </nav>
+      <div className="converge-evidence-stage" id="evidence-materials-panel" role="tabpanel" aria-labelledby="evidence-materials-tab" hidden={workspaceStage !== "materials"}>
+        <div className="converge-evidence-stage-intro">
+          <div><p className="converge-evidence-kicker">STEP 01 · COLLECT</p><h3>Research materials</h3>
+            <p>Start with a claim. Add credible sources or evidence, and keep syntheses and decisions accessible in the same record.</p></div>
+        </div>
       {showForm && (
         <form id="converge-artifact-form" onSubmit={handleCreate} className="mt-5 grid min-w-0 gap-4 rounded-2xl border border-white/10 bg-black/10 p-4 sm:p-5">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -318,33 +360,6 @@ export function ResearchRoom({
         <div role="status" aria-live="polite" className="mt-5 rounded-xl border border-amber-300/15 bg-amber-300/[0.04] p-4 text-sm text-amber-100/80">
           {message}
         </div>
-      )}
-
-      {!loading && !loadError && (
-        <ResearchLineagePanel
-          topicId={topicId}
-          topicTitle={topicTitle}
-          topicQuestion={topicQuestion}
-          participantId={participantId}
-          artifacts={artifacts}
-          onArtifactUpdated={(updated) => setArtifacts((current) => current.map((item) => item.id === updated.id ? updated : item))}
-          onCreateDecision={recordHumanDecision}
-          evidenceEdges={reviewRecords.edges}
-          reviewEvents={reviewRecords.reviews}
-        />
-      )}
-
-      {!loading && !loadError && (
-        <ResearchEvidenceReviewPanel
-          topicId={topicId}
-          participantId={participantId}
-          artifacts={artifacts}
-          edges={reviewRecords.edges}
-          reviews={reviewRecords.reviews}
-          loading={reviewLoading}
-          error={reviewError}
-          onRefresh={loadReviewRecords}
-        />
       )}
 
       {!loading && !loadError && artifacts.length > 0 && (
@@ -462,6 +477,48 @@ export function ResearchRoom({
           ))}
         </div>
       ) : null}
+      </div>
+
+      <div className="converge-evidence-stage" id="evidence-review-panel" role="tabpanel" aria-labelledby="evidence-review-tab" hidden={workspaceStage !== "review"}>
+        <div className="converge-evidence-stage-intro">
+          <div><p className="converge-evidence-kicker">STEP 02 · EXAMINE</p><h3>Evidence review</h3>
+            <p>Connect exact supporting or contradicting passages to claims, then ask another researcher to record an independent assessment.</p></div>
+        </div>
+      {!loading && !loadError && (
+        <ResearchEvidenceReviewPanel
+          topicId={topicId}
+          participantId={participantId}
+          artifacts={artifacts}
+          edges={reviewRecords.edges}
+          reviews={reviewRecords.reviews}
+          loading={reviewLoading}
+          error={reviewError}
+          onRefresh={loadReviewRecords}
+        />
+      )}
+
+      </div>
+
+      <div className="converge-evidence-stage" id="evidence-outcome-panel" role="tabpanel" aria-labelledby="evidence-outcome-tab" hidden={workspaceStage !== "outcome"}>
+        <div className="converge-evidence-stage-intro">
+          <div><p className="converge-evidence-kicker">STEP 03 · CONCLUDE</p><h3>Research outcome</h3>
+            <p>Connect conclusions to evidence, record human decisions and export an outcome that others can inspect.</p></div>
+        </div>
+      {!loading && !loadError && (
+        <ResearchLineagePanel
+          topicId={topicId}
+          topicTitle={topicTitle}
+          topicQuestion={topicQuestion}
+          participantId={participantId}
+          artifacts={artifacts}
+          onArtifactUpdated={(updated) => setArtifacts((current) => current.map((item) => item.id === updated.id ? updated : item))}
+          onCreateDecision={recordHumanDecision}
+          evidenceEdges={reviewRecords.edges}
+          reviewEvents={reviewRecords.reviews}
+        />
+      )}
+
+      </div>
     </section>
   );
 }
