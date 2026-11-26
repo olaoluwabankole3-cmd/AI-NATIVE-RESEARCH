@@ -240,7 +240,7 @@ export function ResearchRoom({
             aria-controls="converge-artifact-form"
             className="rounded-xl bg-emerald-300 px-4 py-2.5 text-sm font-semibold text-[#07110f] hover:bg-emerald-200"
           >
-            {showForm && workspaceStage === "materials" ? "Close editor" : "Add material"}
+            {showForm && workspaceStage === "materials" ? "Close" : "Add artifact"}
           </button>
         </div>
       </div>
