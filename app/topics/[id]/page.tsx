@@ -192,6 +192,21 @@ export default function TopicPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [showAgentPicker, setShowAgentPicker] = useState(false);
   const [mobileSection, setMobileSection] = useState<"discussion" | "evidence">("discussion");
+  // The selected research section now controls the full workspace at every
+  // breakpoint, not just the mobile layout. Restore deep-linked evidence too.
+  useEffect(() => {
+    function selectLinkedSection() {
+      const hash = window.location.hash;
+      if (hash === "#research-record" || hash.startsWith("#research-artifact-")) {
+        setMobileSection("evidence");
+      } else if (hash === "#topic-discussion") {
+        setMobileSection("discussion");
+      }
+    }
+    selectLinkedSection();
+    window.addEventListener("hashchange", selectLinkedSection);
+    return () => window.removeEventListener("hashchange", selectLinkedSection);
+  }, []);
   const [addingAgentId, setAddingAgentId] = useState<string | null>(null);
   const [topicParticipants, setTopicParticipants] = useState<TopicParticipant[]>([]);
 
@@ -773,9 +788,9 @@ export default function TopicPage() {
             </p>
           )}
           {topic.type === "RESEARCH" && currentParticipantId && (
-            <div className="converge-room-tabbar" role="tablist" aria-label="Research room views">
+            <div id="converge-topic-section-switcher" className="converge-room-tabbar" role="tablist" aria-label="Research room views">
               <button type="button" role="tab" id="converge-discussion-tab" aria-controls="topic-discussion" aria-selected={mobileSection === "discussion"} onClick={() => setMobileSection("discussion")} aria-label={`Discussion, ${posts.length} replies`}>Discussion</button>
-              <button type="button" role="tab" id="converge-evidence-tab" aria-controls="converge-room-evidence-panel" aria-selected={mobileSection === "evidence"} onClick={() => setMobileSection("evidence")} aria-label="Evidence and synthesis">Evidence</button>
+              <button type="button" role="tab" id="converge-evidence-tab" aria-controls="converge-room-evidence-panel" aria-selected={mobileSection === "evidence"} onClick={() => setMobileSection("evidence")} aria-label="Evidence workspace: materials, peer review and research outcome">Evidence</button>
             </div>
           )}
           <div className={["converge-room-layout", topic.type !== "RESEARCH" || !currentParticipantId ? "converge-room-layout--discussion-only" : ""].join(" ")} data-mobile-tab={mobileSection}>

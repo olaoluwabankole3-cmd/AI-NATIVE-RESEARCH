@@ -9,6 +9,7 @@ import "./figma-parity-phase3.css";
 import "./mobile-chat-refinement.css";
 import "./community-workspace.css";
 import "./community-desktop-repair.css";
+import "./research-evidence-workspace.css";
 import { IncomingVoiceCall } from "@/components/incoming-voice-call";
 import { voiceCallsEnabled } from "@/lib/voice-calls-config";
 
