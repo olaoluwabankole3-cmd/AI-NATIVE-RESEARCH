@@ -1,0 +1,315 @@
+/*
+ * Converge Research Evidence Workspace
+ *
+ * Replaces the legacy 300px fixed Figma research sidebar with a usable
+ * full-width view. Research discussion and evidence are alternate panels
+ * at every viewport. Scope is restricted to signed-in topic pages.
+ * Public landing, sign-in, messaging and community navigation are untouched.
+ */
+
+main.converge-app-page.figma-topic:has(.converge-room-tabbar) .converge-room-desktop-links {
+  display: none !important;
+}
+
+main.converge-app-page.figma-topic .converge-room-layout {
+  display: block !important;
+  min-width: 0;
+  width: 100%;
+  margin: 0 !important;
+}
+main.converge-app-page.figma-topic .converge-room-layout[data-mobile-tab="discussion"] > .converge-room-evidence,
+main.converge-app-page.figma-topic .converge-room-layout[data-mobile-tab="evidence"] > .converge-room-discussion {
+  display: none !important;
+}
+main.converge-app-page.figma-topic .converge-room-layout[data-mobile-tab="discussion"] > .converge-room-discussion,
+main.converge-app-page.figma-topic .converge-room-layout[data-mobile-tab="evidence"] > .converge-room-evidence {
+  display: block !important;
+}
+main.converge-app-page.figma-topic .converge-room-evidence {
+  position: static !important;
+  inset: auto !important;
+  float: none !important;
+  display: block;
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+main.converge-app-page.figma-topic .converge-room-evidence .converge-research-room {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+main.converge-app-page.figma-topic .converge-research-room h2 {
+  font-size: clamp(21px, 2.3vw, 29px) !important;
+  line-height: 1.25;
+}
+
+/* Research / discussion is a first-class decision on desktop too. */
+@media (min-width: 768px) {
+  main.converge-app-page.figma-topic .converge-room-tabbar {
+    display: flex !important;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    width: 100%;
+    gap: 9px;
+    margin: 19px 0 23px !important;
+    padding: 9px 0 !important;
+    background: #0b1110;
+    border-bottom: 1px solid #294334;
+  }
+  main.converge-app-page.figma-topic .converge-room-tabbar > button {
+    min-height: 44px;
+    border: 1px solid #294334 !important;
+    border-radius: 11px !important;
+    background: #14231b !important;
+    color: #b3c8bb !important;
+    padding: 10px 19px !important;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  main.converge-app-page.figma-topic .converge-room-tabbar > button[aria-selected="true"] {
+    background: #a6e6bd !important;
+    border-color: #a6e6bd !important;
+    color: #091811 !important;
+  }
+}
+
+/* The old 300px sidebar reserved its width in the desktop content margins. */
+@media (min-width: 1280px) {
+  main.converge-app-page.figma-topic .converge-topic-workspace > .py-7 {
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 0 0 368px !important;
+    padding: 24px clamp(25px, 3.4vw, 60px) 72px !important;
+  }
+}
+main.converge-app-page.figma-topic:has(.converge-room-layout[data-mobile-tab="evidence"]) .converge-topic-hero .figma-topic-body {
+  display: none !important;
+}
+main.converge-app-page.figma-topic:has(.converge-room-layout[data-mobile-tab="evidence"]) .converge-topic-hero {
+  padding-bottom: 8px !important;
+}
+main.converge-app-page.figma-topic:has(.converge-room-layout[data-mobile-tab="evidence"]) .converge-research-topic-guidance {
+  display: none !important;
+}
+
+/* A compact research progress strip, never four narrow vertical text cards. */
+main.figma-topic .converge-evidence-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 25px 0 23px;
+}
+main.figma-topic .converge-evidence-overview > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #264635;
+  border-radius: 13px;
+  background: #14231b;
+  padding: 15px 18px;
+}
+main.figma-topic .converge-evidence-overview strong {
+  color: #e7f5ec;
+  font-size: clamp(20px, 2.4vw, 26px);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+main.figma-topic .converge-evidence-overview span {
+  color: #a1b9a9;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: normal;
+}
+
+/* Progressive disclosure: collect > review > conclude. */
+main.figma-topic .converge-evidence-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 11px;
+  margin: 0 0 24px;
+}
+main.figma-topic .converge-evidence-steps > button {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 13px;
+  min-height: 73px;
+  padding: 13px 14px;
+  text-align: left;
+  border: 1px solid #2c4638;
+  border-radius: 13px;
+  background: #111e18;
+  color: #d6e6db;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease;
+}
+main.figma-topic .converge-evidence-steps > button:hover {
+  border-color: #74c89c;
+}
+main.figma-topic .converge-evidence-steps > button[aria-selected="true"] {
+  background: #1b3928;
+  border-color: #8bd9ad;
+}
+main.figma-topic .converge-evidence-steps > button > span:last-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+main.figma-topic .converge-evidence-steps strong {
+  color: #f2fbf4;
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+main.figma-topic .converge-evidence-steps small {
+  color: #a1b9a9;
+  font-size: 11px;
+  line-height: 1.5;
+}
+main.figma-topic .converge-evidence-step-number {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #315844;
+  color: #9bdeb6;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+main.figma-topic .converge-evidence-steps > button[aria-selected="true"] .converge-evidence-step-number {
+  background: #a6e6bd;
+  color: #0a2013;
+  border-color: #a6e6bd;
+}
+main.figma-topic .converge-evidence-stage {
+  min-width: 0;
+  width: 100%;
+  padding-bottom: 48px;
+}
+main.figma-topic .converge-evidence-stage[hidden] {
+  display: none !important;
+}
+main.figma-topic .converge-evidence-stage-intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  align-items: start;
+  border-bottom: 1px solid #294334;
+  padding: 0 0 21px;
+  margin-bottom: 23px;
+}
+main.figma-topic .converge-evidence-stage-intro h3 {
+  color: #f0faf2;
+  font-size: clamp(18px, 2.1vw, 24px);
+  font-weight: 700;
+  line-height: 1.25;
+  margin-top: 5px;
+}
+main.figma-topic .converge-evidence-stage-intro p:not(.converge-evidence-kicker) {
+  color: #a1b9a9;
+  max-width: 68ch;
+  font-size: 13px;
+  line-height: 1.75;
+  margin-top: 7px;
+}
+main.figma-topic .converge-evidence-kicker {
+  color: #55c6a8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+main.figma-topic .converge-evidence-stage .converge-lineage,
+main.figma-topic .converge-evidence-stage .converge-evidence-review-panel {
+  min-width: 0;
+  width: 100%;
+}
+main.figma-topic .converge-evidence-stage :is(input, textarea, select) {
+  min-width: 0;
+  max-width: 100%;
+}
+main.figma-topic .converge-evidence-stage :is(h3, h4, label) {
+  overflow-wrap: break-word;
+}
+
+/* Compact mobile controls, with full-width content and no inner fixed rail. */
+@media (max-width: 767px) {
+  main.figma-topic .converge-evidence-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 16px 0 19px;
+  }
+  main.figma-topic .converge-evidence-overview > div {
+    padding: 12px 13px;
+  }
+  main.figma-topic .converge-evidence-overview strong {
+    font-size: 21px;
+  }
+  main.figma-topic .converge-evidence-overview span {
+    font-size: 11px;
+  }
+  main.figma-topic .converge-evidence-steps {
+    gap: 6px;
+    margin: 0 0 20px;
+  }
+  main.figma-topic .converge-evidence-steps > button {
+    flex-direction: column;
+    gap: 7px;
+    justify-content: center;
+    min-height: 77px;
+    padding: 9px 5px;
+    text-align: center;
+  }
+  main.figma-topic .converge-evidence-steps .converge-evidence-step-number {
+    width: 25px;
+    height: 25px;
+    font-size: 10px;
+  }
+  main.figma-topic .converge-evidence-steps strong {
+    font-size: 11px;
+    line-height: 1.25;
+  }
+  main.figma-topic .converge-evidence-steps small {
+    display: none;
+  }
+  main.figma-topic .converge-evidence-stage-intro {
+    padding-bottom: 15px;
+    margin-bottom: 14px;
+  }
+  main.figma-topic .converge-evidence-stage-intro h3 {
+    font-size: 19px;
+  }
+  main.figma-topic .converge-evidence-stage-intro p:not(.converge-evidence-kicker) {
+    font-size: 12px;
+  }
+  main.figma-topic .converge-room-evidence .converge-research-room {
+    padding: 7px 0 100px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main.figma-topic .converge-evidence-steps > button {
+    transition: none;
+  }
+}
