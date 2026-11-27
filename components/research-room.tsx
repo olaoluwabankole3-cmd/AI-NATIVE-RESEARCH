@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { OutcomeApprovalPanel } from "@/components/outcome-approval-panel";
 import { EvidenceGraphPanel } from "@/components/evidence-graph-panel";
 import { SourceVerificationPanel } from "@/components/source-verification-panel";
 import type { SourceVerification } from "@/lib/source-verification";
@@ -541,6 +542,7 @@ export function ResearchRoom({
           <div><p className="converge-evidence-kicker">STEP 03 · CONCLUDE</p><h3>Research outcome</h3>
             <p>Connect conclusions to evidence, record human decisions and export an outcome that others can inspect.</p></div>
         </div>
+      {workspaceStage === "outcome" && !loading && !loadError && <OutcomeApprovalPanel key={topicId} topicId={topicId} />}
       {!loading && !loadError && (
         <ResearchLineagePanel
           topicId={topicId}
