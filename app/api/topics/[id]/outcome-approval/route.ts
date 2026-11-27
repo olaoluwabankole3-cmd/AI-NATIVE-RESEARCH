@@ -62,7 +62,8 @@ export async function GET(request:Request,{params}:Params) {
     const frozen=version.data as OutcomeVersion;
     const expected=createHash("sha256").update(canonical({snapshot:frozen.snapshot,sections:frozen.sections,report:frozen.report})).digest("hex");
     if(expected!==frozen.digest)return respond({error:"Stored version integrity check failed."},503);
-    return respond({version:frozen,decisions:decisions.data,viewerId:user!.id});
+    const {snapshot: _snapshot, ...publicVersion}=frozen;
+    return respond({version:publicVersion,decisions:decisions.data,viewerId:user!.id});
   }
   const [versions,record]=await Promise.all([
     admin!.from("research_outcome_versions").select("id,topic_id,version_no,submitted_by,created_at,digest").eq("topic_id",topicId).order("version_no",{ascending:false}).limit(101),
