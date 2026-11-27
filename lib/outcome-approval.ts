@@ -5,7 +5,7 @@ export type OutcomeSections = {methodology:string; limitations:string; recommend
 export type OutcomeVersion = {id:string; topic_id:string; version_no:number; submitted_by:string|null; created_at:string; digest:string; sections:OutcomeSections; snapshot:OutcomeRecord; report:string};
 export type OutcomeDecision = {id:string; topic_id:string; version_id:string; reviewer_id:string|null; verdict:"APPROVED"|"CHANGES_REQUESTED"; rationale:string; created_at:string};
 export function outcomeStatus(version:OutcomeVersion, decisions:readonly OutcomeDecision[]) {
-  const records=decisions.filter(d=>d.topic_id===version.topic_id && d.version_id===version.id && d.reviewer_id!==version.submitted_by);
+  const records=decisions.filter(d=>d.topic_id===version.topic_id && d.version_id===version.id && (!d.reviewer_id || !version.submitted_by || d.reviewer_id!==version.submitted_by));
   if(records.some(d=>d.verdict==="CHANGES_REQUESTED")) return "CHANGES_REQUESTED";
   if(records.some(d=>d.verdict==="APPROVED")) return "APPROVED";
   return "UNDER_REVIEW";
@@ -36,6 +36,6 @@ function currentReview(review:ReviewEvent, artifacts:ResearchArtifact[], edges:E
 }
 export function approvedExport(version:OutcomeVersion, decisions:readonly OutcomeDecision[]) {
   const status=outcomeStatus(version,decisions);
-  const events=decisions.filter(d=>d.topic_id===version.topic_id&&d.version_id===version.id&&d.reviewer_id!==version.submitted_by);
+  const events=decisions.filter(d=>d.topic_id===version.topic_id&&d.version_id===version.id&&(!d.reviewer_id || !version.submitted_by || d.reviewer_id!==version.submitted_by));
   return ["# Research outcome — version "+version.version_no,"","Review status: "+status,"Version ID: "+version.id,"Snapshot SHA-256: "+version.digest,"Submitted by: "+(version.submitted_by??"deleted account"),"Submitted at: "+version.created_at,"","Approval concerns this frozen report only, not external source truth or unanimous agreement.","","## Review decisions",...events.map(d=>"- "+d.verdict+" · "+(d.reviewer_id??"deleted account")+" · "+d.created_at+"\n  "+d.rationale),"",version.report].join("\n");
 }
