@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { EvidenceGraphPanel } from "@/components/evidence-graph-panel";
 import { SourceVerificationPanel } from "@/components/source-verification-panel";
 import type { SourceVerification } from "@/lib/source-verification";
 import { ResearchLineagePanel } from "@/components/research-lineage-panel";
@@ -41,6 +42,7 @@ export function ResearchRoom({
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [workspaceStage, setWorkspaceStage] = useState<"materials" | "review" | "outcome">("materials");
+  const [reviewView, setReviewView] = useState<"review" | "graph">("review");
   const [saving, setSaving] = useState(false);
   const [type, setType] = useState<ArtifactType>("SYNTHESIS");
   const [title, setTitle] = useState("");
@@ -500,6 +502,19 @@ export function ResearchRoom({
           <div><p className="converge-evidence-kicker">STEP 02 · EXAMINE</p><h3>Evidence review</h3>
             <p>Connect exact supporting or contradicting passages to claims, then ask another researcher to record an independent assessment.</p></div>
         </div>
+      <div className="mt-4 flex flex-wrap gap-2" aria-label="Evidence review view">
+        <button type="button" aria-pressed={reviewView === "review"} onClick={() => setReviewView("review")}
+          className={"min-h-11 rounded-xl border px-4 text-xs font-semibold "+(reviewView==="review"?"border-emerald-200/50 bg-emerald-200/10 text-emerald-100":"border-white/15 text-white/65")}>Review & verification</button>
+        <button type="button" aria-pressed={reviewView === "graph"} onClick={() => setReviewView("graph")}
+          className={"min-h-11 rounded-xl border px-4 text-xs font-semibold "+(reviewView==="graph"?"border-emerald-200/50 bg-emerald-200/10 text-emerald-100":"border-white/15 text-white/65")}>Evidence graph</button>
+      </div>
+      {reviewView === "graph" && !loading && !loadError && (
+        <EvidenceGraphPanel key={topicId} topicId={topicId} artifacts={artifacts} edges={reviewRecords.edges}
+          reviews={reviewRecords.reviews} verifications={verifications}
+          reviewUnavailable={reviewLoading || Boolean(reviewError)}
+          verificationUnavailable={verificationLoading || Boolean(verificationError)} />
+      )}
+      <div hidden={reviewView !== "review"}>
       {!loading && !loadError && (
         <SourceVerificationPanel key={topicId} topicId={topicId} participantId={participantId} artifacts={artifacts}
           edges={reviewRecords.edges} events={verifications} loading={verificationLoading || reviewLoading}
@@ -517,6 +532,7 @@ export function ResearchRoom({
           onRefresh={loadReviewRecords}
         />
       )}
+      </div>
 
       </div>
 
