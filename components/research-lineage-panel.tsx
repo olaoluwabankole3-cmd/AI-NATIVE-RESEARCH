@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { verificationAppendix, type SourceVerification } from "@/lib/source-verification";
 import { createClient } from "@/lib/supabase/client";
 import {
   buildResearchOutcomeMarkdown,
@@ -20,13 +21,15 @@ type Props = {
   artifacts: ResearchArtifact[];
   evidenceEdges: EvidenceEdge[];
   reviewEvents: ReviewEvent[];
+  sourceVerifications: SourceVerification[];
+  verificationUnavailable: boolean;
   onArtifactUpdated: (artifact: ResearchArtifact) => void;
   onCreateDecision: () => void;
 };
 
 export function ResearchLineagePanel({
   topicId, topicTitle, topicQuestion, participantId, artifacts, evidenceEdges, reviewEvents,
-  onArtifactUpdated, onCreateDecision,
+  onArtifactUpdated, onCreateDecision, sourceVerifications, verificationUnavailable,
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,7 +52,7 @@ export function ResearchLineagePanel({
     setOutcomePreview(buildResearchOutcomeMarkdown({
       topicId, title: topicTitle, question: topicQuestion, artifacts, edges: evidenceEdges, reviews: reviewEvents,
       origin: window.location.origin, generatedAt: new Date(),
-    }));
+    }) + verificationAppendix(topicId, artifacts, evidenceEdges, sourceVerifications, verificationUnavailable));
     setShowOutcome(true);
   }
 
@@ -103,7 +106,7 @@ export function ResearchLineagePanel({
       const report = buildResearchOutcomeMarkdown({
         topicId, title: topicTitle, question: topicQuestion, artifacts, edges: evidenceEdges, reviews: reviewEvents,
         origin: window.location.origin, generatedAt: new Date(),
-      });
+      }) + verificationAppendix(topicId, artifacts, evidenceEdges, sourceVerifications, verificationUnavailable);
       await navigator.clipboard.writeText(report);
       setMessage("Current research outcome copied. This is a draft, not a verified report.");
     } catch {
@@ -115,7 +118,7 @@ export function ResearchLineagePanel({
     const report = buildResearchOutcomeMarkdown({
       topicId, title: topicTitle, question: topicQuestion, artifacts, edges: evidenceEdges, reviews: reviewEvents,
       origin: window.location.origin, generatedAt: new Date(),
-    });
+    }) + verificationAppendix(topicId, artifacts, evidenceEdges, sourceVerifications, verificationUnavailable);
     const filename = (topicTitle.toLowerCase().normalize("NFKD")
       .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 56) || "research") + "-outcome.md";
     const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });

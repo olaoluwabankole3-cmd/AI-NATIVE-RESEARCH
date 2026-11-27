@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { SourceVerificationPanel } from "@/components/source-verification-panel";
+import type { SourceVerification } from "@/lib/source-verification";
 import { ResearchLineagePanel } from "@/components/research-lineage-panel";
 import { ResearchEvidenceReviewPanel } from "@/components/research-evidence-review-panel";
 import { resolveResearchLinks, validResearchSourceUrl, type EvidenceEdge, type ReviewEvent, type ResearchArtifact, type ResearchArtifactType } from "@/lib/research-outcome";
@@ -80,7 +82,21 @@ export function ResearchRoom({
     }
   }
 
-  useEffect(() => { void loadReviewRecords(); }, [topicId]);
+  const [verifications, setVerifications] = useState<SourceVerification[]>([]);
+  const [verificationLoading, setVerificationLoading] = useState(true);
+  const [verificationError, setVerificationError] = useState("");
+  async function loadVerifications() {
+    setVerificationLoading(true); setVerificationError("");
+    try {
+      const response = await fetch("/api/topics/" + encodeURIComponent(topicId) + "/source-verification", {cache:"no-store"});
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !Array.isArray(payload?.verifications)) throw new Error(payload?.error || "Could not load verification history.");
+      setVerifications(payload.verifications);
+    } catch (cause) {
+      setVerificationError(cause instanceof Error ? cause.message : "Could not load verification history.");
+    } finally { setVerificationLoading(false); }
+  }
+  useEffect(() => { setVerifications([]); void loadReviewRecords(); void loadVerifications(); }, [topicId]);
 
   function recordHumanDecision() {
     setWorkspaceStage("materials");
@@ -485,6 +501,11 @@ export function ResearchRoom({
             <p>Connect exact supporting or contradicting passages to claims, then ask another researcher to record an independent assessment.</p></div>
         </div>
       {!loading && !loadError && (
+        <SourceVerificationPanel key={topicId} topicId={topicId} participantId={participantId} artifacts={artifacts}
+          edges={reviewRecords.edges} events={verifications} loading={verificationLoading || reviewLoading}
+          error={verificationError || reviewError} onRefresh={async () => { await Promise.all([loadVerifications(),loadReviewRecords()]); }} />
+      )}
+      {!loading && !loadError && (
         <ResearchEvidenceReviewPanel
           topicId={topicId}
           participantId={participantId}
@@ -515,6 +536,8 @@ export function ResearchRoom({
           onCreateDecision={recordHumanDecision}
           evidenceEdges={reviewRecords.edges}
           reviewEvents={reviewRecords.reviews}
+          sourceVerifications={verifications}
+          verificationUnavailable={verificationLoading || Boolean(verificationError || reviewError)}
         />
       )}
 
